@@ -9,26 +9,15 @@
 </head>
 <body>
   <header class="topbar">
-    <h1 class="wordmark">
-      <span class="wm-latin">geez·art</span>
-    </h1>
+    <h1 class="wordmark"><span class="wm-latin">geez·art</span></h1>
     <p id="status" class="status" role="status">Loading the Ethiopic font…</p>
     <button id="shareTop" class="primary share-top" disabled>Share</button>
   </header>
 
-  <div class="scroll-band" aria-hidden="true"></div>
-
   <main class="stage">
     <section class="showcase" aria-label="Mosaic preview">
-      <p class="hero-kicker">photos · videos · <span class="fidel">ፊደል</span></p>
-      <h2 class="hero-title">Turn any photo or video into <span class="fidel">ፊደል</span> letters</h2>
-      <p class="hero-sub">Free. No sign-up. Nothing uploaded. Drop something in, then hit Share — the link rides along with the picture, so anyone who sees it can make their own.</p>
       <div class="halo" aria-hidden="true"></div>
       <div class="frame" id="frame">
-        <span class="corner tl" aria-hidden="true"></span>
-        <span class="corner tr" aria-hidden="true"></span>
-        <span class="corner bl" aria-hidden="true"></span>
-        <span class="corner br" aria-hidden="true"></span>
         <div class="zoom-controls" id="zoomControls" hidden>
           <button id="zoomOut" type="button" title="Zoom out">−</button>
           <span id="zoomVal" class="zoom-val">100%</span>
@@ -38,10 +27,10 @@
         <div class="frame-inner">
           <div class="zoom-wrap">
             <canvas id="mosaic" width="0" height="0"></canvas>
-            <div class="empty-state" id="emptyHint">
+            <div class="empty-state" id="emptyHint" tabindex="0" role="button">
               <span class="empty-fidel" aria-hidden="true">ፊደል</span>
-              <h2 id="emptyTitle">Make your photo into Ethiopic letters</h2>
-              <p id="emptySub">Drop a photo or video and it becomes a mosaic of fidel — a picture from far, letters up close. It all happens here; nothing is uploaded.</p>
+              <h2 id="emptyTitle">Drop a photo or video</h2>
+              <p id="emptySub">It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.</p>
             </div>
           </div>
         </div>
@@ -53,17 +42,16 @@
         </span>
         <span id="mosaicStat" class="stat"></span>
       </div>
-      <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so your friends can make their own.</p>
+      <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so they can make their own.</p>
     </section>
 
     <aside class="controls" aria-label="Controls">
       <section class="group">
-        <h2>Upload</h2>
+        <h2>Start</h2>
         <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose, drop, or paste a photo or video">
           <input type="file" id="file" accept="image/*,video/*" hidden>
           <p class="dz-main">Drop a photo or video</p>
           <p class="dz-sub">or click to browse · paste (Ctrl+V)</p>
-          <p class="dz-hint">Photos and short videos work best</p>
         </div>
         <button id="playBtn" class="ghost play-btn" type="button" hidden>Pause</button>
       </section>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>geez·art — direction mockups</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eee8dc; font-family: 'Segoe UI', system-ui, sans-serif; padding: 24px; }
+    h1.pick { font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; color: #7a2b16; margin: 0 0 20px; }
+    .cols { display: flex; gap: 20px; flex-wrap: wrap; }
+    .card { width: 380px; border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px -30px rgba(0,0,0,0.4); background: #fff; }
+    .label { padding: 10px 14px; font-size: 13px; font-weight: 700; color: #fff; }
+    .card:nth-child(1) .label { background: #a62b16; }
+    .card:nth-child(2) .label { background: #1d1410; }
+    .card:nth-child(3) .label { background: #2a2a2a; }
+    .label b { display: block; font-size: 14px; }
+    .label span { font-weight: 400; opacity: 0.85; font-size: 12px; }
+    .mock { height: 560px; overflow: hidden; }
+
+    /* shared result placeholder */
+    .result {
+      border-radius: 12px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      font-family: 'Noto Sans Ethiopic', 'Segoe UI', serif;
+      line-height: 1;
+    }
+    .result span { font-size: 14px; }
+
+    /* ---------- 1 · BOLD PAPER ---------- */
+    .dp1 { background: #fff6e8; padding: 22px 22px 30px; color: #241a10; }
+    .dp1 .kick { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #a62b16; font-weight: 700; margin: 0 0 10px; }
+    .dp1 .title { font-family: Georgia, serif; font-size: 42px; font-weight: 800; line-height: 1.02; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .dp1 .title .f { color: #d9a441; }
+    .dp1 .sub { font-size: 14px; color: #7d6a4f; margin: 0 0 18px; }
+    .dp1 .cta { display: block; text-align: center; background: #a62b16; color: #fff7ec; font-size: 18px; font-weight: 800; padding: 18px; border-radius: 999px; margin: 0 0 18px; box-shadow: 0 12px 26px -12px rgba(166,43,22,0.6); }
+    .dp1 .result { background: #fff; border: 3px solid #241a10; }
+    .dp1 .result span:nth-child(4n) { color: #d9a441; } .dp1 .result span:nth-child(odd) { color: #a62b16; } .dp1 .result span { color: #241a10; }
+    .dp1 .row { display: flex; gap: 8px; margin-top: 16px; }
+    .dp1 .row .t { flex: 1; border: 2px solid #241a10; border-radius: 999px; text-align: center; padding: 10px 0; font-weight: 700; font-size: 12px; }
+    .dp1 .samples { display: flex; gap: 8px; margin-top: 18px; }
+    .dp1 .samples i { flex: 1; height: 54px; border-radius: 10px; border: 2px solid #241a10; background: linear-gradient(135deg, #a62b16, #d9a441); }
+
+    /* ---------- 2 · NIGHT FILTER ---------- */
+    .dp2 { background: radial-gradient(120% 80% at 50% 0%, #3a1c12, #140d0a 70%); padding: 22px 22px 30px; color: #fff3e2; }
+    .dp2 .kick { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #e8b84f; font-weight: 700; margin: 0 0 12px; }
+    .dp2 .title { font-family: 'Trebuchet MS', sans-serif; font-size: 38px; font-weight: 800; line-height: 1.05; margin: 0 0 10px; }
+    .dp2 .title .f { color: #e8b84f; }
+    .dp2 .sub { font-size: 13.5px; color: rgba(255,243,226,0.7); margin: 0 0 20px; }
+    .dp2 .result { border: 1px solid rgba(232,184,79,0.5); box-shadow: 0 0 40px -12px rgba(232,184,79,0.5); }
+    .dp2 .result span:nth-child(3n) { color: #e8b84f; } .dp2 .result span:nth-child(odd) { color: #ff6b4a; } .dp2 .result span { color: #fff3e2; }
+    .dp2 .cta { display: block; text-align: center; background: linear-gradient(135deg, #e8b84f, #d9822b); color: #1d1410; font-size: 18px; font-weight: 800; padding: 18px; border-radius: 999px; margin: 18px 0 0; }
+    .dp2 .badges { display: flex; gap: 6px; margin-top: 14px; justify-content: center; }
+    .dp2 .badges i { font-size: 10px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); font-style: normal; color: rgba(255,243,226,0.8); }
+
+    /* ---------- 3 · PHOTO STUDIO ---------- */
+    .dp3 { background: #1a1a1a; padding: 14px 14px 18px; color: #eee; font-family: system-ui, sans-serif; }
+    .dp3 .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .dp3 .brand { font-weight: 800; font-size: 15px; }
+    .dp3 .share { background: #fff; color: #000; font-size: 12px; font-weight: 800; padding: 8px 16px; border-radius: 8px; }
+    .dp3 .viewer { background: #111; border-radius: 10px; padding: 12px; }
+    .dp3 .result { border-radius: 6px; }
+    .dp3 .result span:nth-child(2n) { color: #4ec3b4; } .dp3 .result span { color: #ff8a5c; }
+    .dp3 .sheet { background: #242424; border-radius: 10px; margin-top: 10px; padding: 10px 12px; }
+    .dp3 .sheet .track { height: 6px; background: #3a3a3a; border-radius: 3px; margin: 8px 0; }
+    .dp3 .sheet .track i { display: block; width: 55%; height: 6px; background: #ff8a5c; border-radius: 3px; }
+    .dp3 .sheet .lbl { font-size: 10px; color: #999; display: flex; justify-content: space-between; }
+    .dp3 .mini { display: flex; gap: 6px; margin-top: 10px; }
+    .dp3 .mini i { flex: 1; height: 30px; border-radius: 5px; background: #2e2e2e; }
+  </style>
+</head>
+<body>
+  <h1 class="pick">geez·art — three "viral filter app" directions. Which one feels like yours?</h1>
+  <div class="cols">
+
+    <!-- 1 · BOLD PAPER -->
+    <div class="card">
+      <div class="label"><b>1 · Bold Paper</b><span>light, loud, chunky, big type</span></div>
+      <div class="mock dp1">
+        <p class="kick">free · no sign-up · nothing uploaded</p>
+        <h2 class="title">Turn a photo into <span class="f">ፊደል</span></h2>
+        <p class="sub">Drop a photo or video — it becomes a mosaic of Ethiopian letters. Then hit Share and send it.</p>
+        <div class="cta">Drop a photo or video</div>
+        <div class="result">
+          <span>ሀ</span><span>ለ</span><span>ሐ</span><span>መ</span><span>ሠ</span><span>ረ</span><span>ሰ</span><span>ሸ</span>
+          <span>ቀ</span><span>በ</span><span>ቨ</span><span>ተ</span><span>ቸ</span><span>ኀ</span><span>ነ</span><span>ኘ</span>
+          <span>አ</span><span>ከ</span><span>ኸ</span><span>ወ</span><span>ዐ</span><span>ዘ</span><span>ዠ</span><span>የ</span>
+          <span>ደ</span><span>ጀ</span><span>ገ</span><span>ጠ</span><span>ጨ</span><span>ጰ</span><span>ጸ</span><span>ፀ</span>
+        </div>
+        <div class="row">
+          <div class="t">Share</div>
+          <div class="t">Copy text</div>
+          <div class="t">Save</div>
+        </div>
+        <div class="samples"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+
+    <!-- 2 · NIGHT FILTER -->
+    <div class="card">
+      <div class="label"><b>2 · Night Filter</b><span>dark, vibrant, glowing, club energy</span></div>
+      <div class="mock dp2">
+        <p class="kick">free · no sign-up · nothing uploaded</p>
+        <h2 class="title">Your photo, in <span class="f">ፊደል</span></h2>
+        <p class="sub">Drop a photo or video and it becomes a glowing mosaic of Ethiopian letters. Hit Share — the link rides along.</p>
+        <div class="result">
+          <span>ሀ</span><span>ለ</span><span>ሐ</span><span>መ</span><span>ሠ</span><span>ረ</span><span>ሰ</span><span>ሸ</span>
+          <span>ቀ</span><span>በ</span><span>ቨ</span><span>ተ</span><span>ቸ</span><span>ኀ</span><span>ነ</span><span>ኘ</span>
+          <span>አ</span><span>ከ</span><span>ኸ</span><span>ወ</span><span>ዐ</span><span>ዘ</span><span>ዠ</span><span>የ</span>
+          <span>ደ</span><span>ጀ</span><span>ገ</span><span>ጠ</span><span>ጨ</span><span>ጰ</span><span>ጸ</span><span>ፀ</span>
+        </div>
+        <div class="cta">Drop a photo or video</div>
+        <div class="badges"><i>no upload</i><i>works offline</i><i>share the link</i></div>
+      </div>
+    </div>
+
+    <!-- 3 · PHOTO STUDIO -->
+    <div class="card">
+      <div class="label"><b>3 · Photo Studio</b><span>clean dark app, viewer + toolbar, share top-right</span></div>
+      <div class="mock dp3">
+        <div class="top">
+          <div class="brand">geez·art</div>
+          <div class="share">Share</div>
+        </div>
+        <div class="viewer">
+          <div class="result">
+            <span>ሀ</span><span>ለ</span><span>ሐ</span><span>መ</span><span>ሠ</span><span>ረ</span><span>ሰ</span><span>ሸ</span>
+            <span>ቀ</span><span>በ</span><span>ቨ</span><span>ተ</span><span>ቸ</span><span>ኀ</span><span>ነ</span><span>ኘ</span>
+            <span>አ</span><span>ከ</span><span>ኸ</span><span>ወ</span><span>ዐ</span><span>ዘ</span><span>ዠ</span><span>የ</span>
+            <span>ደ</span><span>ጀ</span><span>ገ</span><span>ጠ</span><span>ጨ</span><span>ጰ</span><span>ጸ</span><span>ፀ</span>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="lbl"><span>Detail</span><span>170</span></div>
+          <div class="track"><i></i></div>
+          <div class="lbl"><span>Edges</span><span>30</span></div>
+          <div class="track"></div>
+          <div class="mini"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

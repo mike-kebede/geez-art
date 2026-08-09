@@ -28,16 +28,17 @@ let zoom = 1;
 let customTouched = false;
 
 const EMPTY_DEFAULT = {
-  title: 'Make your photo into Ethiopic letters',
-  sub: 'Drop a photo or video and it becomes a mosaic of fidel — a picture from far, letters up close. It all happens here; nothing is uploaded.',
+  title: 'Drop a photo or video',
+  sub: 'It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.',
 };
 const EMPTY_PICK = {
   title: 'Pick your letters',
   sub: 'Choose which letters appear — only the ones you tap will be used.',
 };
 
-// The deployed site URL stamped onto shared images — update after deploying.
-const SITE_URL = 'geez-art.art';
+// The deployed site URL stamped onto shared images.
+// Cloudflare Pages default domain for project "geez-art"; swap for a custom domain later.
+const SITE_URL = 'geez-art.pages.dev';
 
 function $(id: string): HTMLElement {
   return document.getElementById(id)!;
@@ -493,6 +494,15 @@ async function init(): Promise<void> {
   });
   setupDropZone($('dropzone'), handlePickedFile);
   setupPaste(document.body, handlePickedFile);
+  // The giant ፊደል empty state IS the drop target — click it to choose a photo.
+  const emptyState = $('emptyHint');
+  emptyState.addEventListener('click', () => file.click());
+  emptyState.addEventListener('keydown', (ev: KeyboardEvent) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      file.click();
+    }
+  });
 
 
   // Controls
