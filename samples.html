@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>geez-art — Phase 0: legibility samples</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <header class="band">
+    <h1>geez-art <span class="fidel">ፊደል</span> — Phase 0: legibility samples</h1>
+    <p id="status" class="status">Loading Ethiopic font &amp; measuring glyphs…</p>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Density ramp <span class="fidel">(lightest → darkest)</span></h2>
+      <canvas id="rampstrip" width="400" height="28"></canvas>
+      <p id="rampstats" class="status"></p>
+    </section>
+    <div id="samples" class="samples"></div>
+  </main>
+  <script type="module" src="/src/samples-main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="geez-art — turn pictures into art made of Ethiopic (Ge'ez) fidel letters. Made with respect for the script.">
+  <title>geez·art — fidel letter art</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="wordmark">
+      <span class="wm-fidel">ግዕዝ</span>
+      <span class="wm-latin">geez·art</span>
+    </h1>
+    <p id="status" class="status" role="status">Loading the Ethiopic font…</p>
+  </header>
+
+  <main class="stage">
+    <section class="showcase" aria-label="Mosaic preview">
+      <div class="frame" id="frame">
+        <span class="corner tl" aria-hidden="true"></span>
+        <span class="corner tr" aria-hidden="true"></span>
+        <span class="corner bl" aria-hidden="true"></span>
+        <span class="corner br" aria-hidden="true"></span>
+        <div class="frame-inner">
+          <canvas id="mosaic" width="0" height="0"></canvas>
+          <p class="empty-hint" id="emptyHint">Drop an image — watch it become <span class="fidel">ፊደል</span></p>
+        </div>
+        <div class="source-chip">
+          <span class="chip-label">source</span>
+          <canvas id="source" width="0" height="0"></canvas>
+        </div>
+      </div>
+      <div class="stat-line">
+        <span class="source-chip" id="sourceChip">
+          <span class="chip-label">source</span>
+          <canvas id="source" width="0" height="0" aria-hidden="true"></canvas>
+        </span>
+        <span id="mosaicStat"></span>
+      </div>
+    </section>
+
+    <aside class="controls" aria-label="Controls">
+      <section class="group">
+        <h2>Start</h2>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose, drop, or paste an image">
+          <input type="file" id="file" accept="image/*" hidden>
+          <p class="dz-main">Drop an image here</p>
+          <p class="dz-sub">or click · or paste (Ctrl+V)</p>
+        </div>
+        <div class="demo-row">
+          <span class="hint">Try a demo:</span>
+          <button data-demo="icon">Icon</button>
+          <button data-demo="face">Face</button>
+          <button data-demo="star">Star</button>
+          <button data-demo="checker">Checker</button>
+          <button data-demo="jebena">Jebena</button>
+          <button data-demo="cross">Cross</button>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Adjust</h2>
+        <label class="slider">
+          Width <span id="widthVal" class="val"></span>
+          <input type="range" id="width" min="20" max="400" step="2" value="170">
+        </label>
+        <label class="slider">
+          Contrast <span id="contrastVal" class="val"></span>
+          <input type="range" id="contrast" min="0" max="100" value="0">
+        </label>
+        <label class="slider">
+          Edges <span id="edgeVal" class="val"></span>
+          <input type="range" id="edge" min="0" max="100" value="0">
+        </label>
+        <label class="row-inline"><input type="checkbox" id="invert"> Invert</label>
+        <label class="row-inline"><input type="checkbox" id="colorize" checked> Colorful letters</label>
+        <label class="select">
+          Dithering
+          <select id="dither">
+            <option value="ordered" selected>Ordered (Bayer)</option>
+            <option value="blue">Blue noise</option>
+            <option value="fs">Floyd–Steinberg</option>
+          </select>
+        </label>
+        <label class="select">
+          Letters
+          <select id="charset">
+            <option value="all">All — full set</option>
+            <option value="common">Common Amharic</option>
+            <option value="dense">Dense only</option>
+            <option value="light">Light only</option>
+          </select>
+        </label>
+        <label class="select">
+          Palette
+          <select id="palette"></select>
+        </label>
+      </section>
+
+      <section class="group">
+        <h2>Export</h2>
+        <div class="btn-row">
+          <button id="share" class="primary">Share</button>
+          <button id="dlPng">Download PNG</button>
+          <button id="copyText">Copy text</button>
+          <button id="dlHtml">HTML</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <footer>
+    <p>A tribute to the <span class="fidel">ፊደል</span> — the Ethiopic script, used with respect. If your picture includes someone, ask before sharing it.</p>
+  </footer>
+
+  <script type="module" src="/src/app.ts"></script>
+</body>
+</html>
