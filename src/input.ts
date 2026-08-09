@@ -29,7 +29,7 @@ function applyOrientation(ctx: CanvasRenderingContext2D, o: number, w: number, h
 }
 
 /** Draw raw pixels onto a white canvas at natural resolution, EXIF-oriented. */
-function orientAndComposite(src: ImageBitmap, orientation: number | undefined): HTMLCanvasElement {
+function orientAndComposite(src: Decoded, orientation: number | undefined): HTMLCanvasElement {
   const o = orientation ?? 1;
   const w = src.width;
   const h = src.height;
@@ -46,24 +46,49 @@ function orientAndComposite(src: ImageBitmap, orientation: number | undefined): 
   return canvas;
 }
 
+type Decoded = ImageBitmap | HTMLImageElement;
+
 /**
  * Decode an image blob WITHOUT browser auto-rotation, so the manual EXIF pass
- * is the single source of truth for orientation.
+ * is the single source of truth for orientation. Falls back to <img> decoding
+ * so a file the bitmap path rejects (e.g. unusual encodings) still has a chance.
  */
-async function decodeRaw(blob: Blob): Promise<ImageBitmap> {
+async function decodeRaw(blob: Blob): Promise<Decoded> {
   try {
     return await createImageBitmap(blob, { imageOrientation: 'none' });
   } catch {
-    // Browsers without `imageOrientation` support are old enough that they also
-    // don't auto-rotate canvas draws, so the manual orientation pass stays correct.
-    return createImageBitmap(blob);
+    try {
+      return await createImageBitmap(blob);
+    } catch {
+      return loadViaImg(blob);
+    }
   }
+}
+
+function loadViaImg(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not decode image'));
+    };
+    img.src = url;
+  });
 }
 
 /** Read a local image file, apply EXIF orientation, composite alpha onto white. */
 export async function imageFileToCanvas(file: File): Promise<HTMLCanvasElement> {
   try {
-    const [orientation, bitmap] = await Promise.all([exifr.orientation(file), decodeRaw(file)]);
+    // EXIF read must never sink a valid image: if it fails, treat as upright.
+    const [orientation, bitmap] = await Promise.all([
+      exifr.orientation(file).catch(() => undefined),
+      decodeRaw(file),
+    ]);
     return orientAndComposite(bitmap, orientation);
   } catch (e) {
     throw new Error(`Could not read image "${file.name}": ${e instanceof Error ? e.message : String(e)}`);
@@ -79,26 +104,24 @@ export async function imageURLToCanvas(url: string): Promise<HTMLCanvasElement> 
   return imageFileToCanvas(new File([blob], name, { type: blob.type }));
 }
 
-/** Paste handler scoped to `el` (pass the app root for app-wide coverage): reads the first image item. */
-export function setupPaste(el: HTMLElement, onImage: (c: HTMLCanvasElement) => void): void {
+/** Paste handler scoped to `el` (pass the app root for app-wide coverage): reads the first image/video item. */
+export function setupPaste(el: HTMLElement, onFile: (file: File) => void): void {
   el.addEventListener('paste', (ev: ClipboardEvent) => {
     const items = ev.clipboardData?.items;
     if (!items) return;
     for (const item of items) {
       if (item.kind !== 'file') continue;
       const file = item.getAsFile();
-      if (!file || !file.type.startsWith('image/')) continue;
+      if (!file || !(file.type.startsWith('image/') || file.type.startsWith('video/'))) continue;
       ev.preventDefault();
-      imageFileToCanvas(file)
-        .then(onImage)
-        .catch((e: unknown) => console.error('Paste failed:', e));
+      onFile(file);
       break;
     }
   });
 }
 
-/** Drag-and-drop zone: visual 'dragover' class + first dropped image file. */
-export function setupDropZone(el: HTMLElement, onImage: (c: HTMLCanvasElement) => void): void {
+/** Drag-and-drop zone: visual 'dragover' class + first dropped image/video file. */
+export function setupDropZone(el: HTMLElement, onFile: (file: File) => void): void {
   let depth = 0; // counts nested dragenter/dragleave so the class doesn't flicker over children
 
   el.addEventListener('dragenter', (ev: DragEvent) => {
@@ -126,10 +149,8 @@ export function setupDropZone(el: HTMLElement, onImage: (c: HTMLCanvasElement) =
     const files = ev.dataTransfer?.files;
     if (!files) return;
     for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) continue;
-      imageFileToCanvas(file)
-        .then(onImage)
-        .catch((e: unknown) => console.error('Drop failed:', e));
+      if (!(file.type.startsWith('image/') || file.type.startsWith('video/'))) continue;
+      onFile(file);
       break;
     }
   });

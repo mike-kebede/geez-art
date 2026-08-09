@@ -43,7 +43,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
     cols,
     contrast = 1,
     invert = false,
-    dither = 'ordered',
+    dither = 'blue',
     edge = 0,
     paper = '#fff',
     ink = '#14100b',
@@ -115,10 +115,15 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   const pHi = sorted[Math.max(0, Math.floor(sorted.length * 0.99) - 1)];
   const stretch = pHi - pLo > 0.04 ? pHi - pLo : 1;
 
-  // Edge map (Sobel on the raw luminance grid).
+  // Stretched luminance (full range) — the base for edge detection AND tone.
+  const stretched = new Float32Array(cols * rows);
+  for (let i = 0; i < stretched.length; i++) stretched[i] = clamp01((lum[i] - pLo) / stretch);
+
+  // Edge map (Sobel on the STRETCHED grid — real gradients, so the slider is actually visible).
   const edgeMap = new Float32Array(cols * rows);
   if (edge > 0) {
-    const at = (r: number, c: number): number => lum[Math.max(0, Math.min(rows - 1, r)) * cols + Math.max(0, Math.min(cols - 1, c))];
+    const at = (r: number, c: number): number =>
+      stretched[Math.max(0, Math.min(rows - 1, r)) * cols + Math.max(0, Math.min(cols - 1, c))];
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const gx =
@@ -127,17 +132,18 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
         const gy =
           at(r + 1, c - 1) + 2 * at(r + 1, c) + at(r + 1, c + 1) -
           (at(r - 1, c - 1) + 2 * at(r - 1, c) + at(r - 1, c + 1));
-        edgeMap[r * cols + c] = clamp01(Math.sqrt(gx * gx + gy * gy) / 1.4);
+        edgeMap[r * cols + c] = clamp01(Math.sqrt(gx * gx + gy * gy) / 1.2);
       }
     }
   }
 
-  // Normalized density target (0..1 spans the ramp range), with edge boost.
+  // Density target: invert → true-contrast S-curve around mid-gray → density → +edge boost.
   const work = new Float32Array(cols * rows);
   for (let i = 0; i < work.length; i++) {
-    let v = clamp01((lum[i] - pLo) / stretch);
+    let v = stretched[i];
     if (invert) v = 1 - v;
-    const d = (1 - v) * contrast;
+    v = clamp01((v - 0.5) * contrast + 0.5);
+    const d = 1 - v;
     work[i] = clamp01((d - dMin) / span + edgeMap[i] * edge);
   }
 
@@ -146,30 +152,35 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
 
   if (dither === 'ordered') {
     // Library-based ordered dithering (Bayer) posterizes to 128 uniform levels;
-    // each level is then snapped to the nearest glyph density.
+    // each level is then snapped to a glyph (variety-aware within a density window).
     const levels = new Uint8Array(cols * rows);
     for (let i = 0; i < levels.length; i++) levels[i] = Math.round(clamp01(work[i]) * 255);
     const buf = new IntBuffer(cols, rows, GRAY8, levels);
     orderedDither(buf, 8, 128);
-    for (let i = 0; i < gi.length; i++) gi[i] = nearestNorm(ramp, key, buf.data[i] / 255);
+    for (let i = 0; i < gi.length; i++) {
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+      gi[i] = pickNorm(ramp, key, buf.data[i] / 255, c, r);
+    }
   } else if (dither === 'blue') {
-    // Blue-noise thresholding: hash-jitter each density target before snapping.
-    // No directional artifacts, no serial dependency (GPU/parallel-safe).
+    // Blue-noise thresholding: hash-jitter each density target before snapping,
+    // then pick variety-aware within a density window.
     const step = 1 / Math.max(1, ramp.length - 1);
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
         const jitter = (hashNoise(c, r) - 0.5) * step * 2;
-        gi[i] = nearestNorm(ramp, key, clamp01(work[i] + jitter));
+        gi[i] = pickNorm(ramp, key, clamp01(work[i] + jitter), c, r);
       }
     }
   } else {
-    // Floyd-Steinberg error diffusion over normalized density targets.
+    // Floyd-Steinberg error diffusion over normalized density targets,
+    // variety-aware so flat areas don't collapse onto one glyph.
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
         const d = clamp01(work[i]);
-        gi[i] = nearestNorm(ramp, key, d);
+        gi[i] = pickNorm(ramp, key, d, c, r);
         const gn = key(gi[i]);
         const err = d - gn;
         if (c + 1 < cols) work[i + 1] += err * (7 / 16);
@@ -262,4 +273,26 @@ function nearestNorm(ramp: GlyphInfo[], key: (i: number) => number, d: number): 
     return Math.abs(key(lo - 1) - d) < Math.abs(key(lo) - d) ? lo - 1 : lo;
   }
   return lo;
+}
+
+/** Density window (normalized) from which a cell's glyph is chosen — the
+ *  "don't collapse onto one letter" knob. */
+const VARIETY_WINDOW = 0.05;
+
+/**
+ * Variety-aware selection: instead of always taking the single nearest-density
+ * glyph, pick among the glyphs within a small density window of the target,
+ * chosen deterministically by cell position. Flat areas then show a MIX of
+ * letters rather than the same glyph repeated — this is what kills the
+ * "always the che letter" look.
+ */
+function pickNorm(ramp: GlyphInfo[], key: (i: number) => number, d: number, x: number, y: number): number {
+  const idx = nearestNorm(ramp, key, d);
+  let lo = idx;
+  let hi = idx;
+  while (lo > 0 && Math.abs(key(lo - 1) - d) < VARIETY_WINDOW) lo--;
+  while (hi < ramp.length - 1 && Math.abs(key(hi + 1) - d) < VARIETY_WINDOW) hi++;
+  if (hi - lo <= 0) return idx;
+  const h = hashNoise(x * 0.1337, y * 0.9517);
+  return lo + Math.min(hi - lo, Math.floor(h * (hi - lo + 1)));
 }

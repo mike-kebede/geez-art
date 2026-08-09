@@ -124,15 +124,26 @@ const SKIP = new Set([0x135b, 0x135c, 0x135d, 0x135e, 0x135f]);
  */
 export type RampPreset = 'all' | 'common' | 'dense' | 'light';
 
-/** Labiovelar forms (ቈ ኈ ኰ ዀ …) — not part of the standard Amharic syllabary. */
-const LABIOVELARS = new Set([
-  0x1248, 0x124a, 0x124b, 0x124c, 0x124d,
-  0x1258, 0x125a, 0x125b, 0x125c, 0x125d,
-  0x1288, 0x128a, 0x128b, 0x128c, 0x128d,
-  0x12b0, 0x12b2, 0x12b3, 0x12b4, 0x12b5,
-  0x12c0, 0x12c2, 0x12c3, 0x12c4, 0x12c5,
-  0x1310, 0x1312, 0x1313, 0x1314, 0x1315,
-]);
+/**
+ * The EXACT standard Amharic fidel: 34 radicals × 7 vowel orders = 238
+ * codepoints. The 1st-order (base) of each radical, in traditional order —
+ * each spans 7 consecutive codepoints. Nothing outside this set is "common
+ * Amharic": no labiovelars (ቈ ኈ ኰ …), no digits/punctuation, no stray slots.
+ */
+export const FIDEL_BASES = [
+  0x1200, 0x1208, 0x1210, 0x1218, 0x1220, 0x1228, 0x1230, 0x1238,
+  0x1240, 0x1260, 0x1268, 0x1270, 0x1278, 0x1280, 0x1290, 0x1298,
+  0x12a0, 0x12a8, 0x12b8, 0x12c8, 0x12d0, 0x12d8, 0x12e0, 0x12e8,
+  0x12f0, 0x1300, 0x1308, 0x1320, 0x1328, 0x1330, 0x1338, 0x1340,
+  0x1348, 0x1350,
+];
+
+/** Export the set so the app can expose it for diagnostics/tests. */
+export const COMMON_AMHARIC: ReadonlySet<number> = (() => {
+  const s = new Set<number>();
+  for (const base of FIDEL_BASES) for (let i = 0; i < 7; i++) s.add(base + i);
+  return s;
+})();
 
 let fullSet: GlyphInfo[] | null = null;
 
@@ -160,7 +171,7 @@ export async function buildRamp(preset: RampPreset = 'all'): Promise<GlyphInfo[]
   const all = await ensureMeasured();
   let base = all;
   if (preset === 'common') {
-    base = all.filter((g) => !LABIOVELARS.has(g.cp) && g.cp < 0x1360);
+    base = all.filter((g) => COMMON_AMHARIC.has(g.cp));
   } else if (preset === 'dense') {
     const med = all[Math.floor(all.length / 2)].density;
     base = all.filter((g) => g.density >= med);
@@ -169,6 +180,17 @@ export async function buildRamp(preset: RampPreset = 'all'): Promise<GlyphInfo[]
     base = all.filter((g) => g.density <= med);
   }
   return evenRamp(base);
+}
+
+/** The full measured Ethiopic set (everything that passed tofu filtering). */
+export async function getAllGlyphs(): Promise<GlyphInfo[]> {
+  return ensureMeasured();
+}
+
+/** Build an even-spaced density ramp from a chosen subset of glyphs. */
+export function rampFromGlyphs(glyphs: GlyphInfo[]): GlyphInfo[] {
+  const sorted = glyphs.slice().sort((a, b) => a.density - b.density);
+  return evenRamp(sorted);
 }
 
 /**
