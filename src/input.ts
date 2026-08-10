@@ -8,8 +8,6 @@
 // are known for. Transparency is composited onto white so the mosaic renderer
 // always receives an opaque source.
 
-import exifr from 'exifr';
-
 export interface SourceImage {
   canvas: HTMLCanvasElement;
 }
@@ -85,6 +83,7 @@ function loadViaImg(blob: Blob): Promise<HTMLImageElement> {
 export async function imageFileToCanvas(file: File): Promise<HTMLCanvasElement> {
   try {
     // EXIF read must never sink a valid image: if it fails, treat as upright.
+    const { default: exifr } = await import('exifr'); // lazy — keeps exifr out of the eager bundle
     const [orientation, bitmap] = await Promise.all([
       exifr.orientation(file).catch(() => undefined),
       decodeRaw(file),

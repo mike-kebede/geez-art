@@ -55,26 +55,34 @@ export function startVideoLoop(
 }
 
 /**
- * Record the animated canvas to a WebM blob via MediaRecorder.
- * The canvas must be animating (e.g. the mosaic output during playback).
+ * Record the animated canvas to a video blob via MediaRecorder.
+ * Prefers WebM where supported; otherwise falls back to the platform default
+ * (MP4 on iOS/Safari). The canvas must be animating (e.g. the mosaic output
+ * during playback).
  */
-export async function recordCanvas(canvas: HTMLCanvasElement, seconds = 4, fps = 12): Promise<Blob | null> {
+export async function recordCanvas(
+  canvas: HTMLCanvasElement,
+  seconds = 4,
+  fps = 12,
+): Promise<{ blob: Blob | null; ext: 'webm' | 'mp4' }> {
   try {
     const stream = canvas.captureStream(fps);
     const mime = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '';
+    const ext: 'webm' | 'mp4' = mime === 'video/webm' ? 'webm' : 'mp4';
     const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
     const chunks: BlobPart[] = [];
     rec.ondataavailable = (e) => {
       if (e.data.size) chunks.push(e.data);
     };
     const done = new Promise<Blob | null>((resolve) => {
-      rec.onstop = () => resolve(chunks.length ? new Blob(chunks, { type: 'video/webm' }) : null);
+      rec.onstop = () =>
+        resolve(chunks.length ? new Blob(chunks, { type: ext === 'webm' ? 'video/webm' : 'video/mp4' }) : null);
     });
     rec.start(250);
     await new Promise((r) => setTimeout(r, seconds * 1000));
     rec.stop();
-    return done;
+    return { blob: await done, ext };
   } catch {
-    return null;
+    return { blob: null, ext: 'mp4' };
   }
 }

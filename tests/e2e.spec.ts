@@ -332,7 +332,7 @@ test('texture (dithering) options each change the output', async ({ page }) => {
   await uploadSample(page);
   const get = () => page.evaluate(() => (document.getElementById('mosaic') as HTMLCanvasElement).toDataURL());
   let prev = await get();
-  for (const value of ['ordered', 'fs', 'blue']) {
+  for (const value of ['ordered', 'fs', 'scatter']) {
     await page.selectOption('#dither', value);
     await page.waitForFunction((p) => {
       const c = document.getElementById('mosaic') as HTMLCanvasElement;
@@ -437,5 +437,22 @@ test('changing a slider re-renders the mosaic', async ({ page }) => {
     const c = document.getElementById('mosaic') as HTMLCanvasElement;
     return c.width > 0 && c.toDataURL() !== prev;
   }, before);
+  expect(errors).toEqual([]);
+});
+
+test('clear button resets the app to the empty state', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  // a mosaic is rendered before we clear
+  await expect(page.locator('#emptyHint')).toBeHidden();
+  await page.click('#clearBtn');
+  // back to the empty state: hint visible again, canvas zero-sized
+  await expect(page.locator('#emptyHint')).toBeVisible();
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width === 0 && c.height === 0;
+  });
   expect(errors).toEqual([]);
 });

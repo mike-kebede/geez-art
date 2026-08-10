@@ -54,13 +54,13 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
   // brand band
   ctx.fillStyle = '#15110d';
   ctx.fillRect(0, mosaic.height, out.width, bandH);
-  ctx.fillStyle = '#d4a24c';
+  ctx.fillStyle = '#d9a441';
   ctx.fillRect(0, mosaic.height, out.width, 2); // gold hairline
   const mid = mosaic.height + bandH / 2;
   ctx.textBaseline = 'middle';
   // wordmark: fidel + latin
   ctx.font = `700 ${Math.round(bandH * 0.5)}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",serif`;
-  ctx.fillStyle = '#d4a24c';
+  ctx.fillStyle = '#d9a441';
   ctx.textAlign = 'left';
   ctx.fillText('ግዕዝ', 16, mid);
   ctx.font = `600 ${Math.round(bandH * 0.42)}px "Space Grotesk Variable","Space Grotesk",sans-serif`;
@@ -68,9 +68,9 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
   ctx.fillText('geez·art', 16 + Math.round(bandH * 0.62), mid);
   // url on the right
   ctx.font = `${Math.round(bandH * 0.32)}px "IBM Plex Mono",monospace`;
-  ctx.fillStyle = '#a99c83';
+  ctx.fillStyle = '#d9a441';
   ctx.textAlign = 'right';
-  ctx.fillText(siteUrl, out.width - 16, mid);
+  ctx.fillText('make yours at ' + siteUrl, out.width - 16, mid);
   return out;
 }
 
@@ -125,7 +125,7 @@ export function exportHTML(
   chars: string[][],
   opts?: { ink?: string; paper?: string; fontSize?: string },
 ): string {
-  const { ink = '#14100b', paper = '#fbf7f0', fontSize = '13px' } = opts ?? {};
+  const { ink = '#2a1a12', paper = '#f3ecdd', fontSize = '13px' } = opts ?? {};
   const body = escapeHTML(gridToText(chars));
   return [
     '<!DOCTYPE html>',

@@ -8,7 +8,7 @@
   --canvas: #f6f4f0;        /* near-neutral page */
   --surface: #ffffff;       /* panels */
   --ink: #1c1917;           /* near-black text */
-  --mist: #78716c;          /* muted */
+  --mist: #5a554e;          /* muted */
   --accent: #a62b16;        /* THE one accent — brick */
   --accent-deep: #8a2110;
   --gold: #d9a441;          /* micro-detail: fidel, focus */
@@ -32,7 +32,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -47,7 +47,7 @@ body {
 }
 .wordmark { margin: 0; }
 .wm-latin {
-  font-family: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
+  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -55,7 +55,7 @@ body {
 }
 .status {
   margin-left: auto;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 12px;
   color: var(--mist);
 }
@@ -143,8 +143,8 @@ body {
   backdrop-filter: blur(4px);
 }
 .zoom-controls button {
-  min-height: 30px;
-  min-width: 32px;
+  min-height: 44px;
+  min-width: 44px;
   padding: 0;
   font-size: 16px;
   background: transparent;
@@ -154,7 +154,7 @@ body {
 .zoom-controls button:hover { background: rgba(255, 255, 255, 0.16); color: #fff; transform: none; box-shadow: none; }
 .zoom-val {
   color: #f6f4f0;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 11px;
   min-width: 40px;
   text-align: center;
@@ -191,7 +191,7 @@ body {
 }
 .empty-state h2 {
   margin: 0;
-  font-family: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
+  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -213,7 +213,7 @@ body {
   margin-top: 16px;
 }
 .stat {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 12px;
   color: var(--mist);
   letter-spacing: 0.02em;
@@ -229,7 +229,7 @@ body {
 }
 .source-chip.visible { display: inline-flex; }
 .chip-label {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -266,7 +266,7 @@ body {
 .group + .group { border-top: 1px solid var(--line); }
 .group h2 {
   margin: 0 0 14px;
-  font-family: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
+  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -298,7 +298,7 @@ button.primary:hover { background: var(--accent-deep); border-color: var(--accen
 button.ghost { background: transparent; border-color: transparent; color: var(--mist); }
 button.ghost:hover { background: rgba(217, 164, 65, 0.12); border-color: transparent; color: var(--accent); transform: none; box-shadow: none; }
 button.share { width: 100%; font-weight: 700; font-size: 15px; }
-.share-top { min-height: 38px; padding: 7px 18px; font-size: 13px; font-weight: 700; }
+.share-top { min-height: 44px; padding: 7px 18px; font-size: 13px; font-weight: 700; }
 .share-top:disabled { opacity: 0.4; cursor: default; box-shadow: none; transform: none; }
 .share-top:disabled:hover { background: var(--accent); color: #fff7ec; }
 .share-top.pulse { animation: sharePulse 1.4s ease-out 2; }
@@ -306,6 +306,8 @@ button.share { width: 100%; font-weight: 700; font-size: 15px; }
   0% { box-shadow: 0 0 0 0 rgba(166, 43, 22, 0.45); }
   100% { box-shadow: 0 0 0 12px rgba(166, 43, 22, 0); }
 }
+#clearBtn { background: transparent; border-color: transparent; color: var(--mist); }
+#clearBtn:hover { background: rgba(217, 164, 65, 0.12); border-color: transparent; color: var(--accent); transform: none; box-shadow: none; }
 .mix-btn {
   width: 100%;
   margin: 0 0 12px;
@@ -336,7 +338,7 @@ button.share { width: 100%; font-weight: 700; font-size: 15px; }
 .slider .val {
   color: var(--mist);
   float: right;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 12px;
   margin-top: 2px;
 }
@@ -371,7 +373,7 @@ select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; bord
 .picker { margin-top: 12px; }
 .picker-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
 .picker-actions { display: flex; gap: 6px; }
-.picker-actions button { min-height: 32px; padding: 4px 10px; font-size: 12px; }
+.picker-actions button { min-height: 44px; padding: 4px 10px; font-size: 12px; }
 .picker .hint { margin: 8px 0 10px; }
 .hint { color: var(--mist); font-size: 12px; margin: 0; }
 .picker .hint .plus { color: var(--accent); font-weight: 700; }
@@ -412,10 +414,10 @@ select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; bord
 }
 .fam-tile.on { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent); }
 .fam-tile.partial { border-color: var(--gold); color: var(--accent); }
-.fam-tile.off { opacity: 0.4; }
+.fam-tile.off { color: var(--mist); background: transparent; opacity: 1; border-color: var(--line); }
 .fam-expand {
-  min-height: 40px;
-  min-width: 20px;
+  min-height: 44px;
+  min-width: 36px;
   padding: 0;
   font-size: 13px;
   color: var(--mist);
@@ -444,7 +446,7 @@ select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; bord
   color: var(--ink);
 }
 .fam-detail .letter.selected { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent); }
-.fam-detail .letter:not(.selected) { opacity: 0.45; }
+.fam-detail .letter:not(.selected) { color: var(--mist); opacity: 1; }
 .fam-detail .letter:hover { opacity: 1; transform: scale(1.05); }
 
 /* ---------- footer ---------- */
@@ -482,7 +484,7 @@ footer .fidel { color: var(--accent); font-weight: 700; }
 
 /* ---------- samples gallery (samples.html) ---------- */
 .band { padding: 24px 28px 16px; }
-.band h1 { margin: 0; font-size: 22px; font-family: 'Space Grotesk Variable', sans-serif; }
+.band h1 { margin: 0; font-size: 22px; font-family: 'Inter Variable', 'Inter', system-ui, sans-serif; }
 .band h1 .fidel { color: var(--accent); }
 .samples {
   display: grid;
@@ -492,7 +494,7 @@ footer .fidel { color: var(--accent); font-weight: 700; }
 }
 figure { margin: 0; background: var(--surface); border: 1px solid var(--line); padding: 10px; border-radius: 14px; }
 figure canvas { width: 100%; height: auto; }
-figcaption { font-size: 12px; color: var(--mist); padding-top: 8px; text-align: center; font-family: 'IBM Plex Mono', monospace; }
+figcaption { font-size: 12px; color: var(--mist); padding-top: 8px; text-align: center; font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; }
 .panel { background: var(--surface); border: 1px solid var(--line); padding: 12px 18px; border-radius: 14px; margin: 0 28px 18px; }
-.panel h2 { margin: 0 0 8px; font-size: 14px; color: var(--accent); font-family: 'Space Grotesk Variable', sans-serif; }
+.panel h2 { margin: 0 0 8px; font-size: 14px; color: var(--accent); font-family: 'Inter Variable', 'Inter', system-ui, sans-serif; }
 #rampstrip { display: block; width: 100%; height: auto; background: #fff; border-radius: 8px; }

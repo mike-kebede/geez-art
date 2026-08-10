@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="geez-art — turn photos into art made of Ethiopic (Ge'ez) fidel letters. Made with respect for the script.">
+  <meta name="theme-color" content="#f6f4f0">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='75' font-size='80' text-anchor='middle' fill='%23D4AF37'%3Eፊ%3C/text%3E%3C/svg%3E">
+  <meta property="og:title" content="geez·art — turn photos into Ethiopic letters">
+  <meta property="og:description" content="Free. Turn any photo or video into a mosaic of Ge'ez fidel letters — nothing uploaded.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://geez-art.pages.dev">
+  <meta name="twitter:card" content="summary">
   <title>geez·art — turn photos into Ethiopic letters</title>
   <link rel="stylesheet" href="/src/style.css">
 </head>
@@ -19,14 +26,14 @@
       <div class="halo" aria-hidden="true"></div>
       <div class="frame" id="frame">
         <div class="zoom-controls" id="zoomControls" hidden>
-          <button id="zoomOut" type="button" title="Zoom out">−</button>
+          <button id="zoomOut" type="button" title="Zoom out" aria-label="Zoom out">−</button>
           <span id="zoomVal" class="zoom-val">100%</span>
-          <button id="zoomIn" type="button" title="Zoom in">+</button>
-          <button id="zoomReset" type="button" title="Fit to width">Fit</button>
+          <button id="zoomIn" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+          <button id="zoomReset" type="button" title="Fit to width" aria-label="Fit to width">Fit</button>
         </div>
         <div class="frame-inner">
           <div class="zoom-wrap">
-            <canvas id="mosaic" width="0" height="0"></canvas>
+            <canvas id="mosaic" width="0" height="0" role="img"></canvas>
             <div class="empty-state" id="emptyHint" tabindex="0" role="button">
               <span class="empty-fidel" aria-hidden="true">ፊደል</span>
               <h2 id="emptyTitle">Drop a photo or video</h2>
@@ -54,21 +61,22 @@
           <p class="dz-sub">or click to browse · paste (Ctrl+V)</p>
         </div>
         <button id="playBtn" class="ghost play-btn" type="button" hidden>Pause</button>
+        <button id="clearBtn" class="ghost" type="button" hidden>Clear</button>
       </section>
 
       <section class="group">
         <h2>Adjust</h2>
         <label class="slider">
           Detail <span id="widthVal" class="val"></span>
-          <input type="range" id="width" min="20" max="400" step="2" value="170">
+          <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail">
         </label>
         <label class="slider">
           Contrast <span id="contrastVal" class="val"></span>
-          <input type="range" id="contrast" min="0" max="100" value="0">
+          <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark">
         </label>
         <label class="slider">
           Edges <span id="edgeVal" class="val"></span>
-          <input type="range" id="edge" min="0" max="100" value="0">
+          <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges">
         </label>
         <div class="checks">
           <label class="row-inline"><input type="checkbox" id="invert"> Invert</label>
@@ -77,7 +85,7 @@
         <label class="select">
           Texture
           <select id="dither">
-            <option value="blue" selected>Smooth</option>
+            <option value="scatter" selected>Scatter</option>
             <option value="ordered">Even</option>
             <option value="fs">Grainy</option>
           </select>

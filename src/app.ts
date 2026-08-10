@@ -3,9 +3,7 @@
 // via src/palette.ts.
 
 import '@fontsource-variable/noto-sans-ethiopic';
-import '@fontsource-variable/space-grotesk';
 import '@fontsource-variable/inter';
-import '@fontsource/ibm-plex-mono';
 import { loadEthiopicFont, buildRamp, getAllGlyphs, rampFromGlyphs, COMMON_AMHARIC, type GlyphInfo, type RampPreset } from './fonts';
 import { renderMosaic, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone } from './input';
@@ -44,11 +42,36 @@ function $(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
 
-function setSource(c: HTMLCanvasElement): void {
-  source = c;
+/** Reset everything and restore the idle empty state (also the "Clear" handler). */
+function clearAll(): void {
   stopVideo();
+  source = null;
   zoom = 1;
   applyZoom();
+  const chip = $('sourceChip');
+  if (chip) chip.classList.remove('visible');
+  const empty = $('emptyHint');
+  if (empty) empty.style.display = '';
+  const out = $('mosaic') as HTMLCanvasElement;
+  out.width = 0;
+  out.height = 0;
+  delete out.dataset.distinct;
+  $('mosaicStat').textContent = '';
+  mosaicCanvas = null;
+  lastResult = null;
+  setEmpty(EMPTY_DEFAULT);
+  $('clearBtn').hidden = true;
+  const sh = document.getElementById('shareHint');
+  if (sh) sh.hidden = true;
+  const zc = document.getElementById('zoomControls');
+  if (zc) zc.hidden = true;
+  firstRenderDone = false;
+  updateShareState();
+}
+
+function setSource(c: HTMLCanvasElement): void {
+  clearAll();
+  source = c;
   const empty = $('emptyHint');
   if (empty) empty.style.display = 'none';
   const chip = $('sourceChip');
@@ -57,6 +80,7 @@ function setSource(c: HTMLCanvasElement): void {
   srcEl.width = c.width;
   srcEl.height = c.height;
   srcEl.getContext('2d')!.drawImage(c, 0, 0);
+  $('clearBtn').hidden = false;
   queueRender();
 }
 
@@ -114,6 +138,8 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
   (window as unknown as { __lastChars?: string[] }).__lastChars = Array.from(distinct);
   const stat = $('mosaicStat');
   stat.textContent = `${res.cols} × ${res.rows} · ${res.cols * res.rows} letters · ${distinct.size} distinct · ${currentPalette.name}`;
+  out.setAttribute('aria-label', `Mosaic of Ethiopic letters, ${res.cols} × ${res.rows}, ${distinct.size} distinct letters, ${currentPalette.name}`);
+  $('clearBtn').hidden = false;
 }
 
 function queueRender(): void {
@@ -196,7 +222,7 @@ async function doShare(): Promise<void> {
   if (!mosaicCanvas) return;
   const branded = makeShareImage(mosaicCanvas, SITE_URL);
   const result = await shareCanvas(branded, `Turn your photo into Ethiopic letters — ${SITE_URL}`);
-  flash(result === 'shared' ? 'Shared' : 'Saved share image');
+  flash(result === 'shared' ? 'Shared' : 'Saved — send it on WhatsApp or Telegram');
 }
 
 /** Keep every Share control honest: disabled until a mosaic exists. */
@@ -240,8 +266,7 @@ function handlePickedFile(file: File): void {
 
 /** Load a video, then run it through the mosaic filter live. */
 async function handleVideoFile(file: File): Promise<void> {
-  source = null;
-  stopVideo();
+  clearAll();
   const url = URL.createObjectURL(file);
   const v = document.createElement('video');
   v.muted = true;
@@ -263,6 +288,7 @@ async function handleVideoFile(file: File): Promise<void> {
   $('dlVideo').hidden = false;
   const chip = $('sourceChip');
   if (chip) chip.classList.add('visible');
+  $('clearBtn').hidden = false;
   const srcEl = $('source') as HTMLCanvasElement;
   srcEl.width = v.videoWidth || 1;
   srcEl.height = v.videoHeight || 1;
@@ -503,6 +529,7 @@ async function init(): Promise<void> {
       file.click();
     }
   });
+  $('clearBtn').addEventListener('click', clearAll);
 
 
   // Controls
@@ -578,13 +605,14 @@ async function init(): Promise<void> {
     if (videoHandle) {
       const paused = videoHandle.togglePlay();
       ($('playBtn') as HTMLButtonElement).textContent = paused ? 'Play' : 'Pause';
+      (document.getElementById('dlVideo') as HTMLButtonElement).disabled = paused;
     }
   });
   $('dlVideo').addEventListener('click', async () => {
     if (!mosaicCanvas) return;
     flash('Recording a few seconds…');
-    const blob = await recordCanvas(mosaicCanvas, 4, 12);
-    if (blob) downloadBlob('geez-art-video.webm', blob);
+    const rec = await recordCanvas(mosaicCanvas, 4, 12);
+    if (rec.blob) downloadBlob('geez-art-video.' + rec.ext, rec.blob);
     flash('Video saved');
   });
   $('zoomIn').addEventListener('click', () => {

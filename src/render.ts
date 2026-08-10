@@ -14,7 +14,7 @@ import { IntBuffer, GRAY8 } from '@thi.ng/pixel';
 import type { GlyphInfo } from './fonts';
 import { FONT } from './fonts';
 
-export type DitherMode = 'fs' | 'ordered' | 'blue';
+export type DitherMode = 'fs' | 'ordered' | 'scatter';
 
 export interface RenderOpts {
   cols: number;
@@ -43,10 +43,10 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
     cols,
     contrast = 1,
     invert = false,
-    dither = 'blue',
+    dither = 'scatter',
     edge = 0,
-    paper = '#fff',
-    ink = '#14100b',
+    paper = '#f3ecdd',
+    ink = '#2a1a12',
     colorize = false,
   } = opts;
   const sctx = source.getContext('2d')!;
@@ -132,6 +132,10 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
         const gy =
           at(r + 1, c - 1) + 2 * at(r + 1, c) + at(r + 1, c + 1) -
           (at(r - 1, c - 1) + 2 * at(r - 1, c) + at(r - 1, c + 1));
+        // / 1.2 is an empirically tuned normalization constant: raw Sobel
+        // magnitudes cluster well below 1 on smooth gradients but spike past 1
+        // on hard edges, and dividing by 1.2 keeps the edge map in a useful
+        // range so edge emphasis doesn't blow out flat regions.
         edgeMap[r * cols + c] = clamp01(Math.sqrt(gx * gx + gy * gy) / 1.2);
       }
     }
@@ -162,9 +166,11 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
       const c = i % cols;
       gi[i] = pickNorm(ramp, key, buf.data[i] / 255, c, r);
     }
-  } else if (dither === 'blue') {
-    // Blue-noise thresholding: hash-jitter each density target before snapping,
-    // then pick variety-aware within a density window.
+  } else if (dither === 'scatter') {
+    // Deterministic hash jitter — an integer-hash white-noise scatter, NOT true
+    // blue noise. Each cell's density target is jittered by a pseudo-random
+    // offset before snapping, then pick variety-aware within a density window.
+    // (Honest label: "scatter", not "blue".)
     const step = 1 / Math.max(1, ramp.length - 1);
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
