@@ -5,6 +5,9 @@ import { FONT } from './fonts';
 
 const DEFAULT_FILENAME = 'geez-art.png';
 
+/** Brand-band colors for shared images — dark band with gold accents, matching the chrome. */
+const BRAND = { band: '#15110d', gold: '#d9a441', text: '#f1e9d9' };
+
 /** Promise wrapper around canvas.toBlob("image/png"). Rejects if the blob is null. */
 export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
@@ -48,27 +51,27 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
   out.width = mosaic.width;
   out.height = mosaic.height + bandH;
   const ctx = out.getContext('2d')!;
-  ctx.fillStyle = '#15110d';
+  ctx.fillStyle = BRAND.band;
   ctx.fillRect(0, 0, out.width, out.height);
   ctx.drawImage(mosaic, 0, 0);
   // brand band
-  ctx.fillStyle = '#15110d';
+  ctx.fillStyle = BRAND.band;
   ctx.fillRect(0, mosaic.height, out.width, bandH);
-  ctx.fillStyle = '#d9a441';
+  ctx.fillStyle = BRAND.gold;
   ctx.fillRect(0, mosaic.height, out.width, 2); // gold hairline
   const mid = mosaic.height + bandH / 2;
   ctx.textBaseline = 'middle';
   // wordmark: fidel + latin
   ctx.font = `700 ${Math.round(bandH * 0.5)}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",serif`;
-  ctx.fillStyle = '#d9a441';
+  ctx.fillStyle = BRAND.gold;
   ctx.textAlign = 'left';
   ctx.fillText('ግዕዝ', 16, mid);
-  ctx.font = `600 ${Math.round(bandH * 0.42)}px "Space Grotesk Variable","Space Grotesk",sans-serif`;
-  ctx.fillStyle = '#f1e9d9';
+  ctx.font = `600 ${Math.round(bandH * 0.42)}px "Inter Variable","Inter",sans-serif`;
+  ctx.fillStyle = BRAND.text;
   ctx.fillText('geez·art', 16 + Math.round(bandH * 0.62), mid);
-  // url on the right
-  ctx.font = `${Math.round(bandH * 0.32)}px "IBM Plex Mono",monospace`;
-  ctx.fillStyle = '#d9a441';
+  // url on the right — the "make yours" viral CTA
+  ctx.font = `${Math.round(bandH * 0.32)}px ui-monospace,Menlo,monospace`;
+  ctx.fillStyle = BRAND.gold;
   ctx.textAlign = 'right';
   ctx.fillText('make yours at ' + siteUrl, out.width - 16, mid);
   return out;

@@ -396,6 +396,20 @@ test('video play/pause toggles', async ({ page }) => {
   await expect(page.locator('#playBtn')).toHaveText('Pause');
 });
 
+test('try an example loads a mosaic and the canvas has an accessible name', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitReady(page);
+  await page.click('#exampleBtn');
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  const label = await page.getAttribute('#mosaic', 'aria-label');
+  expect(label).toMatch(/Mosaic of Ethiopic letters/);
+  expect(errors).toEqual([]);
+});
+
 test('download PNG produces a file', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);

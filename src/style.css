@@ -126,7 +126,7 @@ body {
   margin: 0 auto;
   transition: opacity 0.24s ease;
 }
-.zoom-wrap { overflow: auto; }
+.zoom-wrap { overflow: auto; touch-action: manipulation; }
 
 /* zoom toolbar */
 .zoom-controls {

@@ -49,10 +49,8 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
     ink = '#2a1a12',
     colorize = false,
   } = opts;
-  const sctx = source.getContext('2d')!;
   const sW = source.width;
   const sH = source.height;
-  const sData = sctx.getImageData(0, 0, sW, sH).data;
 
   // Cell aspect from measured glyph advance width (glyph cells are wider than tall).
   const avgW = ramp.reduce((s, g) => s + (g.width || 64), 0) / ramp.length;
@@ -74,50 +72,11 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   const dMin = ramp[0].density;
   const span = Math.max(1e-4, ramp[ramp.length - 1].density - dMin);
 
-  // Per-cell perceptual luminance + average color.
-  const lum = new Float32Array(cols * rows);
-  const cellRgb = new Uint8ClampedArray(cols * rows * 3);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const i = r * cols + c;
-      const x0 = Math.floor((c * sW) / cols);
-      const x1 = Math.max(x0 + 1, Math.floor(((c + 1) * sW) / cols));
-      const y0 = Math.floor((r * sH) / rows);
-      const y1 = Math.max(y0 + 1, Math.floor(((r + 1) * sH) / rows));
-      let sum = 0;
-      let n = 0;
-      let rs = 0;
-      let gs = 0;
-      let bs = 0;
-      for (let y = y0; y < y1; y++) {
-        for (let x = x0; x < x1; x++) {
-          const p = (y * sW + x) * 4;
-          const l = 0.2126 * sData[p] + 0.7152 * sData[p + 1] + 0.0722 * sData[p + 2];
-          sum += l / 255; // perceptual (sRGB) luminance
-          rs += sData[p];
-          gs += sData[p + 1];
-          bs += sData[p + 2];
-          n++;
-        }
-      }
-      lum[i] = n > 0 ? sum / n : 0.5;
-      if (n > 0) {
-        cellRgb[i * 3] = rs / n;
-        cellRgb[i * 3 + 1] = gs / n;
-        cellRgb[i * 3 + 2] = bs / n;
-      }
-    }
-  }
-
-  // Auto-contrast: 1%/99% percentile stretch so a narrow tonal band fills the ramp.
-  const sorted = Float32Array.from(lum).sort();
-  const pLo = sorted[Math.floor(sorted.length * 0.01)];
-  const pHi = sorted[Math.max(0, Math.floor(sorted.length * 0.99) - 1)];
-  const stretch = pHi - pLo > 0.04 ? pHi - pLo : 1;
-
-  // Stretched luminance (full range) — the base for edge detection AND tone.
-  const stretched = new Float32Array(cols * rows);
-  for (let i = 0; i < stretched.length; i++) stretched[i] = clamp01((lum[i] - pLo) / stretch);
+  // Source-dependent pass (per-cell luminance + average color + auto-contrast
+  // stretch) is cached per (source, cols, rows), so mapping-only control changes
+  // (contrast, edge, dither, palette, invert, colorize) reuse it instead of
+  // re-sampling the image and re-sorting every time.
+  const { cellRgb, stretched } = getSourcePass(source, cols, rows, sW, sH);
 
   // Edge map (Sobel on the STRETCHED grid — real gradients, so the slider is actually visible).
   const edgeMap = new Float32Array(cols * rows);
@@ -180,8 +139,11 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
       }
     }
   } else {
-    // Floyd-Steinberg error diffusion over normalized density targets,
-    // variety-aware so flat areas don't collapse onto one glyph.
+    // Floyd-Steinberg error diffusion — hand-rolled intentionally. The library's
+    // diffusion kernels (@thi.ng/pixel-dither ditherWith/FLOYD_STEINBERG) only
+    // reach ~2 levels, which cannot quantize to a non-uniform ~200-glyph density
+    // ramp. This is the only error-diffusion path that maps to the ramp correctly.
+    // (Variety-aware so flat areas don't collapse onto one glyph.)
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
@@ -229,6 +191,88 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   }
 
   return { canvas: out, chars, cols, rows };
+}
+
+/* ---------- per-source pass cache ---------- */
+interface SourcePass {
+  cellRgb: Uint8ClampedArray;
+  stretched: Float32Array;
+}
+const sourceIds = new WeakMap<HTMLCanvasElement, number>();
+let sourceIdCounter = 0;
+const sourcePassCache = new Map<string, SourcePass>();
+
+/** Invalidate cached source passes for a source — needed when a reused canvas's
+ *  content changes (e.g. video frames drawn into the same frame canvas). */
+export function invalidateSource(source: HTMLCanvasElement): void {
+  const id = sourceIds.get(source);
+  if (id === undefined) return;
+  const prefix = `${id}:`;
+  for (const k of Array.from(sourcePassCache.keys())) {
+    if (k.startsWith(prefix)) sourcePassCache.delete(k);
+  }
+}
+
+/** Compute (and cache) the source-dependent pass — per-cell luminance, average
+ *  color, and the auto-contrast stretch — keyed by (source, cols, rows), so
+ *  mapping-only control changes reuse it instead of re-sampling the image. */
+function getSourcePass(source: HTMLCanvasElement, cols: number, rows: number, sW: number, sH: number): SourcePass {
+  let id = sourceIds.get(source);
+  if (id === undefined) {
+    id = sourceIdCounter++;
+    sourceIds.set(source, id);
+  }
+  const cacheKey = `${id}:${cols}:${rows}`;
+  const hit = sourcePassCache.get(cacheKey);
+  if (hit) return hit;
+
+  const sctx = source.getContext('2d')!;
+  const sData = sctx.getImageData(0, 0, sW, sH).data;
+
+  const lum = new Float32Array(cols * rows);
+  const cellRgb = new Uint8ClampedArray(cols * rows * 3);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const i = r * cols + c;
+      const x0 = Math.floor((c * sW) / cols);
+      const x1 = Math.max(x0 + 1, Math.floor(((c + 1) * sW) / cols));
+      const y0 = Math.floor((r * sH) / rows);
+      const y1 = Math.max(y0 + 1, Math.floor(((r + 1) * sH) / rows));
+      let sum = 0;
+      let n = 0;
+      let rs = 0;
+      let gs = 0;
+      let bs = 0;
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          const p = (y * sW + x) * 4;
+          const l = 0.2126 * sData[p] + 0.7152 * sData[p + 1] + 0.0722 * sData[p + 2];
+          sum += l / 255; // perceptual (sRGB) luminance
+          rs += sData[p];
+          gs += sData[p + 1];
+          bs += sData[p + 2];
+          n++;
+        }
+      }
+      lum[i] = n > 0 ? sum / n : 0.5;
+      if (n > 0) {
+        cellRgb[i * 3] = rs / n;
+        cellRgb[i * 3 + 1] = gs / n;
+        cellRgb[i * 3 + 2] = bs / n;
+      }
+    }
+  }
+  const sorted = Float32Array.from(lum).sort();
+  const pLo = sorted[Math.floor(sorted.length * 0.01)];
+  const pHi = sorted[Math.max(0, Math.floor(sorted.length * 0.99) - 1)];
+  const stretch = pHi - pLo > 0.04 ? pHi - pLo : 1;
+  const stretched = new Float32Array(cols * rows);
+  for (let i = 0; i < stretched.length; i++) stretched[i] = clamp01((lum[i] - pLo) / stretch);
+
+  const entry: SourcePass = { cellRgb, stretched };
+  if (sourcePassCache.size > 12) sourcePassCache.clear(); // bound memory across many dropped images
+  sourcePassCache.set(cacheKey, entry);
+  return entry;
 }
 
 let atlasCache: { key: string; atlas: HTMLCanvasElement; tileW: number } | null = null;

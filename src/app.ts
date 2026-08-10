@@ -5,10 +5,11 @@
 import '@fontsource-variable/noto-sans-ethiopic';
 import '@fontsource-variable/inter';
 import { loadEthiopicFont, buildRamp, getAllGlyphs, rampFromGlyphs, COMMON_AMHARIC, type GlyphInfo, type RampPreset } from './fonts';
-import { renderMosaic, type DitherMode } from './render';
+import { renderMosaic, invalidateSource, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone } from './input';
 import { downloadCanvasPNG, gridToText, exportHTML, makeShareImage, shareCanvas } from './export';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
+import { getSamples } from './samples';
 import { startVideoLoop, recordCanvas, type VideoHandle } from './video';
 
 let ramp: GlyphInfo[] = [];
@@ -279,7 +280,10 @@ async function handleVideoFile(file: File): Promise<void> {
     v.addEventListener('error', () => reject(new Error('video failed to load')), { once: true });
   });
   videoEl = v;
-  videoHandle = startVideoLoop(v, (c) => renderSource(c));
+  videoHandle = startVideoLoop(v, (c) => {
+    invalidateSource(c); // the video canvas is reused; its pixels change every frame
+    renderSource(c);
+  });
   zoom = 1;
   applyZoom();
   $('emptyHint').style.display = 'none';
@@ -601,6 +605,13 @@ async function init(): Promise<void> {
   $('copyText').addEventListener('click', copyText);
   $('dlHtml').addEventListener('click', downloadHTML);
   $('mixBtn').addEventListener('click', mixItUp);
+  $('exampleBtn').addEventListener('click', () => {
+    // First-run demo: show the effect in 3 seconds. Uses the icon-classical
+    // sample; swap in real user photos whenever available.
+    const demos = getSamples();
+    const sample = demos.find((s) => s.name === 'icon') ?? demos[0];
+    setSource(sample.render());
+  });
   $('playBtn').addEventListener('click', () => {
     if (videoHandle) {
       const paused = videoHandle.togglePlay();
