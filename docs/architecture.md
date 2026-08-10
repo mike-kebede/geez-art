@@ -70,7 +70,7 @@ The full render pipeline is deterministic given the same source pixels and optio
 ```
 TEST LAYER
 
-  tests/e2e.spec.ts  ── 27 Playwright tests
+  tests/e2e.spec.ts  ── 38 Playwright tests
      │  drives the real page against the Vite dev server
      │  interacts through DOM ids (#file, #charset, #mosaic, …)
      │  asserts on diagnostics exposed by app.ts:
@@ -348,12 +348,17 @@ on mobile; everywhere else it degrades to a plain download. Both Share buttons
 
 ---
 
-## 6. Test suite (27 e2e tests)
+## 6. Test suite (38 e2e tests)
 
 `tests/e2e.spec.ts` — Playwright against the real page. `beforeAll()` generates
 `tests/fixtures/sample-video.webm` once, by recording a small animated canvas
 with `MediaRecorder` inside a real browser. `waitReady()` blocks until the app
 status line reads "Ready", "Setup error", or "Something went wrong".
+
+All 38 tests drive the real page and cover every input path (file picker,
+dropzone and empty-canvas clicks, drag-drop, paste), every export (PNG,
+copy-as-text, HTML, video, GIF), and the video / GIF / replay flows — any
+console or page error fails the suite.
 
 The tests verify the flows end-to-end by poking DOM controls and reading the
 diagnostics `app.ts` exposes on `window` (`__ramp`, `__lastChars`,

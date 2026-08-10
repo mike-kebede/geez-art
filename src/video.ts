@@ -26,9 +26,16 @@ export function startVideoLoop(
     if (!paused && t - last >= 1000 / fps) {
       last = t;
       if (video.videoWidth > 0) {
-        srcCanvas.width = video.videoWidth;
-        srcCanvas.height = video.videoHeight;
-        srcCanvas.getContext('2d')!.drawImage(video, 0, 0);
+        // Downscale the frame: cap the long edge at 1600px so low-end phones
+        // don't sample full 1080p/4K pixels every tick.
+        const scale = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight));
+        const capW = Math.max(1, Math.round(video.videoWidth * scale));
+        const capH = Math.max(1, Math.round(video.videoHeight * scale));
+        // Only resize when the dimensions actually change, so the canvas isn't
+        // cleared/reallocated on every frame.
+        if (srcCanvas.width !== capW) srcCanvas.width = capW;
+        if (srcCanvas.height !== capH) srcCanvas.height = capH;
+        srcCanvas.getContext('2d')!.drawImage(video, 0, 0, capW, capH);
         onFrame(srcCanvas);
       }
     }

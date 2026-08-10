@@ -52,13 +52,17 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   const sW = source.width;
   const sH = source.height;
 
-  // Cell aspect from measured glyph advance width (glyph cells are wider than tall).
-  const avgW = ramp.reduce((s, g) => s + (g.width || 64), 0) / ramp.length;
-  const cellAR = avgW / 64;
-  const rows = Math.max(1, Math.round((sH / sW) * cols * cellAR));
+  // Cells are drawn SQUARE (cellPx × cellPx below), so the row count must be
+  // plain source-aspect math — previously it was multiplied by the glyph advance
+  // ratio, which made a square photo come out ~1.6:1 and a portrait near-landscape.
+  const rows = Math.max(1, Math.round((sH / sW) * cols));
 
-  // Adaptive cell size: keep the output canvas bounded at high column counts.
-  const cellPx = Math.max(7, Math.min(14, Math.round(2800 / cols)));
+  // Adaptive cell size: keep the output canvas bounded at high column counts,
+  // and cap the HEIGHT so tall portraits at high detail don't exceed the ~4096px
+  // per-dimension canvas limit on older phones (which silently render blank).
+  let cellPx = Math.max(7, Math.min(14, Math.round(2800 / cols)));
+  const MAX_H = 4000;
+  if (rows * cellPx > MAX_H) cellPx = Math.max(3, Math.floor(MAX_H / rows));
   const out = document.createElement('canvas');
   out.width = cols * cellPx;
   out.height = rows * cellPx;

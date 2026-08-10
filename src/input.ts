@@ -1,11 +1,13 @@
 // Image input: File / URL / clipboard-paste / drag-drop → opaque, EXIF-corrected canvas.
 //
 // EXIF orientation is read from the raw bytes with exifr, while the pixels are
-// decoded with `imageOrientation: 'none'` so the browser never auto-rotates.
-// We then draw the raw pixels through a manual orientation transform. That is
-// deterministic — no reliance on a browser's inconsistent auto-rotate behavior,
-// so there is no risk of the double-rotation quirk iOS Safari 13.4+ / Chrome 81+
-// are known for. Transparency is composited onto white so the mosaic renderer
+// decoded with `imageOrientation: 'none'` so the browser does NOT auto-rotate.
+// We then draw the raw pixels through a manual orientation transform — that is
+// deterministic, with no reliance on a browser's inconsistent auto-rotate
+// behavior. If `imageOrientation: 'none'` is unsupported we fall back to the
+// browser's default decode, which DOES apply EXIF rotation; decodeRaw reports
+// that via `rotated`, and the manual pass is skipped so the image is never
+// rotated twice. Transparency is composited onto white so the mosaic renderer
 // always receives an opaque source.
 
 export interface SourceImage {
@@ -26,39 +28,67 @@ function applyOrientation(ctx: CanvasRenderingContext2D, o: number, w: number, h
   }
 }
 
-/** Draw raw pixels onto a white canvas at natural resolution, EXIF-oriented. */
+/** Draw raw pixels onto a white canvas, EXIF-oriented, long edge capped at 1600px. */
 function orientAndComposite(src: Decoded, orientation: number | undefined): HTMLCanvasElement {
   const o = orientation ?? 1;
   const w = src.width;
   const h = src.height;
   const swapped = o >= 5 && o <= 8; // 90°/270° orientations exchange width and height
+
+  // Downscale the output canvas so the long edge is capped at 1600px (never
+  // upscale). The mosaic's source pass samples every source pixel, so a phone
+  // photo at natural resolution (e.g. 4000×3000) costs ~10-25× more per render
+  // than the downscaled 1600×1200 — the mosaic grid itself only needs detail
+  // up to the cell count, so the extra resolution is pure waste.
+  const MAX_EDGE = 1600;
+  let outW = swapped ? h : w;
+  let outH = swapped ? w : h;
+  const longEdge = Math.max(outW, outH);
+  if (longEdge > MAX_EDGE) {
+    const scale = MAX_EDGE / longEdge;
+    outW = Math.max(1, Math.round(outW * scale));
+    outH = Math.max(1, Math.round(outH * scale));
+  }
+
   const canvas = document.createElement('canvas');
-  canvas.width = swapped ? h : w;
-  canvas.height = swapped ? w : h;
+  canvas.width = outW;
+  canvas.height = outH;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context unavailable');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high'; // keep downscaled photos crisp
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, canvas.width, canvas.height); // composite alpha onto white
   applyOrientation(ctx, o, w, h);
-  ctx.drawImage(src, 0, 0);
+  ctx.drawImage(src, 0, 0, outW, outH);
   return canvas;
 }
 
 type Decoded = ImageBitmap | HTMLImageElement;
 
+interface DecodedSource {
+  src: Decoded;
+  /** True when the browser already applied its default EXIF auto-rotation
+   *  during a fallback decode, so the manual orientation pass must be skipped
+   *  — applying it on top would rotate the image twice. */
+  rotated: boolean;
+}
+
 /**
- * Decode an image blob WITHOUT browser auto-rotation, so the manual EXIF pass
- * is the single source of truth for orientation. Falls back to <img> decoding
- * so a file the bitmap path rejects (e.g. unusual encodings) still has a chance.
+ * Decode an image blob. The primary path uses `imageOrientation: 'none'` so the
+ * manual EXIF pass is the single source of truth for orientation. The fallback
+ * paths (an encoding `createImageBitmap` rejects, or a browser that ignores
+ * `imageOrientation`) use the browser's default decode, which auto-rotates per
+ * EXIF — reported via `rotated` so the caller can skip the manual pass.
  */
-async function decodeRaw(blob: Blob): Promise<Decoded> {
+async function decodeRaw(blob: Blob): Promise<DecodedSource> {
   try {
-    return await createImageBitmap(blob, { imageOrientation: 'none' });
+    return { src: await createImageBitmap(blob, { imageOrientation: 'none' }), rotated: false };
   } catch {
     try {
-      return await createImageBitmap(blob);
+      return { src: await createImageBitmap(blob), rotated: true };
     } catch {
-      return loadViaImg(blob);
+      return { src: await loadViaImg(blob), rotated: true };
     }
   }
 }
@@ -84,11 +114,13 @@ export async function imageFileToCanvas(file: File): Promise<HTMLCanvasElement> 
   try {
     // EXIF read must never sink a valid image: if it fails, treat as upright.
     const { default: exifr } = await import('exifr'); // lazy — keeps exifr out of the eager bundle
-    const [orientation, bitmap] = await Promise.all([
+    const [orientation, decoded] = await Promise.all([
       exifr.orientation(file).catch(() => undefined),
       decodeRaw(file),
     ]);
-    return orientAndComposite(bitmap, orientation);
+    // Skip the manual EXIF transform when the browser already auto-rotated the
+    // pixels during a fallback decode — applying it again double-rotates.
+    return orientAndComposite(decoded.src, decoded.rotated ? undefined : orientation);
   } catch (e) {
     throw new Error(`Could not read image "${file.name}": ${e instanceof Error ? e.message : String(e)}`);
   }

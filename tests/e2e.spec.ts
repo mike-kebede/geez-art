@@ -56,6 +56,12 @@ async function waitReady(page: Page): Promise<string> {
     const s = document.getElementById('status');
     return s && /Ready|Setup error|Something went wrong/.test(s.textContent || '');
   });
+  // Expand the "Advanced" panel so tests can reach the sliders/picker/exports
+  // (it's collapsed by default for the three-tap user flow).
+  await page.evaluate(() => {
+    const d = document.getElementById('advanced') as HTMLDetailsElement | null;
+    if (d) d.open = true;
+  });
   return (await page.textContent('#status')) ?? '';
 }
 

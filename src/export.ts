@@ -2,6 +2,7 @@
 // Uses toBlob (async, memory-friendly) rather than toDataURL where possible.
 
 import { FONT } from './fonts';
+import ethiopicWoffUrl from '@fontsource-variable/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-wght-normal.woff2';
 
 const DEFAULT_FILENAME = 'geez-art.png';
 
@@ -61,19 +62,49 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
   ctx.fillRect(0, mosaic.height, out.width, 2); // gold hairline
   const mid = mosaic.height + bandH / 2;
   ctx.textBaseline = 'middle';
-  // wordmark: fidel + latin
+
+  const PAD = 16; // horizontal padding on each side of the band
+  const STEP = Math.round(bandH * 0.62); // gap between the fidel and the latin wordmark
+  const GAP = 24; // minimum clearance between wordmark and CTA
+
+  // wordmark: fidel + latin (left-anchored)
+  ctx.textAlign = 'left';
   ctx.font = `700 ${Math.round(bandH * 0.5)}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",serif`;
   ctx.fillStyle = BRAND.gold;
-  ctx.textAlign = 'left';
-  ctx.fillText('ግዕዝ', 16, mid);
+  ctx.fillText('ግዕዝ', PAD, mid);
+  const fidelW = ctx.measureText('ግዕዝ').width;
   ctx.font = `600 ${Math.round(bandH * 0.42)}px "Inter Variable","Inter",sans-serif`;
   ctx.fillStyle = BRAND.text;
-  ctx.fillText('geez·art', 16 + Math.round(bandH * 0.62), mid);
-  // url on the right — the "make yours" viral CTA
-  ctx.font = `${Math.round(bandH * 0.32)}px ui-monospace,Menlo,monospace`;
+  ctx.fillText('geez·art', PAD + STEP, mid);
+  const latinW = ctx.measureText('geez·art').width;
+  // Occupied width of the wordmark (fidel and latin may overlap, so use the wider edge).
+  const wordmarkRight = Math.max(PAD + fidelW, PAD + STEP + latinW);
+
+  // Viral CTA on the right. On narrow mosaics the monospace URL collides with
+  // the wordmark; shrink it until it fits, and if it still can't, drop the
+  // "make yours at " prefix and show the bare URL (still findable as the CTA).
+  const right = out.width - PAD;
+  const full = 'make yours at ' + siteUrl;
+  const bare = siteUrl;
+  const minSize = 10;
+  const fitsCta = (label: string, px: number): boolean => {
+    ctx.font = `${px}px ui-monospace,Menlo,monospace`;
+    return wordmarkRight + GAP <= right - ctx.measureText(label).width;
+  };
+  let label = full;
+  let size = Math.round(bandH * 0.32);
+  if (!fitsCta(label, size)) {
+    while (size > minSize && !fitsCta(label, size)) size -= 1;
+    if (!fitsCta(label, size)) {
+      label = bare; // the prefix doesn't fit — the URL alone still carries the app
+      size = Math.round(bandH * 0.32);
+      while (size > minSize && !fitsCta(label, size)) size -= 1;
+    }
+  }
+  ctx.font = `${size}px ui-monospace,Menlo,monospace`;
   ctx.fillStyle = BRAND.gold;
   ctx.textAlign = 'right';
-  ctx.fillText('make yours at ' + siteUrl, out.width - 16, mid);
+  ctx.fillText(label, right, mid);
   return out;
 }
 
@@ -119,14 +150,12 @@ export function gridToText(chars: string[][]): string {
   return chars.map((row) => row.join('')).join('\n');
 }
 
-/**
- * Build a fully self-contained HTML string: a <pre> with inline styles
- * (paper/ink colors, Ethiopic font stack, font size) plus a minimal <head>.
- * Valid standalone HTML the user can save and open in any browser.
- */
-export function exportHTML(
+/** Shared shell for the exported HTML document; `extraHead` adds <head> lines (e.g. an embedded @font-face style). */
+function htmlDocument(
   chars: string[][],
-  opts?: { ink?: string; paper?: string; fontSize?: string },
+  opts: { ink?: string; paper?: string; fontSize?: string } | undefined,
+  fontFamily: string,
+  extraHead: readonly string[],
 ): string {
   const { ink = '#2a1a12', paper = '#f3ecdd', fontSize = '13px' } = opts ?? {};
   const body = escapeHTML(gridToText(chars));
@@ -137,13 +166,74 @@ export function exportHTML(
     '  <meta charset="utf-8">',
     '  <meta name="viewport" content="width=device-width, initial-scale=1">',
     '  <title>Geez Art Mosaic</title>',
+    ...extraHead,
     '</head>',
     `<body style="margin:0;padding:16px;background:${paper};color:${ink};">`,
-    `<pre style="font-family:${FONT};font-size:${fontSize};line-height:1.1;margin:0;letter-spacing:0;">${body}</pre>`,
+    `<pre style="font-family:${fontFamily};font-size:${fontSize};line-height:1.1;margin:0;letter-spacing:0;">${body}</pre>`,
     '</body>',
     '</html>',
     '',
   ].join('\n');
+}
+
+/**
+ * Build a standalone HTML string: a <pre> with inline styles (paper/ink colors,
+ * Ethiopic font stack, font size) plus a minimal <head>. Valid HTML the user
+ * can save and open in any browser.
+ *
+ * NOTE: this sync version relies on the system Ethiopic font stack (FONT), which
+ * is missing on macOS/iOS and renders as tofu there. For a genuinely portable
+ * file, call `selfContainedHTML` (async) instead — it embeds the woff2.
+ */
+export function exportHTML(
+  chars: string[][],
+  opts?: { ink?: string; paper?: string; fontSize?: string },
+): string {
+  return htmlDocument(chars, opts, FONT, []);
+}
+
+/**
+ * "Save as HTML" with the font baked in: embeds the Noto Ethiopic woff2 as a
+ * base64 data URL inside an inline @font-face ("Fidel") so the exported file
+ * renders Ge'ez correctly everywhere — including macOS/iOS, which have no
+ * default Ethiopic font. The result is a single self-contained string; the
+ * system Ethiopic stack is kept as a fallback behind the embedded face.
+ *
+ * Async because the bundled woff2 must be fetched and base64-encoded. Callers
+ * (app.ts downloadHTML) must `await` this instead of the sync exportHTML to
+ * actually embed the font.
+ */
+export async function selfContainedHTML(
+  chars: string[][],
+  opts?: { ink?: string; paper?: string; fontSize?: string },
+): Promise<string> {
+  const face = await embeddedFidelFontFace();
+  const fontFamily = `"Fidel",${FONT}`;
+  return htmlDocument(chars, opts, fontFamily, [`  <style>${face}</style>`]);
+}
+
+/** Fetch the bundled Ethiopic woff2 and render a @font-face rule embedding it as a data URL. */
+async function embeddedFidelFontFace(): Promise<string> {
+  const resp = await fetch(ethiopicWoffUrl);
+  if (!resp.ok) throw new Error(`Failed to fetch embedded font (HTTP ${resp.status})`);
+  const b64 = bytesToBase64(new Uint8Array(await resp.arrayBuffer()));
+  return `@font-face{font-family:"Fidel";src:url("data:font/woff2;base64,${b64}") format("woff2");font-display:block;}`;
+}
+
+/** Base64-encode raw bytes without relying on btoa's input-size limits. */
+function bytesToBase64(bytes: Uint8Array): string {
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const b0 = bytes[i];
+    const b1 = i + 1 < bytes.length ? bytes[i + 1] : 0;
+    const b2 = i + 2 < bytes.length ? bytes[i + 2] : 0;
+    out += CHARS[b0 >> 2];
+    out += CHARS[((b0 & 3) << 4) | (b1 >> 4)];
+    out += i + 1 < bytes.length ? CHARS[((b1 & 15) << 2) | (b2 >> 6)] : '=';
+    out += i + 2 < bytes.length ? CHARS[b2 & 63] : '=';
+  }
+  return out;
 }
 
 /** Escape the few characters that are special in HTML text content. */

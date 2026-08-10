@@ -11,10 +11,13 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://geez-art.pages.dev">
   <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="/og-image.png">
+  <meta name="twitter:image" content="/og-image.png">
   <title>geez·art — turn photos into Ethiopic letters</title>
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
+  <a class="skip-link" href="#mosaic">Skip to artwork</a>
   <header class="topbar">
     <h1 class="wordmark"><span class="wm-latin">geez·art</span></h1>
     <p id="status" class="status" role="status">Loading the Ethiopic font…</p>
@@ -33,11 +36,13 @@
         </div>
         <div class="frame-inner">
           <div class="zoom-wrap">
-            <canvas id="mosaic" width="0" height="0" role="img"></canvas>
+            <canvas id="mosaic" width="0" height="0" role="img" tabindex="-1"></canvas>
             <div class="empty-state" id="emptyHint" tabindex="0" role="button">
               <span class="empty-fidel" aria-hidden="true">ፊደል</span>
-              <h2 id="emptyTitle">Drop a photo or video</h2>
+              <h2 id="emptyTitle">Choose a photo or video</h2>
+              <p lang="am" class="fidel empty-am">ምስል ወይም ቪዲዮ ይምረጡ</p>
               <p id="emptySub">It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.</p>
+              <p lang="am" class="fidel empty-am">ወደ የኢትዮጵያ ፊደላት ሞዛይክ ይቀየራል። ነፃ ነው፣ ምንም አይሰቀልም።</p>
             </div>
           </div>
         </div>
@@ -49,7 +54,7 @@
         </span>
         <span id="mosaicStat" class="stat"></span>
       </div>
-      <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so they can make their own.</p>
+      <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so they can make their own. <span lang="am" class="fidel">ዝግጁ ነው — አጋራ፣ አገናኙም አብሮ ይጓዛል።</span></p>
       <div id="replay" class="replay" hidden>
         <video id="replayVideo" controls playsinline></video>
         <div class="replay-actions">
@@ -62,10 +67,10 @@
     <aside class="controls" aria-label="Controls">
       <section class="group">
         <h2>Start</h2>
-        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose, drop, or paste a photo or video">
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose a photo or video">
           <input type="file" id="file" accept="image/*,video/*" hidden>
-          <p class="dz-main">Drop a photo or video</p>
-          <p class="dz-sub">or click to browse · paste (Ctrl+V)</p>
+          <p class="dz-main">Choose a photo or video</p>
+          <p class="dz-sub">tap to pick a photo or video</p>
         </div>
         <button id="playBtn" class="ghost play-btn" type="button" hidden>Pause</button>
         <button id="clearBtn" class="ghost" type="button" hidden>Clear</button>
@@ -73,82 +78,91 @@
       </section>
 
       <section class="group">
-        <h2>Adjust</h2>
-        <label class="slider">
-          Detail <span id="widthVal" class="val"></span>
-          <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail">
-        </label>
-        <label class="slider">
-          Contrast <span id="contrastVal" class="val"></span>
-          <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark">
-        </label>
-        <label class="slider">
-          Edges <span id="edgeVal" class="val"></span>
-          <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges">
-        </label>
-        <div class="checks">
-          <label class="row-inline"><input type="checkbox" id="invert"> Invert</label>
-          <label class="row-inline"><input type="checkbox" id="colorize" checked> Colorful letters</label>
-        </div>
-        <label class="select">
-          Texture
-          <select id="dither">
-            <option value="scatter" selected>Scatter</option>
-            <option value="ordered">Even</option>
-            <option value="fs">Grainy</option>
-          </select>
-        </label>
-        <label class="select">
-          Palette
-          <select id="palette"></select>
-        </label>
-      </section>
-
-      <section class="group">
-        <h2>Letters</h2>
-        <button id="mixBtn" class="mix-btn" type="button">Randomize letters</button>
-        <label class="select">
-          Alphabet
-          <select id="charset">
-            <option value="common" selected>Common Amharic</option>
-            <option value="all">Full set</option>
-            <option value="dense">Dense only</option>
-            <option value="light">Light only</option>
-            <option value="custom">Pick your own</option>
-          </select>
-        </label>
-        <div id="picker" class="picker" hidden>
-          <div class="picker-bar">
-            <span id="pickSummary" class="hint">All letters</span>
-            <div class="picker-actions">
-              <button id="pickAll" class="ghost" type="button">Use all</button>
-              <button id="pickNone" class="ghost" type="button">Use none</button>
-            </div>
-          </div>
-          <p class="hint">Tap a family to use it. Tap <span class="plus">+</span> to pick individual letters.</p>
-          <div id="rampPreview" class="ramp-preview" aria-label="Letters in use"></div>
-          <div id="pickerGrid" class="picker-grid"></div>
-        </div>
-      </section>
-
-      <section class="group">
         <h2>Export</h2>
         <div class="btn-stack">
           <button id="share" class="primary share">Share</button>
+          <button id="dlPng">Download PNG</button>
+        </div>
+      </section>
+
+      <details id="advanced">
+        <summary>Advanced</summary>
+
+        <section class="group">
+          <h2>Adjust</h2>
+          <label class="slider">
+            Detail <span id="widthVal" class="val"></span>
+            <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail">
+          </label>
+          <label class="slider">
+            Contrast <span id="contrastVal" class="val"></span>
+            <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark">
+          </label>
+          <label class="slider">
+            Edges <span id="edgeVal" class="val"></span>
+            <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges">
+          </label>
+          <div class="checks">
+            <label class="row-inline"><input type="checkbox" id="invert"> Invert</label>
+            <label class="row-inline"><input type="checkbox" id="colorize" checked> Colorful letters</label>
+          </div>
+          <label class="select">
+            Texture
+            <select id="dither">
+              <option value="scatter" selected>Scatter</option>
+              <option value="ordered">Even</option>
+              <option value="fs">Grainy</option>
+            </select>
+          </label>
+          <label class="select">
+            Palette
+            <select id="palette"></select>
+          </label>
+          <p class="attribution">Colors inspired by the manuscript and mural tradition of the Ethiopian Orthodox Church.</p>
+        </section>
+
+        <section class="group">
+          <h2>Letters</h2>
+          <button id="mixBtn" class="mix-btn" type="button">Randomize letters</button>
+          <label class="select">
+            Alphabet
+            <select id="charset">
+              <option value="common" selected>Common Amharic</option>
+              <option value="all">Full set</option>
+              <option value="dense">Dense only</option>
+              <option value="light">Light only</option>
+              <option value="custom">Pick your own</option>
+            </select>
+          </label>
+          <div id="picker" class="picker" hidden>
+            <div class="picker-bar">
+              <span id="pickSummary" class="hint">All letters</span>
+              <div class="picker-actions">
+                <button id="pickAll" class="ghost" type="button">Use all</button>
+                <button id="pickNone" class="ghost" type="button">Use none</button>
+              </div>
+            </div>
+            <p class="hint">Tap a family to use it. Tap <span class="plus">+</span> to pick individual letters.</p>
+            <div id="rampPreview" class="ramp-preview" aria-label="Letters in use"></div>
+            <div id="pickerGrid" class="picker-grid"></div>
+          </div>
+        </section>
+
+        <section class="group">
+          <h2>More exports</h2>
           <div class="btn-row">
-            <button id="dlPng">Download PNG</button>
             <button id="dlVideo" hidden>Download video</button>
             <button id="dlGif" hidden>Download GIF</button>
             <button id="copyText">Copy as text</button>
             <button id="dlHtml">Save as HTML</button>
           </div>
-        </div>
-      </section>
+        </section>
+      </details>
     </aside>
   </main>
 
   <footer>
-    <p>Made with respect for the Ethiopic script, <span class="fidel">ፊደል</span>. If a photo shows a real person, ask before sharing it.</p>
+    <p>Made with respect for the Ethiopic script, <span class="fidel">ፊደል</span>. If a photo shows a real person, ask before sharing it. <span lang="am" class="fidel">ለፊደል በአክብሮት</span></p>
   </footer>
 
   <script type="module" src="/src/app.ts"></script>

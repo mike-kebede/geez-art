@@ -2,12 +2,14 @@
 // Algorithmic, client-side, zero backend. Ethiopian classical-art design layer
 // via src/palette.ts.
 
+/// <reference types="vite/client" />
+
 import '@fontsource-variable/noto-sans-ethiopic';
 import '@fontsource-variable/inter';
 import { loadEthiopicFont, buildRamp, getAllGlyphs, rampFromGlyphs, COMMON_AMHARIC, type GlyphInfo, type RampPreset } from './fonts';
 import { renderMosaic, invalidateSource, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone } from './input';
-import { downloadCanvasPNG, gridToText, exportHTML, makeShareImage, shareCanvas } from './export';
+import { downloadCanvasPNG, gridToText, selfContainedHTML, makeShareImage, shareCanvas } from './export';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
 import { getSamples } from './samples';
 import { startVideoLoop, recordCanvas, recordGIF, type VideoHandle } from './video';
@@ -25,9 +27,11 @@ let videoEl: HTMLVideoElement | null = null;
 let lastResult: ReturnType<typeof renderMosaic> | null = null;
 let zoom = 1;
 let customTouched = false;
+/** Track the currently-shown replay object URL so a new one replaces (revokes) the old. */
+let replayUrl: string | null = null;
 
 const EMPTY_DEFAULT = {
-  title: 'Drop a photo or video',
+  title: 'Choose a photo or video',
   sub: 'It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.',
 };
 const EMPTY_PICK = {
@@ -116,6 +120,7 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
   out.getContext('2d')!.drawImage(res.canvas, 0, 0);
   mosaicCanvas = res.canvas;
   updateShareState();
+  const firstRender = !firstRenderDone;
   if (!firstRenderDone) {
     firstRenderDone = true;
     const top = document.getElementById('shareTop');
@@ -130,16 +135,24 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
     requestAnimationFrame(() => {
       out.style.opacity = '1';
     });
+    // Announce on a fresh source render (not every slider tweak) so screen
+    // readers get a live-region "ready" cue via the role=status line.
+    if (firstRender) flash('Your picture is ready!');
   }
   const distinct = new Set<string>();
   for (const row of res.chars) for (const ch of row) distinct.add(ch);
   out.dataset.distinct = String(distinct.size);
-  // Expose ramp + usage stats for diagnostics and tests.
-  (window as unknown as { __ramp?: unknown; __lastChars?: string[] }).__ramp = ramp;
-  (window as unknown as { __lastChars?: string[] }).__lastChars = Array.from(distinct);
+  // Expose ramp + usage stats for diagnostics and tests (dev only — never shipped).
+  if (import.meta.env.DEV) {
+    (window as unknown as { __ramp?: unknown; __lastChars?: string[] }).__ramp = ramp;
+    (window as unknown as { __lastChars?: string[] }).__lastChars = Array.from(distinct);
+  }
   const stat = $('mosaicStat');
-  stat.textContent = `${res.cols} × ${res.rows} · ${res.cols * res.rows} letters · ${distinct.size} distinct · ${currentPalette.name}`;
-  out.setAttribute('aria-label', `Mosaic of Ethiopic letters, ${res.cols} × ${res.rows}, ${distinct.size} distinct letters, ${currentPalette.name}`);
+  stat.textContent = `Your picture — ${(res.cols * res.rows).toLocaleString()} letters · ${currentPalette.name}`;
+  // Readable sample of the actual fidel grid so the canvas isn't a silent
+  // picture to screen-reader users.
+  const sample = res.chars.map((row) => row.join('')).join('').slice(0, 200);
+  out.setAttribute('aria-label', `Mosaic of Ethiopic letters, ${res.cols} × ${res.rows}, ${distinct.size} distinct letters, ${currentPalette.name}. Fidel text sample: ${sample}`);
   $('clearBtn').hidden = false;
 }
 
@@ -192,10 +205,12 @@ function fallbackCopy(text: string): void {
   document.body.removeChild(ta);
 }
 
-function downloadHTML(): void {
+async function downloadHTML(): Promise<void> {
   const res = currentResult();
   if (!res) return;
-  const html = exportHTML(res.chars, { ink: currentPalette.ink, paper: currentPalette.paper });
+  // Self-contained: embeds the Ethiopic font so the exported file renders on
+  // macOS/iOS (which have no system Ethiopic font).
+  const html = await selfContainedHTML(res.chars, { ink: currentPalette.ink, paper: currentPalette.paper });
   downloadTextFile('geez-art.html', html, 'text/html;charset=utf-8');
 }
 
@@ -223,7 +238,11 @@ async function doShare(): Promise<void> {
   if (!mosaicCanvas) return;
   const branded = makeShareImage(mosaicCanvas, SITE_URL);
   const result = await shareCanvas(branded, `Turn your photo into Ethiopic letters — ${SITE_URL}`);
-  flash(result === 'shared' ? 'Shared' : 'Saved — send it on WhatsApp or Telegram');
+  flash(
+    result === 'shared'
+      ? 'Shared — just the mosaic, not your original, and nothing is uploaded'
+      : 'Saved — only the mosaic is shared; your photo never leaves your device',
+  );
 }
 
 /** Keep every Share control honest: disabled until a mosaic exists. */
@@ -275,10 +294,25 @@ async function handleVideoFile(file: File): Promise<void> {
   v.playsInline = true;
   v.preload = 'metadata';
   v.src = url;
-  await new Promise<void>((resolve, reject) => {
-    v.addEventListener('loadedmetadata', () => resolve(), { once: true });
-    v.addEventListener('error', () => reject(new Error('video failed to load')), { once: true });
-  });
+  // A stalled/blocked file must not hang the UI forever after clearAll() already
+  // tore the page back to the empty state — give metadata 15s, then bail.
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const timer = window.setTimeout(() => reject(new Error('timed out waiting for the video to load')), 15000);
+      v.addEventListener('loadedmetadata', () => {
+        window.clearTimeout(timer);
+        resolve();
+      }, { once: true });
+      v.addEventListener('error', () => {
+        window.clearTimeout(timer);
+        reject(new Error('video failed to load'));
+      }, { once: true });
+    });
+  } catch (e) {
+    URL.revokeObjectURL(url);
+    clearAll(); // restore the empty state the load was supposed to leave
+    throw e;
+  }
   videoEl = v;
   videoHandle = startVideoLoop(v, (c) => {
     invalidateSource(c); // the video canvas is reused; its pixels change every frame
@@ -297,7 +331,15 @@ async function handleVideoFile(file: File): Promise<void> {
   const srcEl = $('source') as HTMLCanvasElement;
   srcEl.width = v.videoWidth || 1;
   srcEl.height = v.videoHeight || 1;
-  srcEl.getContext('2d')!.drawImage(v, 0, 0);
+  // The poster frame may not exist yet (InvalidStateError); the frame loop paints
+  // the first frame a moment later, so a missing frame is not a failure.
+  if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    try {
+      srcEl.getContext('2d')!.drawImage(v, 0, 0);
+    } catch {
+      /* no decoded frame yet — the video loop handles it */
+    }
+  }
   flash('Playing — the filter is live');
 }
 
@@ -334,8 +376,11 @@ function showReplay(blob: Blob): void {
   const dl = document.getElementById('dlReplay') as HTMLButtonElement | null;
   const close = document.getElementById('closeReplay') as HTMLButtonElement | null;
   if (!panel || !vid || !dl || !close) return;
-  const url = URL.createObjectURL(blob);
-  vid.src = url;
+  // Each replay gets a fresh object URL; revoke the previous one so repeated
+  // downloads don't leak blob URLs.
+  if (replayUrl) URL.revokeObjectURL(replayUrl);
+  replayUrl = URL.createObjectURL(blob);
+  vid.src = replayUrl;
   void vid.play().catch(() => {});
   dl.onclick = () => {
     downloadBlob('geez-art-video.' + (blob.type.includes('webm') ? 'webm' : 'mp4'), blob);
@@ -343,7 +388,10 @@ function showReplay(blob: Blob): void {
   close.onclick = () => {
     panel.hidden = true;
     vid.pause();
-    URL.revokeObjectURL(url);
+    if (replayUrl) {
+      URL.revokeObjectURL(replayUrl);
+      replayUrl = null;
+    }
   };
   panel.hidden = false;
 }
@@ -375,6 +423,7 @@ function buildPicker(): void {
     tile.className = 'fam-tile';
     tile.title = 'Toggle this family';
     tile.textContent = head.ch;
+    tile.setAttribute('aria-pressed', 'false');
     tile.addEventListener('click', () => toggleFamily(members));
     const expand = document.createElement('button');
     expand.type = 'button';
@@ -406,6 +455,8 @@ function buildPicker(): void {
       b.textContent = m.ch;
       b.dataset.cp = m.cp.toString(16);
       b.title = `U+${m.cp.toString(16).toUpperCase()}`;
+      b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', `Letter U+${m.cp.toString(16).toUpperCase()}`);
       b.addEventListener('click', () => toggleLetter(m.cp));
       detail.appendChild(b);
     }
@@ -439,11 +490,16 @@ function updatePickerUI(): void {
     const detail = document.querySelector(`.fam-detail[data-fam="${fam}"]`);
     if (!tile || !detail) return;
     const letters = Array.from(detail.querySelectorAll<HTMLElement>('.letter'));
-    letters.forEach((b) => b.classList.toggle('selected', selectedCps.has(parseInt(b.dataset.cp!, 16))));
+    letters.forEach((b) => {
+      const sel = selectedCps.has(parseInt(b.dataset.cp!, 16));
+      b.classList.toggle('selected', sel);
+      b.setAttribute('aria-pressed', String(sel));
+    });
     const on = letters.filter((b) => selectedCps.has(parseInt(b.dataset.cp!, 16))).length;
     tile.classList.toggle('on', letters.length > 0 && on === letters.length);
     tile.classList.toggle('off', on === 0);
     tile.classList.toggle('partial', on > 0 && on < letters.length);
+    tile.setAttribute('aria-pressed', letters.length > 0 && on === letters.length ? 'true' : on > 0 ? 'mixed' : 'false');
   });
   const total = allGlyphs.length;
   const used = allGlyphs.filter((g) => selectedCps.has(g.cp)).length;
@@ -481,8 +537,10 @@ async function applyCustomRamp(): Promise<void> {
   // clustering is real — without this, one glyph floods every large area).
   const selected = allGlyphs.filter((g) => selectedCps.has(g.cp));
   ramp = rampFromGlyphs(selected);
-  (window as unknown as { __ramp?: unknown; __selectedCps?: number[] }).__ramp = ramp;
-  (window as unknown as { __selectedCps?: number[] }).__selectedCps = selected.map((g) => g.cp);
+  if (import.meta.env.DEV) {
+    (window as unknown as { __ramp?: unknown; __selectedCps?: number[] }).__ramp = ramp;
+    (window as unknown as { __selectedCps?: number[] }).__selectedCps = selected.map((g) => g.cp);
+  }
   // Live strip: the letters actually in use — instant feedback per tap.
   const preview = document.getElementById('rampPreview');
   if (preview) {
@@ -507,11 +565,20 @@ async function init(): Promise<void> {
     selectedCps = new Set(allGlyphs.map((g) => g.cp));
     buildPicker();
     updatePickerUI();
-    (window as unknown as { __commonSet?: number[] }).__commonSet = Array.from(COMMON_AMHARIC);
+    if (import.meta.env.DEV) {
+      (window as unknown as { __commonSet?: number[] }).__commonSet = Array.from(COMMON_AMHARIC);
+    }
     status.textContent = `Ready · ${ramp.length} letters`;
   } catch {
     status.textContent = 'Something went wrong — try reloading.';
     return;
+  }
+
+  // Share privacy: only the rendered mosaic leaves the device — never the source
+  // photo, and nothing goes to geez·art's servers (this page is fully client-side).
+  const shareHint = document.getElementById('shareHint');
+  if (shareHint) {
+    shareHint.textContent = "Ready — hit Share. Only the mosaic is shared — not your original — and nothing goes to geez·art's servers.";
   }
 
   // Palette selector — guarded so a missing element can never kill the wiring.
@@ -626,7 +693,7 @@ async function init(): Promise<void> {
   $('share').addEventListener('click', () => void doShare());
   $('shareTop').addEventListener('click', () => void doShare());
   $('copyText').addEventListener('click', copyText);
-  $('dlHtml').addEventListener('click', downloadHTML);
+  $('dlHtml').addEventListener('click', () => void downloadHTML());
   $('mixBtn').addEventListener('click', mixItUp);
   $('exampleBtn').addEventListener('click', () => {
     // First-run demo: show the effect in 3 seconds. Uses the icon-classical
@@ -648,15 +715,23 @@ async function init(): Promise<void> {
     flash('Recording a few seconds…');
     // Capture the on-page canvas (repainted every video frame) — captureStream
     // needs changing frames; the offscreen render canvas is static each frame.
-    // Mix in the source video's audio so the converted clip isn't silent.
+    // Mix in the source video's audio so the converted clip isn't silent. The
+    // source <video> is muted for silent playback, but a muted element yields a
+    // silent captureStream audio track — so temporarily unmute (volume 0 keeps
+    // playback inaudible while the track stays live), capture, then restore.
     let audio: MediaStream | null = null;
     if (videoEl) {
+      const prevVolume = videoEl.volume;
+      videoEl.muted = false;
+      videoEl.volume = 0;
       try {
         const withStream = videoEl as HTMLVideoElement & { captureStream?: () => MediaStream };
         audio = withStream.captureStream ? withStream.captureStream() : null;
       } catch {
         audio = null;
       }
+      videoEl.muted = true;
+      videoEl.volume = prevVolume;
     }
     const rec = await recordCanvas(out, 4, 12, audio);
     if (rec.blob) {
