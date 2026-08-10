@@ -12,8 +12,8 @@
   --accent: #a62b16;        /* THE one accent — brick */
   --accent-deep: #8a2110;
   --gold: #d9a441;          /* micro-detail: fidel, focus */
-  --line: #e7e2da;
-  --hairline: #d8d2c8;
+  --line: #e0dacd;
+  --hairline: #c7bdad;      /* darkened from #d8d2c8 to lift non-text boundary contrast (M17) */
   --shadow: 0 18px 50px -26px rgba(28, 25, 23, 0.35);
 }
 
@@ -128,11 +128,12 @@ body {
   background: var(--paper);
   border-radius: 20px;
   padding: 16px;
-  box-shadow: var(--shadow), inset 0 0 0 1px rgba(166, 43, 22, 0.12);
+  /* L44: the frame's accent ring follows the palette (was a hardcoded brick). */
+  box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
   animation: frameIn 0.6s ease-out both;
   transition: box-shadow 0.3s ease;
 }
-.showcase:hover .frame { box-shadow: 0 26px 60px -28px rgba(28, 25, 23, 0.45), inset 0 0 0 1px rgba(166, 43, 22, 0.16); }
+.showcase:hover .frame { box-shadow: 0 26px 60px -28px rgba(28, 25, 23, 0.45), inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent); }
 @keyframes frameIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
@@ -171,12 +172,14 @@ body {
   padding: 0;
   font-size: 16px;
   background: transparent;
-  color: #f6f4f0;
+  color: #fff; /* L20: raised from #f6f4f0 (~4.2:1) to ≥8:1 on the dark pill */
   border-color: transparent;
 }
 .zoom-controls button:hover { background: rgba(255, 255, 255, 0.16); color: #fff; transform: none; box-shadow: none; }
+/* L23: a high-contrast focus ring on the dark pill (the global accent ring was ~1.6:1 there). */
+.zoom-controls button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .zoom-val {
-  color: #f6f4f0;
+  color: #fff;
   font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 11px;
   min-width: 40px;
@@ -497,7 +500,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
 }
 .fam { display: grid; grid-template-columns: 1fr 20px; gap: 3px; align-items: center; }
 .fam-tile {
-  min-height: 40px;
+  min-height: 44px; /* L27: ≥44px touch target */
   padding: 0;
   font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif;
   font-size: 18px;
@@ -532,8 +535,8 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
 .fam-detail .letter {
   font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif;
   font-size: 14px;
-  min-height: 36px;
-  min-width: 34px;
+  min-height: 44px; /* L27: ≥44px touch target (was 36×34) */
+  min-width: 44px;
   padding: 2px 4px;
   border-radius: 10px;
   background: var(--surface);
@@ -551,6 +554,9 @@ footer {
   font-size: 12.5px;
 }
 footer .fidel { color: var(--accent); font-weight: 700; }
+.privacy-note { margin-top: 12px; max-width: 62ch; }
+.privacy-note summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.privacy-note p { margin: 6px 0 0; }
 
 /* ---------- shared entrance ---------- */
 @keyframes riseIn {

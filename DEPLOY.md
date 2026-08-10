@@ -144,6 +144,47 @@ for you.)
 
 ---
 
+## Analytics (optional — off by default, never a blocker)
+
+geez·art sends nothing, anywhere, until you opt in. Analytics are read from a
+single meta tag; with no tag present (the default) the app loads no analytics
+script and calls nothing — the privacy promise "nothing is uploaded" holds out
+of the box.
+
+**IMPORTANT — the shipped CSP blocks cross-origin tracking by design.** The
+`public/_headers` file sets `script-src 'self'` (via `default-src`) and
+`connect-src 'self'`, so following the instructions below WITHOUT also editing
+the CSP silently no-ops. When you enable a provider, apply the matching CSP
+change in `public/_headers` at the same time:
+
+- **Plausible** → allow the script host: replace `default-src 'self'` with
+  `default-src 'self' https://plausible.io` (or add a `script-src` line
+  `script-src 'self' https://plausible.io`).
+- **Beacon** → allow the collector: add `connect-src 'self' https://stats.example.com`
+  (your endpoint).
+
+**Enable Plausible** (privacy-friendly, script-based, EU-hosted):
+Add the Plausible script to `index.html` `<head>` and a config tag:
+
+```html
+<script defer data-domain="geez-art.art" src="https://plausible.io/js/script.js"></script>
+<meta name="geez-art:analytics" content='{"provider":"plausible","domain":"geez-art.art"}'>
+```
+
+**Enable a self-hosted collector** (`beacon` — zero scripts, POSTs JSON
+`{ "event", "props" }` via `navigator.sendBeacon` to any endpoint you control,
+e.g. a Cloudflare Worker):
+
+```html
+<meta name="geez-art:analytics" content='{"provider":"beacon","endpoint":"https://stats.example.com/e"}'>
+```
+
+Events tracked: `source` (image|video), `share_started` / `share_success` /
+`share_cancelled` / `share_downloaded`, `export` (png|gif|video|html|text),
+`dropzone_opened`, `example_used`.
+
+---
+
 ## Checklist before you deploy
 
 - [ ] `npm run build` succeeds locally and `dist/` looks right with

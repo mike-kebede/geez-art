@@ -40,7 +40,7 @@ export interface MosaicResult {
 
 export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts: RenderOpts): MosaicResult {
   const {
-    cols,
+    cols: requestedCols,
     contrast = 1,
     invert = false,
     dither = 'scatter',
@@ -55,14 +55,26 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   // Cells are drawn SQUARE (cellPx × cellPx below), so the row count must be
   // plain source-aspect math — previously it was multiplied by the glyph advance
   // ratio, which made a square photo come out ~1.6:1 and a portrait near-landscape.
-  const rows = Math.max(1, Math.round((sH / sW) * cols));
+  let cols = requestedCols;
+  let rows = Math.max(1, Math.round((sH / sW) * cols));
 
   // Adaptive cell size: keep the output canvas bounded at high column counts,
   // and cap the HEIGHT so tall portraits at high detail don't exceed the ~4096px
   // per-dimension canvas limit on older phones (which silently render blank).
-  let cellPx = Math.max(7, Math.min(14, Math.round(2800 / cols)));
+  // M3: if even 3px cells would be too tall, reduce the column count FIRST so
+  // rows*cellPx can never exceed MAX_H (the old Math.max(3, …) floor still let
+  // a 4:1 source produce a 4800px-tall canvas that blanks on 4096px-limit phones).
   const MAX_H = 4000;
-  if (rows * cellPx > MAX_H) cellPx = Math.max(3, Math.floor(MAX_H / rows));
+  const MIN_CELL = 3;
+  let cellPx = Math.max(7, Math.min(14, Math.round(2800 / cols)));
+  const maxRowsAtMinCell = Math.floor(MAX_H / MIN_CELL);
+  if (rows > maxRowsAtMinCell) {
+    cols = Math.max(1, Math.round((sW / sH) * maxRowsAtMinCell));
+    rows = Math.max(1, Math.round((sH / sW) * cols));
+    cellPx = Math.max(7, Math.min(14, Math.round(2800 / cols)));
+  }
+  cellPx = Math.min(cellPx, Math.floor(MAX_H / Math.max(1, rows)));
+  cellPx = Math.max(1, cellPx);
   const out = document.createElement('canvas');
   out.width = cols * cellPx;
   out.height = rows * cellPx;
@@ -165,17 +177,20 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
     }
   }
 
-  // Draw pass: mono blits from a glyph sprite atlas; colorize needs per-cell fillText.
+  // Draw pass: mono blits from a glyph sprite atlas; colorize blits from a
+  // per-color atlas (see colorAtlasFor) so the default colorful mode is equally
+  // fast — per-cell fillText is what froze video mode on low-end devices.
   const chars: string[][] = [];
   if (colorize) {
+    const { atlas, tileW, palette } = colorAtlasFor(ramp, cellPx, paper, cellRgb);
+    const tileH = Math.ceil(cellPx * 1.4);
     for (let r = 0; r < rows; r++) {
       const row: string[] = [];
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
         const g = ramp[gi[i]];
         row.push(g.ch);
-        octx.fillStyle = `rgb(${cellRgb[i * 3]},${cellRgb[i * 3 + 1]},${cellRgb[i * 3 + 2]})`;
-        octx.fillText(g.ch, c * cellPx + cellPx / 2, r * cellPx + cellPx / 2 + cellPx * 0.06);
+        octx.drawImage(atlas, gi[i] * tileW, palette[i] * tileH, tileW, tileH, c * cellPx, r * cellPx, cellPx, cellPx);
       }
       chars.push(row);
     }
@@ -302,6 +317,71 @@ function ensureAtlas(ramp: GlyphInfo[], cellPx: number, ink: string, paper: stri
   }
   atlasCache = { key, atlas, tileW };
   return atlasCache;
+}
+
+// Small LRU of recent color atlases — video scenes shift their quantized
+// palette (cuts, pans, lighting), so a single-entry cache was rebuilt from
+// scratch every frame at ~15k fillText (M7).
+const colorAtlasCache = new Map<string, { atlas: HTMLCanvasElement; tileW: number }>();
+const COLOR_ATLAS_LRU = 3;
+
+/**
+ * The colorized equivalent of ensureAtlas: cell colors are quantized to 2 bits
+ * per channel (≤64 levels — imperceptible on a letter mosaic), and every
+ * (glyph × quantized color) tile is pre-rasterized once, then blitted per cell.
+ * This is what keeps the default colorful mode on the ~6× faster drawImage path
+ * instead of per-cell fillText (the cost that froze video mode on low-end CPUs).
+ */
+function colorAtlasFor(
+  ramp: GlyphInfo[],
+  cellPx: number,
+  paper: string,
+  cellRgb: Uint8ClampedArray,
+): { atlas: HTMLCanvasElement; tileW: number; palette: Uint32Array } {
+  const quant = (v: number): number => (v >> 6) << 6;
+  const colors = new Map<number, number>();
+  const palette = new Uint32Array(cellRgb.length / 3);
+  for (let i = 0; i < palette.length; i++) {
+    const key = (quant(cellRgb[i * 3]) << 16) | (quant(cellRgb[i * 3 + 1]) << 8) | quant(cellRgb[i * 3 + 2]);
+    let idx = colors.get(key);
+    if (idx === undefined) {
+      idx = colors.size;
+      colors.set(key, idx);
+    }
+    palette[i] = idx;
+  }
+  const colorsKey = [...colors.keys()].sort((a, b) => a - b).join(',');
+  const key = `${ramp.length}:${cellPx}:${paper}:${colorsKey}`;
+  const hit = colorAtlasCache.get(key);
+  if (hit) {
+    // touch for LRU recency
+    colorAtlasCache.delete(key);
+    colorAtlasCache.set(key, hit);
+    return { atlas: hit.atlas, tileW: hit.tileW, palette };
+  }
+  const tileW = Math.ceil(cellPx * 1.2);
+  const tileH = Math.ceil(cellPx * 1.4);
+  const atlas = document.createElement('canvas');
+  atlas.width = ramp.length * tileW;
+  atlas.height = colors.size * tileH;
+  const ctx = atlas.getContext('2d')!;
+  ctx.fillStyle = paper;
+  ctx.fillRect(0, 0, atlas.width, atlas.height);
+  ctx.font = `${cellPx}px ${FONT}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const [rgbKey, idx] of colors) {
+    ctx.fillStyle = `rgb(${(rgbKey >> 16) & 0xff},${(rgbKey >> 8) & 0xff},${rgbKey & 0xff})`;
+    for (let k = 0; k < ramp.length; k++) {
+      ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, idx * tileH + tileH / 2 + cellPx * 0.06);
+    }
+  }
+  colorAtlasCache.set(key, { atlas, tileW });
+  if (colorAtlasCache.size > COLOR_ATLAS_LRU) {
+    const oldest = colorAtlasCache.keys().next().value;
+    if (oldest !== undefined) colorAtlasCache.delete(oldest);
+  }
+  return { atlas, tileW, palette };
 }
 
 function clamp01(v: number): number {

@@ -8,8 +8,6 @@ export interface GlyphInfo {
   ch: string;
   /** fraction of the measured cell covered by ink, 0..1 */
   density: number;
-  /** advance width in px at measurement size */
-  width: number;
 }
 
 const MEASURE_PX = 64;
@@ -20,10 +18,15 @@ let fontReady: Promise<void> | null = null;
 export function loadEthiopicFont(): Promise<void> {
   if (!fontReady) {
     fontReady = (async () => {
-      // Targeted load: document.fonts.ready alone can miss async faces.
+      // CRITICAL: pass explicit fidel codepoints. `document.fonts.load` with no
+      // text defaults to a single space, which unicode-range routing matches to
+      // the LATIN subset — so the U+1200–1399 Ethiopic woff2 never downloads,
+      // measurement reads fallback glyphs, and on macOS/iOS (no Ethiopic system
+      // font) the ramp comes back empty: "Ready · 0 letters" tofu.
+      const fidel = 'ሀለሐመሠረሰሸቀበቨተቸኀነኘአከኰኸወዐዘዠየደዸገጠጨጰጸፈፐ፩፪፫';
       await Promise.all([
-        document.fonts.load(`${MEASURE_PX}px "Noto Sans Ethiopic Variable"`),
-        document.fonts.load(`${MEASURE_PX}px "Noto Sans Ethiopic"`),
+        document.fonts.load(`${MEASURE_PX}px "Noto Sans Ethiopic Variable"`, fidel),
+        document.fonts.load(`${MEASURE_PX}px "Noto Sans Ethiopic"`, fidel),
       ]);
     })();
   }
@@ -108,10 +111,7 @@ function measureGlyph(cp: number): GlyphInfo | null {
   const mask = alphaMask(ch);
   if (isTofu(mask)) return null;
   const { density } = stats(mask);
-  const [, ctx] = measureCanvas();
-  ctx.font = `${MEASURE_PX}px "Noto Sans Ethiopic Variable"`;
-  const width = ctx.measureText(ch).width || MEASURE_PX;
-  return { cp, ch, density, width };
+  return { cp, ch, density };
 }
 
 /** Codepoints to skip outright: unassigned slots + standalone combining marks. */
@@ -152,10 +152,14 @@ async function ensureMeasured(): Promise<GlyphInfo[]> {
   if (fullSet) return fullSet;
   await loadEthiopicFont();
   const infos: GlyphInfo[] = [];
+  let measured = 0;
   for (let cp = 0x1200; cp <= 0x135a; cp++) {
     if (SKIP.has(cp)) continue;
     const g = measureGlyph(cp);
     if (g) infos.push(g);
+    // M5: ~371 glyphs × (fillText + getImageData) is a long main-thread block on
+    // cold visits — yield to the event loop every 32 so the page stays responsive.
+    if (++measured % 32 === 0) await new Promise((r) => setTimeout(r, 0));
   }
   for (let cp = 0x1360; cp <= 0x137c; cp++) {
     const g = measureGlyph(cp);

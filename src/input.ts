@@ -10,8 +10,94 @@
 // rotated twice. Transparency is composited onto white so the mosaic renderer
 // always receives an opaque source.
 
-export interface SourceImage {
-  canvas: HTMLCanvasElement;
+/** True for Apple HEIC/HEIF files — which only a few browsers can decode. */
+export function isHeic(file: File): boolean {
+  return file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name);
+}
+
+/**
+ * createImageBitmap resize options that cap the long edge at 1600px — decode
+ * straight into the downscaled size so a 12MP phone photo never materializes at
+ * full resolution (~48–60MB transient) on a low-end phone (L28).
+ */
+function resizeDims(
+  size: { width?: number; height?: number } | undefined,
+): { resizeWidth: number; resizeHeight: number } | undefined {
+  const w = size?.width;
+  const h = size?.height;
+  if (!w || !h) return undefined;
+  const k = Math.min(1, 1600 / Math.max(w, h));
+  if (k >= 1) return undefined;
+  // Resize applies to the SOURCE bitmap (pre-orientation). The 90°/270° EXIF
+  // swaps w/h in the destination, but the long edge is unchanged, so the scale
+  // factor is the same either way.
+  return { resizeWidth: Math.max(1, Math.round(w * k)), resizeHeight: Math.max(1, Math.round(h * k)) };
+}
+
+/**
+ * Read just enough of the file header to know its pixel dimensions (PNG, GIF,
+ * WebP, JPEG). Returns undefined for unknown formats (e.g. HEIC) — the caller
+ * then decodes without the memory-saving resize, which is still correct.
+ * Intentionally tiny and dependency-free: this only feeds resizeDims, it never
+ * touches the pixels.
+ */
+async function imageDimensions(
+  blob: Blob,
+): Promise<{ width?: number; height?: number } | undefined> {
+  try {
+    // 64KB probe: EXIF-heavy phone JPEGs carry 5–40KB of metadata/thumbnail
+    // before the SOF marker — the old 4KB window missed it, silently skipping
+    // the memory-saving decode-time resize (M4).
+    const buf = new Uint8Array(await blob.slice(0, 65536).arrayBuffer());
+    if (buf.length < 24) return undefined;
+
+    // PNG: 8-byte signature, then IHDR width/height at offsets 16/20.
+    if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+      return {
+        width: (buf[16] << 24) | (buf[17] << 16) | (buf[18] << 8) | buf[19],
+        height: (buf[20] << 24) | (buf[21] << 16) | (buf[22] << 8) | buf[23],
+      };
+    }
+
+    // GIF: "GIF87a"/"GIF89a", width/height little-endian at offsets 6/8.
+    if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) {
+      return { width: buf[6] | (buf[7] << 8), height: buf[8] | (buf[9] << 8) };
+    }
+
+    // WebP: "RIFF"...."WEBP", then VP8 / VP8L chunk dims.
+    if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 && buf[8] === 0x57 && buf[9] === 0x45) {
+      const fourcc = String.fromCharCode(buf[12], buf[13], buf[14], buf[15]);
+      if (fourcc === 'VP8 ' && buf.length >= 30) {
+        return { width: buf[26] | ((buf[27] & 0x3f) << 8), height: buf[28] | ((buf[29] & 0x3f) << 8) };
+      }
+      if (fourcc === 'VP8L' && buf.length >= 26) {
+        return {
+          width: ((buf[21] | (buf[22] << 8) | (buf[23] << 16)) & 0x3fff) + 1,
+          height: (((buf[23] >> 6) | (buf[24] << 2) | (buf[25] << 10)) & 0x3fff) + 1,
+        };
+      }
+      return undefined;
+    }
+
+    // JPEG: walk the marker segments until an SOF (0xFFC0–0xFFCF, minus the
+    // Huffman/quantization tables C4/C8/CC) which carries height/width.
+    if (buf[0] === 0xff && buf[1] === 0xd8) {
+      let o = 2;
+      while (o + 9 < buf.length) {
+        if (buf[o] !== 0xff) { o++; continue; }
+        const marker = buf[o + 1];
+        if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+          return { height: (buf[o + 5] << 8) | buf[o + 6], width: (buf[o + 7] << 8) | buf[o + 8] };
+        }
+        o += 2 + ((buf[o + 2] << 8) | buf[o + 3]);
+      }
+      return undefined;
+    }
+
+    return undefined;
+  } catch {
+    return undefined; // never let dimension probing sink a decodable image
+  }
 }
 
 /** Map an EXIF orientation (1-8) to a canvas transform. Source is w×h; for 5-8 the destination is h×w. */
@@ -76,14 +162,27 @@ interface DecodedSource {
 
 /**
  * Decode an image blob. The primary path uses `imageOrientation: 'none'` so the
- * manual EXIF pass is the single source of truth for orientation. The fallback
- * paths (an encoding `createImageBitmap` rejects, or a browser that ignores
- * `imageOrientation`) use the browser's default decode, which auto-rotates per
- * EXIF — reported via `rotated` so the caller can skip the manual pass.
+ * manual EXIF pass is the single source of truth for orientation — and it
+ * decodes straight into the capped size (L28) so big phone photos never occupy
+ * full-resolution memory. The fallback paths (an encoding `createImageBitmap`
+ * rejects, or a browser that ignores `imageOrientation`) use the browser's
+ * default decode, which auto-rotates per EXIF — reported via `rotated` so the
+ * caller can skip the manual pass.
  */
-async function decodeRaw(blob: Blob): Promise<DecodedSource> {
+async function decodeRaw(
+  blob: Blob,
+  resize?: { resizeWidth: number; resizeHeight: number },
+): Promise<DecodedSource> {
   try {
-    return { src: await createImageBitmap(blob, { imageOrientation: 'none' }), rotated: false };
+    return {
+      src: await createImageBitmap(blob, {
+        imageOrientation: 'none',
+        resizeWidth: resize?.resizeWidth,
+        resizeHeight: resize?.resizeHeight,
+        resizeQuality: 'high',
+      }),
+      rotated: false,
+    };
   } catch {
     try {
       return { src: await createImageBitmap(blob), rotated: true };
@@ -114,10 +213,11 @@ export async function imageFileToCanvas(file: File): Promise<HTMLCanvasElement> 
   try {
     // EXIF read must never sink a valid image: if it fails, treat as upright.
     const { default: exifr } = await import('exifr'); // lazy — keeps exifr out of the eager bundle
-    const [orientation, decoded] = await Promise.all([
-      exifr.orientation(file).catch(() => undefined),
-      decodeRaw(file),
-    ]);
+    const orientation = await exifr.orientation(file).catch(() => undefined);
+    const size = await imageDimensions(file);
+    // Decode straight into the capped size (L28) so a 12MP photo never occupies
+    // full-resolution memory on a low-end phone.
+    const decoded = await decodeRaw(file, resizeDims(size));
     // Skip the manual EXIF transform when the browser already auto-rotated the
     // pixels during a fallback decode — applying it again double-rotates.
     return orientAndComposite(decoded.src, decoded.rotated ? undefined : orientation);
@@ -126,13 +226,21 @@ export async function imageFileToCanvas(file: File): Promise<HTMLCanvasElement> 
   }
 }
 
-/** Load a bundled/demo image from a URL and run it through the same pipeline. */
-export async function imageURLToCanvas(url: string): Promise<HTMLCanvasElement> {
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Failed to fetch image "${url}": HTTP ${resp.status}`);
-  const blob = await resp.blob();
-  const name = url.split('/').pop() ?? 'image';
-  return imageFileToCanvas(new File([blob], name, { type: blob.type }));
+/** Accept a file as photo/video input — including .heic/.heif and other camera
+ *  files whose MIME type is empty on some platforms (L6: they were silently
+ *  skipped before the friendly HEIC error path could fire). */
+function isMediaFile(f: File): boolean {
+  return (
+    f.type.startsWith('image/') ||
+    f.type.startsWith('video/') ||
+    isHeic(f) ||
+    /\.(png|jpe?g|gif|webp|avif|bmp|mp4|webm|mov|ogg|ogv)$/i.test(f.name)
+  );
+}
+
+/** True when a file should route to the VIDEO pipeline (extension fallback covers empty-MIME files). */
+export function isVideoFile(f: File): boolean {
+  return f.type.startsWith('video/') || /\.(mp4|webm|mov|ogg|ogv)$/i.test(f.name);
 }
 
 /** Paste handler scoped to `el` (pass the app root for app-wide coverage): reads the first image/video item. */
@@ -143,7 +251,7 @@ export function setupPaste(el: HTMLElement, onFile: (file: File) => void): void 
     for (const item of items) {
       if (item.kind !== 'file') continue;
       const file = item.getAsFile();
-      if (!file || !(file.type.startsWith('image/') || file.type.startsWith('video/'))) continue;
+      if (!file || !isMediaFile(file)) continue;
       ev.preventDefault();
       onFile(file);
       break;
@@ -180,7 +288,7 @@ export function setupDropZone(el: HTMLElement, onFile: (file: File) => void): vo
     const files = ev.dataTransfer?.files;
     if (!files) return;
     for (const file of Array.from(files)) {
-      if (!(file.type.startsWith('image/') || file.type.startsWith('video/'))) continue;
+      if (!isMediaFile(file)) continue;
       onFile(file);
       break;
     }

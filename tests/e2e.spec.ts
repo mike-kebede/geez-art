@@ -1,6 +1,41 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
+import http from 'node:http';
+import { execSync } from 'node:child_process';
+
+let distBuilt = false;
+function ensureBuilt(): void {
+  if (distBuilt) return;
+  execSync('npm run build', { stdio: 'ignore' });
+  distBuilt = true;
+}
+
+/** Serve dist/ with public/_headers applied — the exact way Cloudflare serves it. */
+function serveDist(port: number): http.Server {
+  return http.createServer((req, res) => {
+    let p = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
+    if (p === '/') p = '/index.html';
+    const file = path.resolve('dist', '.' + p);
+    const headers: Record<string, string> = {};
+    const raw = fs.readFileSync(path.resolve('public', '_headers'), 'utf8');
+    for (const line of raw.split('\n')) {
+      const m = line.trim().match(/^([\w-]+): (.+)$/);
+      if (m) headers[m[1]] = m[2];
+    }
+    if (fs.existsSync(file)) {
+      const type: Record<string, string> = {
+        '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
+        '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2',
+      };
+      res.writeHead(200, { 'Content-Type': type[path.extname(file)] ?? 'application/octet-stream', ...headers });
+      fs.createReadStream(file).pipe(res);
+    } else {
+      res.writeHead(404, headers);
+      res.end();
+    }
+  });
+}
 
 const SAMPLE = path.resolve('tests', 'fixtures', 'sample.png');
 const VIDEO = path.resolve('tests', 'fixtures', 'sample-video.webm');
@@ -33,12 +68,15 @@ test.beforeAll(async ({ browser }) => {
     });
     rec.start(250);
     const t0 = performance.now();
+    // Distinct motion every frame: the mosaic renderer quantizes cell colors, so
+    // a slowly-shifting background could look identical across samples — the
+    // fixture needs clearly different frames (hue rotation + a moving square).
     const draw = () => {
       const k = Math.floor((performance.now() - t0) / 200);
-      ctx.fillStyle = `rgb(${k % 255},${(k * 2) % 255},120)`;
+      ctx.fillStyle = `hsl(${(k * 60) % 360}, 80%, 55%)`;
       ctx.fillRect(0, 0, 96, 96);
       ctx.fillStyle = '#111';
-      ctx.fillRect(20, 20, 56, 56);
+      ctx.fillRect(10 + ((k * 12) % 30), 20, 56, 56);
       if (performance.now() - t0 < 1500) requestAnimationFrame(draw);
       else rec.stop();
     };
@@ -489,7 +527,7 @@ test('download video produces a file', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('download GIF produces a file', async ({ page }) => {
+test('download GIF produces a valid, capped file', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
   await page.setInputFiles('#file', VIDEO);
@@ -502,6 +540,105 @@ test('download GIF produces a file', async ({ page }) => {
   await page.click('#dlGif');
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toContain('geez-art.gif');
+  // L38: the exported bytes are a real GIF89a, capped at 480px on BOTH axes.
+  const path = await download.path();
+  const gif = fs.readFileSync(path!);
+  expect(gif.subarray(0, 6).toString('ascii')).toBe('GIF89a');
+  expect(gif.readUInt16LE(6)).toBeLessThanOrEqual(480);
+  expect(gif.readUInt16LE(8)).toBeLessThanOrEqual(480);
+});
+
+test('share metadata: absolute og image, large card, JSON-LD (M7/L46)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const og = await page.getAttribute('meta[property="og:image"]', 'content');
+  expect(og).toMatch(/^https:\/\//);
+  expect(og).toContain('/og-image.png');
+  expect(await page.getAttribute('meta[name="twitter:card"]', 'content')).toBe('summary_large_image');
+  expect(await page.getAttribute('meta[property="og:image:width"]', 'content')).toBe('1200');
+  expect(await page.getAttribute('meta[property="og:image:height"]', 'content')).toBe('630');
+  expect(await page.locator('script[type="application/ld+json"]').count()).toBe(1);
+});
+
+// --- re-audit round-2 fixes: CSP enforcement, tall-source cap, privacy, share-cancel ---
+
+test('the built app works under its own production CSP headers (blob: media allowed) (H1)', async ({ page }) => {
+  // The dev server never sends public/_headers, so the suite couldn't see the
+  // release-blocker: the CSP had no media-src and rejected the app's own blob:
+  // video URLs — "media load rejected by URL safety check" — killing video mode
+  // + replay the moment headers were enforced. Serve the BUILT artifact with the
+  // real headers and exercise video mode; a future policy edit that breaks
+  // blob: media fails here.
+  test.setTimeout(120000);
+  ensureBuilt();
+  const server = serveDist(5197);
+  await new Promise((r) => server.listen(5197, r));
+  try {
+    await page.goto('http://localhost:5197/');
+    await page.waitForFunction(() => /Ready/.test(document.getElementById('status')?.textContent ?? ''), null, { timeout: 30000 });
+    await page.setInputFiles('#file', VIDEO);
+    await page.waitForFunction(() => {
+      const c = document.getElementById('mosaic') as HTMLCanvasElement;
+      return c.width > 10 && c.height > 10;
+    });
+    await expect(page.locator('#playBtn')).toBeVisible();
+  } finally {
+    server.close();
+  }
+});
+
+test('very tall sources never exceed the 4000px output cap (M3)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  // Max detail on an 8:1 source is the worst case for the height cap.
+  await page.locator('#width').fill('400');
+  const b64 = await page.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = 100;
+    c.height = 800;
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 100, 800);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(30, 100, 40, 600);
+    return c.toDataURL('image/png').split(',')[1];
+  });
+  await page.setInputFiles('#file', { name: 'tall.png', mimeType: 'image/png', buffer: Buffer.from(b64, 'base64') });
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.height > 0 && c.height <= 4000; // would timeout (9600px) under the old cap bug
+  });
+});
+
+test('nothing leaves the origin — all requests same-origin (privacy guarantee) (M13)', async ({ page }) => {
+  const urls: string[] = [];
+  await page.route('**/*', (route) => {
+    urls.push(route.request().url());
+    return route.continue();
+  });
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.click('#dlPng'); // exports are blob:-based; no network should fire
+  await page.waitForTimeout(500);
+  const origin = new URL(page.url()).origin;
+  const offenders = urls.filter((u) => !u.startsWith('data:') && !u.startsWith('blob:') && !u.startsWith(origin));
+  expect(offenders).toEqual([]);
+});
+
+test('cancelling the share sheet reports "cancelled", not "saved" (L7)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: () => Promise.reject(new DOMException('Aborted', 'AbortError')),
+    });
+  });
+  await page.click('#share');
+  await expect(page.locator('#status')).toContainText('Share cancelled', { timeout: 10000 });
 });
 
 test('video download shows an in-app replay', async ({ page }) => {
@@ -622,4 +759,152 @@ test('clear button resets the app to the empty state', async ({ page }) => {
     return c.width === 0 && c.height === 0;
   });
   expect(errors).toEqual([]);
+});
+
+// --- critic-fix coverage: devices without video recording, HEIC, analytics ---
+
+test('on devices without video recording, the video button is replaced by a GIF hint', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitReady(page);
+  // Force the "iOS Safari" path: no canvas.captureStream support.
+  await page.evaluate(() => {
+    (window as unknown as { __forceNoVideoCapture?: boolean }).__forceNoVideoCapture = true;
+  });
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10 && c.height > 10;
+  });
+  // GIF stays available; the video button yields to an actionable hint.
+  await expect(page.locator('#dlGif')).toBeVisible();
+  await expect(page.locator('#dlVideo')).toBeHidden();
+  await expect(page.locator('#videoCapHint')).toBeVisible();
+  // The hint disappears with the video (Clear → empty state).
+  await page.click('#clearBtn');
+  await expect(page.locator('#videoCapHint')).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
+test('an undecodable HEIC photo shows a friendly conversion message', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitReady(page);
+  // Garbage bytes with a real HEIC name/type — the decode must fail.
+  await page.setInputFiles('#file', {
+    name: 'photo.heic',
+    mimeType: 'image/heic',
+    buffer: Buffer.from('this is not a real heic image'),
+  });
+  await expect(page.locator('#status')).toContainText('HEIC', { timeout: 10000 });
+  // And a plain unreadable file still gets the generic message, not the HEIC one.
+  await page.waitForTimeout(5200); // let the HEIC message time out back to "Ready"
+  await page.setInputFiles('#file', {
+    name: 'broken.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('also not a real image'),
+  });
+  await expect(page.locator('#status')).toContainText("couldn't read that picture", { timeout: 10000 });
+  expect(errors).toEqual([]);
+});
+
+test('analytics are off by default and fire only when a provider is configured', async ({ page }) => {
+  // Stub sendBeacon so a configured beacon provider can be observed.
+  await page.addInitScript(() => {
+    (window as unknown as { __beaconCalls?: Array<{ url: string; body: string }> }).__beaconCalls = [];
+    Object.defineProperty(Navigator.prototype, 'sendBeacon', {
+      configurable: true,
+      value: function (url: string, data: Blob | string | null) {
+        const calls = (window as unknown as { __beaconCalls: Array<{ url: string; body: string }> }).__beaconCalls;
+        if (data instanceof Blob) void data.text().then((t) => calls.push({ url: String(url), body: t }));
+        else calls.push({ url: String(url), body: String(data ?? '') });
+        return true;
+      },
+    });
+  });
+  await page.goto('/');
+  await waitReady(page);
+
+  // Off by default: a photo drop sends nothing.
+  await page.evaluate(() => {
+    (window as unknown as { __beaconCalls: unknown[] }).__beaconCalls = [];
+  });
+  await uploadSample(page);
+  await page.waitForTimeout(300);
+  const silent = await page.evaluate(() => (window as unknown as { __beaconCalls: unknown[] }).__beaconCalls);
+  expect(silent).toEqual([]);
+
+  // Configure a beacon provider at runtime (as a deployer would via the meta
+  // tag) — the next event goes out.
+  await page.evaluate(() => {
+    const m = document.createElement('meta');
+    m.name = 'geez-art:analytics';
+    m.content = JSON.stringify({ provider: 'beacon', endpoint: '/__stats__' });
+    document.head.appendChild(m);
+    (window as unknown as { __reloadAnalytics?: () => void }).__reloadAnalytics?.();
+    (window as unknown as { __beaconCalls: unknown[] }).__beaconCalls = [];
+  });
+  await uploadSample(page);
+  await page.waitForFunction(() => {
+    const calls = (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls;
+    return Array.isArray(calls) && calls.some((c) => c.body.includes('"source"'));
+  });
+  const calls = await page.evaluate(() => (window as unknown as { __beaconCalls: Array<{ url: string; body: string }> }).__beaconCalls);
+  expect(calls.length).toBeGreaterThan(0);
+  expect(calls[0].url).toContain('/__stats__');
+  expect(calls[0].body).toContain('"source"');
+  expect(calls[0].body).toContain('"kind":"image"');
+});
+
+// --- round-2 rubric-audit fixes: font load, bilingual sync, samples, empty ramp ---
+
+test('the density ramp is non-empty — the Ethiopic font actually loaded (M2)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  // If the U+1200-1399 face never loaded, the ramp would be empty and the mosaic
+  // would not render — this pins the unicode-range fix so it can't regress.
+  const n = await page.evaluate(() => (window as unknown as { __ramp?: unknown[] }).__ramp?.length ?? 0);
+  expect(n).toBeGreaterThan(100);
+});
+
+test('the share hint keeps its Amharic line after the app initializes (M3)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await expect(page.locator('#shareHint')).toContainText('ዝግጁ');
+});
+
+test('Amharic empty-state stays in sync when switching to the letter picker (M4)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await expect(page.locator('#emptyTitleAm')).toContainText('ይምረጡ');
+  await page.selectOption('#charset', 'custom');
+  await expect(page.locator('#emptyTitle')).toContainText('Pick your letters');
+  await expect(page.locator('#emptyTitleAm')).toContainText('ፊደሎችን');
+});
+
+test('try an example loads the icon-classical sample, not the fallback face (L32)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.click('#exampleBtn');
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  const name = await page.evaluate(() => (window as unknown as { __currentSample?: string }).__currentSample);
+  expect(name).toBe('icon-classical');
+});
+
+test('use none blanks the mosaic instead of leaving a stale image (L31)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.selectOption('#charset', 'custom');
+  await page.click('#pickNone');
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width === 0 && c.height === 0;
+  });
+  expect(await page.textContent('#mosaicStat')).toBe('');
+  await expect(page.locator('#status')).toContainText('No letters selected');
 });

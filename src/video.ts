@@ -1,6 +1,7 @@
 // Video → fidel mosaic frame loop + recording/export helpers.
 
-import { GIFEncoder, quantize, applyPalette } from 'gifenc';
+/// <reference types="vite/client" />
+
 
 export interface VideoHandle {
   stop(): void;
@@ -11,32 +12,66 @@ export interface VideoHandle {
 /**
  * Start the frame loop: draw each video frame to a hidden canvas and hand it
  * to `onFrame` at roughly `fps` frames per second.
+ *
+ * Two safeguards for low-end devices and pathological sources:
+ * - Adaptive framerate: if a frame consistently takes most of its budget, the
+ *   interval backs off toward a ~6fps floor so the tab doesn't jam up.
+ * - Error recovery: a throw inside onFrame no longer silently kills the loop —
+ *   the loop stops, the video pauses, and `onError` is called.
  */
 export function startVideoLoop(
   video: HTMLVideoElement,
   onFrame: (c: HTMLCanvasElement) => void,
   fps = 12,
+  onError?: (e: unknown) => void,
 ): VideoHandle {
   const srcCanvas = document.createElement('canvas');
   let raf = 0;
   let last = 0;
   let paused = false;
+  let stopped = false;
+  let frameMs = 1000 / fps;
+  const MIN_FRAME_MS = 1000 / 6;
+  let slowFrames = 0;
+
+  function fail(e: unknown): void {
+    stopped = true;
+    cancelAnimationFrame(raf);
+    video.pause();
+    onError?.(e);
+  }
 
   function tick(t: number): void {
-    if (!paused && t - last >= 1000 / fps) {
+    if (stopped) return;
+    if (!paused && t - last >= frameMs) {
       last = t;
       if (video.videoWidth > 0) {
-        // Downscale the frame: cap the long edge at 1600px so low-end phones
-        // don't sample full 1080p/4K pixels every tick.
-        const scale = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight));
-        const capW = Math.max(1, Math.round(video.videoWidth * scale));
-        const capH = Math.max(1, Math.round(video.videoHeight * scale));
-        // Only resize when the dimensions actually change, so the canvas isn't
-        // cleared/reallocated on every frame.
-        if (srcCanvas.width !== capW) srcCanvas.width = capW;
-        if (srcCanvas.height !== capH) srcCanvas.height = capH;
-        srcCanvas.getContext('2d')!.drawImage(video, 0, 0, capW, capH);
-        onFrame(srcCanvas);
+        const t0 = performance.now();
+        try {
+          // Downscale the frame: cap the long edge at 1600px so low-end phones
+          // don't sample full 1080p/4K pixels every tick.
+          const scale = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight));
+          const capW = Math.max(1, Math.round(video.videoWidth * scale));
+          const capH = Math.max(1, Math.round(video.videoHeight * scale));
+          // Only resize when the dimensions actually change, so the canvas isn't
+          // cleared/reallocated on every frame.
+          if (srcCanvas.width !== capW) srcCanvas.width = capW;
+          if (srcCanvas.height !== capH) srcCanvas.height = capH;
+          srcCanvas.getContext('2d')!.drawImage(video, 0, 0, capW, capH);
+          onFrame(srcCanvas);
+        } catch (e) {
+          fail(e);
+          return;
+        }
+        const cost = performance.now() - t0;
+        if (cost > frameMs * 0.8 && frameMs < MIN_FRAME_MS) {
+          if (++slowFrames >= 3) {
+            frameMs = Math.min(frameMs * 1.5, MIN_FRAME_MS);
+            slowFrames = 0;
+          }
+        } else if (cost <= frameMs * 0.5) {
+          slowFrames = 0; // healthy frames — don't drift further
+        }
       }
     }
     raf = requestAnimationFrame(tick);
@@ -47,6 +82,7 @@ export function startVideoLoop(
 
   return {
     stop() {
+      stopped = true;
       cancelAnimationFrame(raf);
       video.pause();
       video.removeAttribute('src');
@@ -59,6 +95,22 @@ export function startVideoLoop(
       return paused;
     },
   };
+}
+
+/**
+ * Can this browser record the animated canvas to a video file? iOS Safari lacks
+ * `canvas.captureStream()`, so WebM/MP4 export is unavailable there — the GIF
+ * export (pure JS via gifenc) works on every device.
+ */
+export function canRecordVideo(): boolean {
+  // e2e seam: force the unsupported path so the fallback UI is exercised.
+  if (import.meta.env.DEV && (window as unknown as { __forceNoVideoCapture?: boolean }).__forceNoVideoCapture) {
+    return false;
+  }
+  return (
+    typeof MediaRecorder !== 'undefined' &&
+    typeof (HTMLCanvasElement.prototype as { captureStream?: unknown }).captureStream === 'function'
+  );
 }
 
 export interface RecordResult {
@@ -77,13 +129,19 @@ export async function recordCanvas(
   fps = 12,
   audio: MediaStream | null = null,
 ): Promise<RecordResult> {
+  const tracks: MediaStreamTrack[] = [];
   try {
     const videoTracks = canvas.captureStream(fps).getVideoTracks();
+    tracks.push(...videoTracks);
     const audioTracks = audio ? audio.getAudioTracks() : [];
+    tracks.push(...audioTracks);
     const stream = new MediaStream([...videoTracks, ...audioTracks]);
     const mime = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '';
     const ext: 'webm' | 'mp4' = mime === 'video/webm' ? 'webm' : 'mp4';
-    const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    // Bound quality/size so encoding stays real-time on budget phones instead of
+    // dropping frames on a large canvas (M10). The bitrate cap applies on the
+    // mp4 path too, not just WebM.
+    const rec = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: 2_500_000 });
     const chunks: BlobPart[] = [];
     rec.ondataavailable = (e) => {
       if (e.data.size) chunks.push(e.data);
@@ -97,6 +155,10 @@ export async function recordCanvas(
     return { blob: await done, ext };
   } catch {
     return { blob: null, ext: 'mp4' };
+  } finally {
+    // Never leak capture tracks — a stopped captureStream otherwise keeps the
+    // recording camera/media live (M15).
+    for (const t of tracks) t.stop();
   }
 }
 
@@ -106,8 +168,12 @@ export async function recordCanvas(
  */
 export async function recordGIF(canvas: HTMLCanvasElement, seconds = 3, fps = 8): Promise<Uint8Array | null> {
   try {
+    // gifenc is click-gated, so import it only when GIF export is actually used
+    // — keeps its weight out of the eager main bundle (L35).
+    const { GIFEncoder, quantize, applyPalette } = await import('gifenc');
     const gif = GIFEncoder();
-    const scale = Math.min(1, 480 / Math.max(1, canvas.width));
+    // Cap the LONG edge at 480px (width-only let tall portraits through at 480×852).
+    const scale = Math.min(1, 480 / Math.max(1, canvas.width, canvas.height));
     const w = Math.max(1, Math.round(canvas.width * scale));
     const h = Math.max(1, Math.round(canvas.height * scale));
     const tmp = document.createElement('canvas');

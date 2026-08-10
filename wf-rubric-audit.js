@@ -1,0 +1,224 @@
+// wf-rubric-audit.js — 12 persona reviewers, each graded against an industry-standard rubric.
+// Round 2 of the critic fan-out: round 1 was free-form; round 2 is rubric-grounded.
+
+export const meta = {
+  name: 'rubric-audit',
+  description: '12 persona reviewers grade geez-art against industry-standard rubrics (WCAG, OWASP, Core Web Vitals, AARRR, …)',
+  phases: [
+    { title: 'Audit', detail: '12 rubric-graded persona reviews in parallel' },
+    { title: 'Synthesize', detail: 'one agent merges, dedupes, and ranks the findings' },
+  ],
+}
+
+const CONTEXT = `
+geez-art — a zero-backend, client-side web app (Vite + TypeScript, vanilla DOM) that turns photos and
+videos into mosaics of Ge'ez/Ethiopic fidel letters. Product goal: a free viral "filter" for the Ethiopian
++ diaspora audience (send a pic, friend taps the URL baked into the image, makes their own, shares onward).
+Source root: C:\\Users\\mike-work\\Desktop\\geez-art.
+
+App runs two ways right now:
+- Dev server: http://localhost:5199 (may be briefly busy — the author's Playwright suite uses it; a quick
+  HTTP GET of the page is fine, do not hammer it, and do NOT run the full test suite yourself).
+- Production build: \`npm run build\` → dist/ is clean (tsc + vite build green).
+
+DEPLOYMENT IS DELIBERATELY PARKED by the user. Anything that only manifests on a live URL (og:image
+preview, CSP enforcement, share-card rendering, DNS) is "deploy-blocked", not a fixable bug.
+
+THIS IS A RE-AUDIT. A prior round of 12 persona reviews surfaced ~48 findings; the author has since fixed
+the tractable ones. Fixed-and-verified (do NOT re-report as new; you may mark them PASS if the code
+confirms them): aspect-ratio math; EXIF single-source orientation; ≤1600px source + video-frame
+downscaling; decode-time resize (createImageBitmap) for 12MP photos; 4000px output-height cap;
+self-contained HTML export (embedded Ethiopic font); og-image.png 1200×630 + absolute-URL og/twitter meta
++ summary_large_image + JSON-LD; CSP + nosniff + X-Frame-Options + frame-ancestors + base-uri + form-action
++ /assets cache-control headers; dev-only test hooks; video audio capture; replay blob-URL cleanup;
+three-tap default (Advanced disclosure); sticky share bar; bilingual Amharic (share hint preserved,
+empty-state synced); static halo; church attribution; a11y fixes (zoom keyboard panning, slider
+aria-labels, touch targets ≥44px, focus re-home, focus contrast, mosaic text alternative, picker
+aria-pressed, skip link, announce-on-ready, neutral mosaic name); iOS video-export fallback (GIF hint);
+HEIC friendly error; opt-in analytics seam with share-outcome/funnel events; runtime-derived share URL;
+share-path downscale (≤1600px); colored-atlas renderer for colorize (video no longer freezes low-end);
+adaptive video fps; GIF long-edge cap + failure honesty; empty-ramp blanking; lazy picker build; lazy
+gifenc import; dead code removed; "Try an example" loads the icon-classical sample; privacy & parents
+notice; favicon gold harmonized; palette-driven frame accent.
+
+Test suite: tests/e2e.spec.ts — 47 Playwright tests expected green (Chromium, dev server). Read the file
+to assess COVERAGE; the author is running it, so do not execute it.
+
+Grade the CURRENT code fresh against your rubric and give an honest 0-100 score. Re-reporting an already
+fixed item as a NEW finding is a mistake; noting "previously FAIL, now PASS" in a criterion verdict is
+encouraged. Find genuinely remaining issues only.
+
+YOUR JOB: review the codebase (and, if useful, the page) against the rubric for YOUR persona below.
+Report ONLY findings that are NEW, BROKEN, or genuinely UNADDRESSED. For each finding give:
+rubric criterion, verdict (PASS/FAIL/WARN), severity (info/low/medium/high/critical), evidence
+(file:line or URL), and a concrete recommendation. Do not edit any files. Return the structured result.
+`
+
+const RUBRICS = [
+  {
+    key: 'performance',
+    persona: 'Web Performance Engineer',
+    rubric:
+      'Google Core Web Vitals (LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1) + bundle/task budgets. ' +
+      'Assess: main-bundle weight (app JS ~68 kB, Ethiopic woff2 ~198 kB, exifr lazy chunk), font loading ' +
+      'strategy (preload vs fontsource), initial render path, debounced re-render, sprite-atlas blitting, ' +
+      '≤1600px source downscaling, and any jank on low-end CPUs. Use the built dist/ if you want to audit ' +
+      'what actually ships.',
+  },
+  {
+    key: 'a11y',
+    persona: 'Accessibility Auditor',
+    rubric:
+      'WCAG 2.2 Level AA (all 4 principles; 1.4.3 contrast ≥ 4.5:1, 1.4.4 resize, 2.1.1 keyboard, 2.4.7 ' +
+      'focus-visible, 3.3.1 errors, 4.1.2 name/role/value) + axe-core-style automated checks. Check the ' +
+      'sliders, picker (aria-pressed), details/summary keyboard path, skip link, zoom controls, live region ' +
+      '(role=status), mosaic aria-label, and reduced-motion handling.',
+  },
+  {
+    key: 'security',
+    persona: 'Security Reviewer',
+    rubric:
+      'OWASP Web Security Testing Guide v4.2 / Top 10 (2021). Assess: XSS surfaces (innerHTML usage), CSP ' +
+      'adequacy in public/_headers, file-input handling (paths, types, HEIC), blob-URL lifecycle, third-party ' +
+      'network calls (should be ZERO at runtime), dependency CVEs (run \`npm audit --omit=dev\`), and ' +
+      'clickjacking/nosniff/referrer headers.',
+  },
+  {
+    key: 'mobile',
+    persona: 'Mobile & Low-End Device Critic',
+    rubric:
+      'Nielsen 10 Usability Heuristics scored with severity ratings (0=cosmetic … 4=usability catastrophe), ' +
+      'plus Material touch-target guidance (≥48×48dp) and 4G + low-end-CPU throttling lens. Focus: the ' +
+      'three-tap flow, 12MP photo handling on a low-end Android, video mode, and whether anything freezes.',
+  },
+  {
+    key: 'seo-share',
+    persona: 'SEO / Share / Viral-Loop Specialist',
+    rubric:
+      'Google Search Essentials + Open Graph + Twitter Card specs + WhatsApp/Telegram link-preview behavior. ' +
+      'Check: meta/og tags, og:image 1200×630 ≥ 2×, the URL baked into shared images (is it legible post-' +
+      'compression, is it the final domain), SITE_URL placeholder, crawlability, and any structured data. ' +
+      'Flag everything that is deploy-blocked separately.',
+  },
+  {
+    key: 'qa',
+    persona: 'QA / Test Engineer',
+    rubric:
+      'ISTQB defect-severity classification (critical/major/minor/cosmetic) + risk-based test design. Assess ' +
+      'coverage in tests/e2e.spec.ts against every control/input/export: empty states, HEIC, forced-iOS video ' +
+      'fallback, analytics opt-in, error paths, and any untested affordance. Note flake risk (timeouts, ' +
+      'toDataURL comparisons).',
+  },
+  {
+    key: 'l10n',
+    persona: 'Amharic Localization Linguist',
+    rubric:
+      'ISO 17100 / MQM-style TQA (accuracy, fluency, terminology, completeness). Verify every Amharic string ' +
+      'in index.html and src/app.ts for correctness, register, script fidelity, and consistency (e.g. the ' +
+      '"Choose vs ይምረጡ" pairing). Check the empty-state, share-hint, video-capability hint, and footer strings. ' +
+      'If you are not fluent, mark the claim as unverified rather than guessing.',
+  },
+  {
+    key: 'privacy',
+    persona: 'Privacy Reviewer',
+    rubric:
+      'GDPR principles (data minimization, purpose limitation, transparency) + ISO 27701 + COPPA/children lens ' +
+      '(the app has a kids angle) + Google Play data-safety framing. Verify: zero third-party requests at ' +
+      'runtime, analytics off by default and opt-in, the accuracy of the "nothing is uploaded" claim, and whether ' +
+      'any personal data (photos) is ever transmitted or stored.',
+  },
+  {
+    key: 'code-quality',
+    persona: 'Frontend Code-Quality Reviewer',
+    rubric:
+      'Google JavaScript Style Guide + strict TypeScript (noUnusedLocals/Parameters on) + cyclomatic ' +
+      'complexity / maintainability + SOLID-lite. Check: dead code, error handling, event-listener hygiene ' +
+      '(zombie listeners, object-URL leaks), magic numbers, the DEV-gated test hooks (do they stay out of ' +
+      'production?), and import hygiene in the bundle.',
+  },
+  {
+    key: 'design',
+    persona: 'Design / Craft Reviewer',
+    rubric:
+      'Nielsen heuristics + Laws of UX + Microsoft Inclusive Design + WCAG non-text contrast; brand ' +
+      'consistency with the Ethiopian classical-art direction (church-mural palette, single brick accent, ' +
+      'quiet chrome). Evaluate the single-signature rule (the mosaic is the hero), typography pairing ' +
+      '(Inter + Noto Ethiopic), the empty-state, and whether any element reads as template/AI-default.',
+  },
+  {
+    key: 'growth',
+    persona: 'Growth / Product Critic (viral loop)',
+    rubric:
+      'AARRR pirate metrics: Acquisition, Activation, Retention, Referral, Revenue. Audit the loop as a ' +
+      'non-technical user: does the shared image carry a clear CTA + URL? ≤3 taps to first result? Is the ' +
+      'filter "faddish" enough to share? What would break the loop at scale (cost, CORS, CDN)?',
+  },
+  {
+    key: 'media',
+    persona: 'Video / Multimedia Engineer',
+    rubric:
+      'Media-encoding best practices: WebM/MP4 codec + container correctness, GIF size (≤480px cap, palette ' +
+      'quantization), fps/duration tradeoffs, audio-track handling, and device compatibility (iOS lacks ' +
+      'canvas.captureStream). Verify the new fallback actually routes to GIF + hint, and that exports are ' +
+      'WhatsApp/Telegram-friendly in size.',
+  },
+]
+
+const FINDINGS_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['persona', 'rubricName', 'score', 'findings', 'overall'],
+  properties: {
+    persona: { type: 'string' },
+    rubricName: { type: 'string' },
+    score: { type: 'number' },
+    findings: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['criterion', 'verdict', 'severity', 'evidence', 'recommendation'],
+        properties: {
+          criterion: { type: 'string' },
+          verdict: { type: 'string', enum: ['PASS', 'FAIL', 'WARN'] },
+          severity: { type: 'string', enum: ['info', 'low', 'medium', 'high', 'critical'] },
+          evidence: { type: 'string' },
+          recommendation: { type: 'string' },
+        },
+      },
+    },
+    overall: { type: 'string' },
+  },
+}
+
+phase('Audit')
+const results = await parallel(
+  RUBRICS.map((r) => () =>
+    agent(
+      `${CONTEXT}\n\nPERSONA: ${r.persona}\nRUBRIC: ${r.rubric}\n\nGrade the app against this rubric. ` +
+      `Return PASS/FAIL/WARN per criterion you checked, only NEW or BROKEN items as FAIL/WARN, a 0-100 score, ` +
+      `and a 2-3 sentence overall.`,
+      { label: `audit:${r.key}`, phase: 'Audit', schema: FINDINGS_SCHEMA },
+    ),
+  ),
+)
+
+const nonEmpty = results.filter(Boolean)
+log(`${nonEmpty.length}/${RUBRICS.length} persona audits returned`)
+
+phase('Synthesize')
+const report = await agent(
+  `${CONTEXT}\n\nBelow are the structured audit results from ${nonEmpty.length} personas. Merge them into ONE ` +
+  `final review report:\n` +
+  `1. DEDUPE: collapse the same issue reported by multiple personas into one finding.\n` +
+  `2. RANK by severity (critical → high → medium → low → info), and separate the list into two sections: ` +
+  `"FIXABLE NOW" (code can address today) and "DEPLOY-BLOCKED" (only manifests once live).\n` +
+  `3. For each finding keep: persona(s), rubric criterion, severity, evidence, recommendation.\n` +
+  `4. Include a per-persona scorecard (name + 0-100 + verdict line) computed from the audit results.\n` +
+  `5. End with an OVERALL SCORE (weighted 0-100), a top-5 "fix these first" list, and an honest overall ` +
+  `verdict: release-ready or not, and what a 5/5 (or the next score tier) would require.\n\n` +
+  `AUDIT RESULTS:\n${JSON.stringify(nonEmpty, null, 1)}`,
+  { label: 'synthesize', phase: 'Synthesize' },
+)
+
+return report

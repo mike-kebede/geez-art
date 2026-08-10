@@ -5,14 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="geez-art — turn photos into art made of Ethiopic (Ge'ez) fidel letters. Made with respect for the script.">
   <meta name="theme-color" content="#f6f4f0">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='75' font-size='80' text-anchor='middle' fill='%23D4AF37'%3Eፊ%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='75' font-size='80' text-anchor='middle' fill='%23d9a441'%3Eፊ%3C/text%3E%3C/svg%3E">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "geez·art",
+    "url": "https://geez-art.pages.dev",
+    "description": "Turn any photo or video into a mosaic of Ge'ez fidel letters — free, nothing uploaded.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript and canvas"
+  }
+  </script>
+  <meta property="og:site_name" content="geez·art">
   <meta property="og:title" content="geez·art — turn photos into Ethiopic letters">
   <meta property="og:description" content="Free. Turn any photo or video into a mosaic of Ge'ez fidel letters — nothing uploaded.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://geez-art.pages.dev">
-  <meta name="twitter:card" content="summary">
-  <meta property="og:image" content="/og-image.png">
-  <meta name="twitter:image" content="/og-image.png">
+  <meta property="og:image" content="https://geez-art.pages.dev/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://geez-art.pages.dev/og-image.png">
   <title>geez·art — turn photos into Ethiopic letters</title>
   <link rel="stylesheet" href="/src/style.css">
 </head>
@@ -36,13 +51,13 @@
         </div>
         <div class="frame-inner">
           <div class="zoom-wrap">
-            <canvas id="mosaic" width="0" height="0" role="img" tabindex="-1"></canvas>
+            <canvas id="mosaic" width="0" height="0" role="img" tabindex="-1" aria-label="Ethiopic letter mosaic — add a photo to create one."></canvas>
             <div class="empty-state" id="emptyHint" tabindex="0" role="button">
               <span class="empty-fidel" aria-hidden="true">ፊደል</span>
               <h2 id="emptyTitle">Choose a photo or video</h2>
-              <p lang="am" class="fidel empty-am">ምስል ወይም ቪዲዮ ይምረጡ</p>
+              <p lang="am" class="fidel empty-am" id="emptyTitleAm">ምስል ወይም ቪዲዮ ይምረጡ</p>
               <p id="emptySub">It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.</p>
-              <p lang="am" class="fidel empty-am">ወደ የኢትዮጵያ ፊደላት ሞዛይክ ይቀየራል። ነፃ ነው፣ ምንም አይሰቀልም።</p>
+              <p lang="am" class="fidel empty-am" id="emptySubAm">ወደ የኢትዮጵያ ፊደላት ሞዛይክ ይቀየራል። ነፃ ነው፣ ምንም አይሰቀልም።</p>
             </div>
           </div>
         </div>
@@ -92,15 +107,15 @@
           <h2>Adjust</h2>
           <label class="slider">
             Detail <span id="widthVal" class="val"></span>
-            <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail">
+            <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail" aria-label="Detail">
           </label>
           <label class="slider">
             Contrast <span id="contrastVal" class="val"></span>
-            <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark">
+            <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark" aria-label="Contrast">
           </label>
           <label class="slider">
             Edges <span id="edgeVal" class="val"></span>
-            <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges">
+            <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges" aria-label="Edges">
           </label>
           <div class="checks">
             <label class="row-inline"><input type="checkbox" id="invert"> Invert</label>
@@ -156,6 +171,7 @@
             <button id="copyText">Copy as text</button>
             <button id="dlHtml">Save as HTML</button>
           </div>
+          <p id="videoCapHint" class="hint" hidden>Video export isn't supported on this device — grab a GIF instead. <span lang="am" class="fidel">ቪዲዮ ማውረድ በዚህ መሣሪያ አይገኝም — GIF ይውሰዱ።</span></p>
         </section>
       </details>
     </aside>
@@ -163,6 +179,13 @@
 
   <footer>
     <p>Made with respect for the Ethiopic script, <span class="fidel">ፊደል</span>. If a photo shows a real person, ask before sharing it. <span lang="am" class="fidel">ለፊደል በአክብሮት</span></p>
+    <details class="privacy-note">
+      <summary>Privacy &amp; parents</summary>
+      <p>Everything runs on your device: your photo or video is never uploaded, and this page makes no server
+      requests. Optional analytics are off by default and only send anonymous event counts if the site owner
+      enables them. For parents: no accounts, no cookies, no tracking — a child's photo never leaves their
+      device. Please ask before sharing a real person's picture.</p>
+    </details>
   </footer>
 
   <script type="module" src="/src/app.ts"></script>

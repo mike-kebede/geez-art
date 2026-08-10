@@ -55,12 +55,27 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
   ctx.fillStyle = BRAND.band;
   ctx.fillRect(0, 0, out.width, out.height);
   ctx.drawImage(mosaic, 0, 0);
-  // brand band
+  drawBrandBand(ctx, mosaic.width, mosaic.height, bandH, siteUrl);
+  return out;
+}
+
+/**
+ * Draw the brand band (gold hairline + fidel wordmark + "make yours at" CTA)
+ * BELOW the mosaic area on an already-sized context. Shared by the static PNG
+ * path and the video/GIF capture path so every shared artifact carries the URL.
+ */
+export function drawBrandBand(
+  ctx: CanvasRenderingContext2D,
+  mosaicW: number,
+  mosaicH: number,
+  bandH: number,
+  siteUrl: string,
+): void {
   ctx.fillStyle = BRAND.band;
-  ctx.fillRect(0, mosaic.height, out.width, bandH);
+  ctx.fillRect(0, mosaicH, mosaicW, bandH);
   ctx.fillStyle = BRAND.gold;
-  ctx.fillRect(0, mosaic.height, out.width, 2); // gold hairline
-  const mid = mosaic.height + bandH / 2;
+  ctx.fillRect(0, mosaicH, mosaicW, 2); // gold hairline
+  const mid = mosaicH + bandH / 2;
   ctx.textBaseline = 'middle';
 
   const PAD = 16; // horizontal padding on each side of the band
@@ -83,7 +98,7 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
   // Viral CTA on the right. On narrow mosaics the monospace URL collides with
   // the wordmark; shrink it until it fits, and if it still can't, drop the
   // "make yours at " prefix and show the bare URL (still findable as the CTA).
-  const right = out.width - PAD;
+  const right = mosaicW - PAD;
   const full = 'make yours at ' + siteUrl;
   const bare = siteUrl;
   const minSize = 10;
@@ -105,6 +120,53 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
   ctx.fillStyle = BRAND.gold;
   ctx.textAlign = 'right';
   ctx.fillText(label, right, mid);
+}
+
+/**
+ * Paint the live mosaic + URL band onto `target` at a capture-friendly size
+ * (long edge ≤ maxEdge). Call this every frame during recording so the exported
+ * video/GIF animates AND carries the loop URL (M2), downscaled for low-end
+ * encoding (M10).
+ */
+export function paintBrandedCapture(
+  target: HTMLCanvasElement,
+  mosaic: HTMLCanvasElement,
+  siteUrl: string,
+  maxEdge = 1280,
+): void {
+  const scale = Math.min(1, maxEdge / Math.max(1, mosaic.width, mosaic.height));
+  const w = Math.max(1, Math.round(mosaic.width * scale));
+  const h = Math.max(1, Math.round(mosaic.height * scale));
+  const bandH = Math.max(32, Math.min(64, Math.round(w * 0.05)));
+  if (target.width !== w || target.height !== h + bandH) {
+    target.width = w;
+    target.height = h + bandH;
+  }
+  const ctx = target.getContext('2d')!;
+  ctx.fillStyle = BRAND.band;
+  ctx.fillRect(0, 0, target.width, target.height);
+  ctx.drawImage(mosaic, 0, 0, w, h);
+  drawBrandBand(ctx, w, h, bandH, siteUrl);
+}
+
+/**
+ * Downscale a canvas so its long edge ≤ maxEdge, returning the SAME canvas when
+ * it already fits. Share sheets on budget phones choke on multi-MB PNGs, and
+ * WhatsApp/Telegram recompress anyway — so the shared image is capped (M13).
+ */
+export function downscaleCanvas(canvas: HTMLCanvasElement, maxEdge = 1600): HTMLCanvasElement {
+  const long = Math.max(canvas.width, canvas.height);
+  if (long <= maxEdge) return canvas;
+  const k = maxEdge / long;
+  const w = Math.max(1, Math.round(canvas.width * k));
+  const h = Math.max(1, Math.round(canvas.height * k));
+  const out = document.createElement('canvas');
+  out.width = w;
+  out.height = h;
+  const ctx = out.getContext('2d')!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(canvas, 0, 0, w, h);
   return out;
 }
 
@@ -117,7 +179,7 @@ export async function shareCanvas(
   canvas: HTMLCanvasElement,
   text: string,
   filename = 'geez-art.png',
-): Promise<'shared' | 'downloaded'> {
+): Promise<'shared' | 'downloaded' | 'cancelled'> {
   const blob = await canvasToBlob(canvas);
   const file = new File([blob], filename, { type: 'image/png' });
   const nav = navigator as Navigator & {
@@ -133,7 +195,7 @@ export async function shareCanvas(
         downloadCanvasPNG(canvas, filename);
         return 'downloaded';
       }
-      return 'shared'; // user cancelled the sheet — not an error
+      return 'cancelled'; // user dismissed the sheet — not an error, but trackable (M6)
     }
   }
   downloadCanvasPNG(canvas, filename);
@@ -174,22 +236,6 @@ function htmlDocument(
     '</html>',
     '',
   ].join('\n');
-}
-
-/**
- * Build a standalone HTML string: a <pre> with inline styles (paper/ink colors,
- * Ethiopic font stack, font size) plus a minimal <head>. Valid HTML the user
- * can save and open in any browser.
- *
- * NOTE: this sync version relies on the system Ethiopic font stack (FONT), which
- * is missing on macOS/iOS and renders as tofu there. For a genuinely portable
- * file, call `selfContainedHTML` (async) instead — it embeds the woff2.
- */
-export function exportHTML(
-  chars: string[][],
-  opts?: { ink?: string; paper?: string; fontSize?: string },
-): string {
-  return htmlDocument(chars, opts, FONT, []);
 }
 
 /**
