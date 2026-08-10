@@ -251,6 +251,18 @@ body {
   margin-top: 14px;
 }
 
+/* in-app replay of the converted video */
+.replay {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+.replay video { width: 100%; max-height: 320px; border-radius: 10px; background: #000; }
+.replay-actions { display: flex; gap: 10px; margin-top: 10px; justify-content: center; }
+
 /* ---------- controls — floating glass panel ---------- */
 .controls {
   background: rgba(255, 255, 255, 0.82);

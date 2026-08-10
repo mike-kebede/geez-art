@@ -483,6 +483,37 @@ test('download video produces a file', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('download GIF produces a file', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  await expect(page.locator('#dlGif')).toBeVisible();
+  const downloadPromise = page.waitForEvent('download');
+  await page.click('#dlGif');
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toContain('geez-art.gif');
+});
+
+test('video download shows an in-app replay', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  const downloadPromise = page.waitForEvent('download');
+  await page.click('#dlVideo');
+  await downloadPromise; // the download fires; also the replay appears
+  await expect(page.locator('#replay')).toBeVisible({ timeout: 15000 });
+  const src = await page.getAttribute('#replayVideo', 'src');
+  expect(src).toBeTruthy();
+});
+
 test('save as HTML produces a file', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);

@@ -50,6 +50,13 @@
         <span id="mosaicStat" class="stat"></span>
       </div>
       <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so they can make their own.</p>
+      <div id="replay" class="replay" hidden>
+        <video id="replayVideo" controls playsinline></video>
+        <div class="replay-actions">
+          <button id="dlReplay" class="primary">Download</button>
+          <button id="closeReplay" class="ghost">Close</button>
+        </div>
+      </div>
     </section>
 
     <aside class="controls" aria-label="Controls">
@@ -131,6 +138,7 @@
           <div class="btn-row">
             <button id="dlPng">Download PNG</button>
             <button id="dlVideo" hidden>Download video</button>
+            <button id="dlGif" hidden>Download GIF</button>
             <button id="copyText">Copy as text</button>
             <button id="dlHtml">Save as HTML</button>
           </div>

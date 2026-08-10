@@ -10,7 +10,7 @@ import { imageFileToCanvas, setupPaste, setupDropZone } from './input';
 import { downloadCanvasPNG, gridToText, exportHTML, makeShareImage, shareCanvas } from './export';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
 import { getSamples } from './samples';
-import { startVideoLoop, recordCanvas, type VideoHandle } from './video';
+import { startVideoLoop, recordCanvas, recordGIF, type VideoHandle } from './video';
 
 let ramp: GlyphInfo[] = [];
 let source: HTMLCanvasElement | null = null;
@@ -290,6 +290,7 @@ async function handleVideoFile(file: File): Promise<void> {
   $('playBtn').hidden = false;
   ($('playBtn') as HTMLButtonElement).textContent = 'Pause';
   $('dlVideo').hidden = false;
+  $('dlGif').hidden = false;
   const chip = $('sourceChip');
   if (chip) chip.classList.add('visible');
   $('clearBtn').hidden = false;
@@ -311,6 +312,7 @@ function stopVideo(): void {
   }
   $('playBtn').hidden = true;
   $('dlVideo').hidden = true;
+  $('dlGif').hidden = true;
 }
 
 function downloadBlob(name: string, blob: Blob): void {
@@ -323,6 +325,27 @@ function downloadBlob(name: string, blob: Blob): void {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Show the converted video back in-app so the user can replay it there and then. */
+function showReplay(blob: Blob): void {
+  const panel = document.getElementById('replay');
+  const vid = document.getElementById('replayVideo') as HTMLVideoElement | null;
+  const dl = document.getElementById('dlReplay') as HTMLButtonElement | null;
+  const close = document.getElementById('closeReplay') as HTMLButtonElement | null;
+  if (!panel || !vid || !dl || !close) return;
+  const url = URL.createObjectURL(blob);
+  vid.src = url;
+  void vid.play().catch(() => {});
+  dl.onclick = () => {
+    downloadBlob('geez-art-video.' + (blob.type.includes('webm') ? 'webm' : 'mp4'), blob);
+  };
+  close.onclick = () => {
+    panel.hidden = true;
+    vid.pause();
+    URL.revokeObjectURL(url);
+  };
+  panel.hidden = false;
 }
 
 /* ---------- custom letter picker ---------- */
@@ -625,9 +648,30 @@ async function init(): Promise<void> {
     flash('Recording a few seconds…');
     // Capture the on-page canvas (repainted every video frame) — captureStream
     // needs changing frames; the offscreen render canvas is static each frame.
-    const rec = await recordCanvas(out, 4, 12);
-    if (rec.blob) downloadBlob('geez-art-video.' + rec.ext, rec.blob);
-    flash('Video saved');
+    // Mix in the source video's audio so the converted clip isn't silent.
+    let audio: MediaStream | null = null;
+    if (videoEl) {
+      try {
+        const withStream = videoEl as HTMLVideoElement & { captureStream?: () => MediaStream };
+        audio = withStream.captureStream ? withStream.captureStream() : null;
+      } catch {
+        audio = null;
+      }
+    }
+    const rec = await recordCanvas(out, 4, 12, audio);
+    if (rec.blob) {
+      downloadBlob('geez-art-video.' + rec.ext, rec.blob);
+      showReplay(rec.blob);
+    }
+    flash(rec.blob ? 'Video saved' : "Couldn't record the video.");
+  });
+  $('dlGif').addEventListener('click', async () => {
+    const out = document.getElementById('mosaic') as HTMLCanvasElement | null;
+    if (!out || out.width === 0) return;
+    flash('Making a GIF…');
+    const bytes = await recordGIF(out, 3, 8);
+    if (bytes) downloadBlob('geez-art.gif', new Blob([bytes.buffer as ArrayBuffer], { type: 'image/gif' }));
+    flash('GIF saved');
   });
   $('zoomIn').addEventListener('click', () => {
     zoom = Math.min(4, Math.round((zoom + 0.25) * 100) / 100);
