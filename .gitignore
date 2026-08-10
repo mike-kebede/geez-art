@@ -6,3 +6,4 @@ poc/
 test-results/
 playwright-report/
 
+.claude/
