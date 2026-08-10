@@ -26,13 +26,18 @@
   <meta property="og:image" content="https://geez-art.pages.dev/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A photo rendered as a mosaic of Ge'ez/Ethiopic fidel letters">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="geez·art — turn photos into Ethiopic letters">
+  <meta name="twitter:description" content="Free. Turn any photo or video into a mosaic of Ge'ez fidel letters — nothing uploaded.">
+  <meta name="twitter:domain" content="geez-art.pages.dev">
   <meta name="twitter:image" content="https://geez-art.pages.dev/og-image.png">
+  <meta name="twitter:image:alt" content="A photo rendered as a mosaic of Ge'ez/Ethiopic fidel letters">
   <title>geez·art — turn photos into Ethiopic letters</title>
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-  <a class="skip-link" href="#mosaic">Skip to artwork</a>
+  <a class="skip-link" href="#frame">Skip to artwork</a>
   <header class="topbar">
     <h1 class="wordmark"><span class="wm-latin">geez·art</span></h1>
     <p id="status" class="status" role="status">Loading the Ethiopic font…</p>
@@ -42,7 +47,7 @@
   <main class="stage">
     <section class="showcase" aria-label="Mosaic preview">
       <div class="halo" aria-hidden="true"></div>
-      <div class="frame" id="frame">
+      <div class="frame" id="frame" tabindex="-1">
         <div class="zoom-controls" id="zoomControls" hidden>
           <button id="zoomOut" type="button" title="Zoom out" aria-label="Zoom out">−</button>
           <span id="zoomVal" class="zoom-val">100%</span>
@@ -69,7 +74,7 @@
         </span>
         <span id="mosaicStat" class="stat"></span>
       </div>
-      <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so they can make their own. <span lang="am" class="fidel">ዝግጁ ነው — አጋራ፣ አገናኙም አብሮ ይጓዛል።</span></p>
+      <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so they can make their own. <span lang="am" class="fidel">ዝግጁ ነው — አጋሩ፣ የመጀመሪያው ምስል አይለቀቅም፣ ወደ አገልጋይም አይላክም።</span></p>
       <div id="replay" class="replay" hidden>
         <video id="replayVideo" controls playsinline></video>
         <div class="replay-actions">

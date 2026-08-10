@@ -1,4 +1,6 @@
 // Image input: File / URL / clipboard-paste / drag-drop → opaque, EXIF-corrected canvas.
+
+import { MAX_SOURCE_EDGE } from './limits';
 //
 // EXIF orientation is read from the raw bytes with exifr, while the pixels are
 // decoded with `imageOrientation: 'none'` so the browser does NOT auto-rotate.
@@ -26,7 +28,7 @@ function resizeDims(
   const w = size?.width;
   const h = size?.height;
   if (!w || !h) return undefined;
-  const k = Math.min(1, 1600 / Math.max(w, h));
+  const k = Math.min(1, MAX_SOURCE_EDGE / Math.max(w, h));
   if (k >= 1) return undefined;
   // Resize applies to the SOURCE bitmap (pre-orientation). The 90°/270° EXIF
   // swaps w/h in the destination, but the long edge is unchanged, so the scale
@@ -47,8 +49,9 @@ async function imageDimensions(
   try {
     // 64KB probe: EXIF-heavy phone JPEGs carry 5–40KB of metadata/thumbnail
     // before the SOF marker — the old 4KB window missed it, silently skipping
-    // the memory-saving decode-time resize (M4).
-    const buf = new Uint8Array(await blob.slice(0, 65536).arrayBuffer());
+    // the memory-saving decode-time resize (M4). The JPEG walk below grows the
+    // probe in chunks up to 512KB so heavy EXIF still yields the dims (L9).
+    let buf = new Uint8Array(await blob.slice(0, 65536).arrayBuffer());
     if (buf.length < 24) return undefined;
 
     // PNG: 8-byte signature, then IHDR width/height at offsets 16/20.
@@ -80,18 +83,26 @@ async function imageDimensions(
     }
 
     // JPEG: walk the marker segments until an SOF (0xFFC0–0xFFCF, minus the
-    // Huffman/quantization tables C4/C8/CC) which carries height/width.
+    // Huffman/quantization tables C4/C8/CC) which carries height/width. If the
+    // window ends mid-segment (big EXIF/thumbnail before SOF), grow it and
+    // re-walk — up to 512KB (L9).
     if (buf[0] === 0xff && buf[1] === 0xd8) {
-      let o = 2;
-      while (o + 9 < buf.length) {
-        if (buf[o] !== 0xff) { o++; continue; }
-        const marker = buf[o + 1];
-        if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
-          return { height: (buf[o + 5] << 8) | buf[o + 6], width: (buf[o + 7] << 8) | buf[o + 8] };
+      const CHUNK = 65536;
+      const MAX_PROBE = 8 * CHUNK;
+      for (;;) {
+        let o = 2;
+        while (o + 9 < buf.length) {
+          if (buf[o] !== 0xff) { o++; continue; }
+          const marker = buf[o + 1];
+          if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+            return { height: (buf[o + 5] << 8) | buf[o + 6], width: (buf[o + 7] << 8) | buf[o + 8] };
+          }
+          o += 2 + ((buf[o + 2] << 8) | buf[o + 3]);
         }
-        o += 2 + ((buf[o + 2] << 8) | buf[o + 3]);
+        const next = Math.min(blob.size, buf.length + CHUNK);
+        if (buf.length >= MAX_PROBE || next === buf.length) return undefined;
+        buf = new Uint8Array(await blob.slice(0, next).arrayBuffer());
       }
-      return undefined;
     }
 
     return undefined;
@@ -126,7 +137,7 @@ function orientAndComposite(src: Decoded, orientation: number | undefined): HTML
   // photo at natural resolution (e.g. 4000×3000) costs ~10-25× more per render
   // than the downscaled 1600×1200 — the mosaic grid itself only needs detail
   // up to the cell count, so the extra resolution is pure waste.
-  const MAX_EDGE = 1600;
+  const MAX_EDGE = MAX_SOURCE_EDGE;
   let outW = swapped ? h : w;
   let outH = swapped ? w : h;
   const longEdge = Math.max(outW, outH);

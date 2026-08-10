@@ -24,25 +24,36 @@ App runs two ways right now:
 DEPLOYMENT IS DELIBERATELY PARKED by the user. Anything that only manifests on a live URL (og:image
 preview, CSP enforcement, share-card rendering, DNS) is "deploy-blocked", not a fixable bug.
 
-THIS IS A RE-AUDIT. A prior round of 12 persona reviews surfaced ~48 findings; the author has since fixed
-the tractable ones. Fixed-and-verified (do NOT re-report as new; you may mark them PASS if the code
-confirms them): aspect-ratio math; EXIF single-source orientation; ≤1600px source + video-frame
-downscaling; decode-time resize (createImageBitmap) for 12MP photos; 4000px output-height cap;
-self-contained HTML export (embedded Ethiopic font); og-image.png 1200×630 + absolute-URL og/twitter meta
-+ summary_large_image + JSON-LD; CSP + nosniff + X-Frame-Options + frame-ancestors + base-uri + form-action
-+ /assets cache-control headers; dev-only test hooks; video audio capture; replay blob-URL cleanup;
-three-tap default (Advanced disclosure); sticky share bar; bilingual Amharic (share hint preserved,
-empty-state synced); static halo; church attribution; a11y fixes (zoom keyboard panning, slider
-aria-labels, touch targets ≥44px, focus re-home, focus contrast, mosaic text alternative, picker
-aria-pressed, skip link, announce-on-ready, neutral mosaic name); iOS video-export fallback (GIF hint);
-HEIC friendly error; opt-in analytics seam with share-outcome/funnel events; runtime-derived share URL;
-share-path downscale (≤1600px); colored-atlas renderer for colorize (video no longer freezes low-end);
-adaptive video fps; GIF long-edge cap + failure honesty; empty-ramp blanking; lazy picker build; lazy
-gifenc import; dead code removed; "Try an example" loads the icon-classical sample; privacy & parents
-notice; favicon gold harmonized; palette-driven frame accent.
+THIS IS A RE-AUDIT (round 3). Two prior rounds of 12 persona reviews surfaced ~60 findings; the author has
+since fixed the tractable ones. Fixed-and-verified (do NOT re-report as new; you may mark them PASS if the
+code confirms them):
+- Round 2: aspect-ratio math; EXIF single-source orientation; ≤1600px source + video-frame downscaling;
+  decode-time resize (createImageBitmap) for 12MP photos; 4000px output-height cap; self-contained HTML
+  export (embedded Ethiopic font); og-image.png 1200×630 + absolute-URL og/twitter meta +
+  summary_large_image + JSON-LD; CSP + nosniff + X-Frame-Options + frame-ancestors + base-uri +
+  form-action + /assets cache-control; dev-only test hooks; video audio capture; replay blob-URL cleanup;
+  three-tap default (Advanced disclosure); sticky share bar; bilingual Amharic (share hint preserved,
+  empty-state synced); static halo; church attribution; a11y fixes (zoom keyboard panning, slider
+  aria-labels, touch targets ≥44px, focus re-home, focus contrast, mosaic text alternative, picker
+  aria-pressed, skip link, announce-on-ready, neutral mosaic name); iOS video-export fallback (GIF hint);
+  HEIC friendly error; opt-in analytics seam with share-outcome/funnel events; runtime-derived share URL;
+  share-path downscale; colored-atlas renderer for colorize; adaptive video fps; GIF long-edge cap +
+  failure honesty; empty-ramp blanking; lazy picker; lazy gifenc; dead code removed; "Try an example"
+  loads the icon-classical sample; privacy & parents notice; favicon gold harmonized; palette-driven frame
+  accent.
+- Round 3 (just committed): CSP now allows blob: media (media-src 'self' blob: + img-src blob:) so video
+  mode + replay survive production headers (was a release-blocker — now covered by a dist-based test that
+  serves the real artifact with real headers); share band stamped at FINAL resolution (downscale-first)
+  so the URL CTA is legible; video/GIF exports carry the URL band (paintBrandedCapture); 4000px cap now
+  holds for very tall sources (cols reduced first); 64KB JPEG header probe so 12MP decode-time resize
+  engages; ramp measurement yields to the event loop; color-atlas 3-entry LRU; audio stays unmuted for
+  the full recording window; videoBitsPerSecond applies to mp4 too + recording downscaled ≤1280;
+  empty-MIME .heic reaches the friendly error + video routing by extension; share-sheet cancel reports
+  "cancelled"; zero-upload network-interception test; DEPLOY.md analytics/CSP reconciliation.
 
-Test suite: tests/e2e.spec.ts — 47 Playwright tests expected green (Chromium, dev server). Read the file
-to assess COVERAGE; the author is running it, so do not execute it.
+Test suite: tests/e2e.spec.ts — 51 Playwright tests expected green (Chromium; the suite builds dist and
+validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
+do not execute it.
 
 Grade the CURRENT code fresh against your rubric and give an honest 0-100 score. Re-reporting an already
 fixed item as a NEW finding is a mistake; noting "previously FAIL, now PASS" in a criterion verdict is

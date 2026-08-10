@@ -7,8 +7,26 @@ import { execSync } from 'node:child_process';
 let distBuilt = false;
 function ensureBuilt(): void {
   if (distBuilt) return;
-  execSync('npm run build', { stdio: 'ignore' });
+  try {
+    execSync('npm run build', { stdio: 'ignore' });
+  } catch (e) {
+    // L15: a build failure should fail fast with a real message, not a cryptic
+    // worker crash from the missing dist/.
+    throw new Error('`npm run build` failed — run it manually first. ' + (e instanceof Error ? e.message : String(e)));
+  }
   distBuilt = true;
+}
+
+/** Listen with a real error handler so EADDRINUSE fails fast (L15) instead of
+ *  hanging the suite on an unhandled 'error' event. */
+function listenServer(server: http.Server, port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, () => {
+      server.removeListener('error', reject);
+      resolve();
+    });
+  });
 }
 
 /** Serve dist/ with public/_headers applied — the exact way Cloudflare serves it. */
@@ -572,7 +590,7 @@ test('the built app works under its own production CSP headers (blob: media allo
   test.setTimeout(120000);
   ensureBuilt();
   const server = serveDist(5197);
-  await new Promise((r) => server.listen(5197, r));
+  await listenServer(server, 5197);
   try {
     await page.goto('http://localhost:5197/');
     await page.waitForFunction(() => /Ready/.test(document.getElementById('status')?.textContent ?? ''), null, { timeout: 30000 });
@@ -639,6 +657,236 @@ test('cancelling the share sheet reports "cancelled", not "saved" (L7)', async (
   });
   await page.click('#share');
   await expect(page.locator('#status')).toContainText('Share cancelled', { timeout: 10000 });
+});
+
+// --- round-3 fixes: EXIF/resize coverage, empty-MIME routing, band, HTML, aria ---
+
+test('EXIF-orientation-6 JPEG >1600px: mosaic renders AND decode-time resize engaged (H1)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  // Build a 4000×3000 JPEG with EXIF Orientation=6 in-page, exactly as a phone
+  // would produce — the highest-risk path (orientation + >1600px resize) had
+  // zero automated coverage.
+  const file = await page.evaluateHandle(async () => {
+    const c = document.createElement('canvas');
+    c.width = 4000;
+    c.height = 3000;
+    const x = c.getContext('2d')!;
+    x.fillStyle = '#ff0000'; x.fillRect(0, 0, 2000, 3000);
+    x.fillStyle = '#0000ff'; x.fillRect(2000, 0, 2000, 3000);
+    x.fillStyle = '#00ff00'; x.fillRect(0, 0, 4000, 1500);
+    x.fillStyle = '#ffff00'; x.fillRect(0, 1500, 4000, 1500);
+    return new Promise<File>((resolve) => c.toBlob(async (blob) => {
+      const buf = new Uint8Array((await blob!.arrayBuffer()));
+      // APP1 EXIF segment, II byte order, IFD0 tag 0x0112 Orientation = 6.
+      const exif = new Uint8Array([
+        0xff, 0xe1, 0x00, 0x1c,
+        0x45, 0x78, 0x69, 0x66, 0x00, 0x00,
+        0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x01, 0x12, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x00,
+      ]);
+      exif[2] = 0x00; exif[3] = 0x1e;
+      const out = new Uint8Array(buf.length + 30);
+      out.set(buf.subarray(0, 2), 0);
+      out.set(exif, 2);
+      out.set(buf.subarray(2), 32);
+      resolve(new File([out], 'rot.jpg', { type: 'image/jpeg' }));
+    }, 'image/jpeg', 0.95));
+  });
+  const bytes = await file.evaluate((f: File) => f.arrayBuffer().then((a) => Array.from(new Uint8Array(a))));
+  await page.setInputFiles('#file', { name: 'rot.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(bytes) });
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10 && c.height > 10;
+  });
+  // Non-blank: a healthy share of the top-left sample is ink (not just paper).
+  const ink = await page.evaluate(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    const d = c.getContext('2d')!.getImageData(0, 0, Math.min(c.width, 400), Math.min(c.height, 400)).data;
+    let dark = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] < 240 || d[i + 1] < 240 || d[i + 2] < 240) dark++;
+    return dark / (d.length / 4);
+  });
+  expect(ink).toBeGreaterThan(0.02);
+  // Decode-time resize engaged: the corrected source long edge is ≤1600, not 4000.
+  const src = await page.evaluate(() => {
+    const s = document.getElementById('source') as HTMLCanvasElement;
+    return { w: s.width, h: s.height };
+  });
+  expect(Math.max(src.w, src.h)).toBeLessThanOrEqual(1600);
+});
+
+test('empty-MIME files still route correctly: .heic friendly error + .mp4 video path (M10)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  // Empty MIME is what Android/Windows expose for .heic — the extension sniff
+  // must still reach the friendly HEIC error.
+  await page.setInputFiles('#file', { name: 'photo.heic', mimeType: '', buffer: Buffer.from('not a real heic') });
+  await expect(page.locator('#status')).toContainText('HEIC', { timeout: 10000 });
+  await page.waitForFunction(() => document.getElementById('status')!.textContent === 'Ready', null, { timeout: 8000 });
+  // Empty-MIME .mp4 must route to the VIDEO pipeline (error says video, not image).
+  await page.setInputFiles('#file', { name: 'clip.mp4', mimeType: '', buffer: Buffer.from('not a real mp4') });
+  await expect(page.locator('#status')).toContainText("couldn't read that video", { timeout: 10000 });
+});
+
+test('the shared image carries the dark URL brand band (M11)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  const downloadPromise = page.waitForEvent('download');
+  await page.click('#share');
+  const download = await downloadPromise;
+  const buf = fs.readFileSync((await download.path())!);
+  const band = await page.evaluate(async (b64) => {
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = 'data:image/png;base64,' + b64; });
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const ctx = c.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+    const rowY = Math.floor(c.height * 0.97); // inside the bottom band
+    const d = ctx.getImageData(0, rowY, c.width, 1).data;
+    let dark = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] < 60 && d[i + 1] < 60 && d[i + 2] < 60) dark++;
+    return { w: c.width, h: c.height, darkFrac: dark / (d.length / 4) };
+  }, buf.toString('base64'));
+  expect(band.w).toBeGreaterThan(0);
+  expect(band.darkFrac).toBeGreaterThan(0.4); // brand band #15110d dominates the row
+});
+
+test('save as HTML embeds the Ethiopic font (self-contained) (L12)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  const downloadPromise = page.waitForEvent('download');
+  await page.click('#dlHtml');
+  const download = await downloadPromise;
+  const html = fs.readFileSync((await download.path())!, 'utf8');
+  expect(html).toContain('data:font/woff2;base64,');
+  expect(html).toMatch(/[ሀ-፿]/); // real fidel in the exported <pre>
+});
+
+test('picker never emits invalid aria-pressed="mixed" (L2)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.selectOption('#charset', 'custom');
+  await page.locator('.fam-expand').first().click();
+  const letters = page.locator('.fam-detail .letter');
+  await letters.nth(0).click(); // one letter of a family → partial state
+  expect(await page.locator('.fam-tile[aria-pressed="mixed"]').count()).toBe(0);
+  const pressed = await page.getAttribute('.fam-tile', 'aria-pressed');
+  expect(['true', 'false']).toContain(pressed);
+});
+
+test('analytics: plausible provider + malformed config stays silent (L13)', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __plausibleEvents?: string[] }).__plausibleEvents = [];
+    // trackEvent reads window.plausible (the property Plausible's snippet defines).
+    (window as unknown as { plausible?: (e: string) => void }).plausible = (e: string) => {
+      (window as unknown as { __plausibleEvents: string[] }).__plausibleEvents.push(e);
+    };
+  });
+  await page.goto('/');
+  await waitReady(page);
+  // Malformed config → stays silent (never crashes, never fires).
+  await page.evaluate(() => {
+    const m = document.createElement('meta');
+    m.name = 'geez-art:analytics';
+    m.content = 'this is not json';
+    document.head.appendChild(m);
+    (window as unknown as { __reloadAnalytics?: () => void }).__reloadAnalytics?.();
+  });
+  await uploadSample(page);
+  expect(await page.evaluate(() => (window as unknown as { __plausibleEvents: string[] }).__plausibleEvents)).toEqual([]);
+  // Valid plausible config → events reach the stub.
+  await page.evaluate(() => {
+    const m = document.querySelector('meta[name="geez-art:analytics"]');
+    if (m) m.setAttribute('content', JSON.stringify({ provider: 'plausible', domain: 'example.com' }));
+    (window as unknown as { __reloadAnalytics?: () => void }).__reloadAnalytics?.();
+  });
+  await uploadSample(page);
+  await page.waitForFunction(() => (window as unknown as { __plausibleEvents?: string[] }).__plausibleEvents?.length > 0);
+  const events = await page.evaluate(() => (window as unknown as { __plausibleEvents: string[] }).__plausibleEvents);
+  expect(events).toContain('source');
+});
+
+test('share_cancelled fires as an analytics event (L13)', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls = [];
+    Object.defineProperty(Navigator.prototype, 'sendBeacon', {
+      configurable: true,
+      value: function (url: string, data: Blob | string | null) {
+        const calls = (window as unknown as { __beaconCalls: Array<{ body: string }> }).__beaconCalls;
+        if (data instanceof Blob) void data.text().then((t) => calls.push({ body: t }));
+        else calls.push({ body: String(data ?? '') });
+        return true;
+      },
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: () => Promise.reject(new DOMException('Aborted', 'AbortError')),
+    });
+  });
+  await page.goto('/');
+  await waitReady(page);
+  await page.evaluate(() => {
+    const m = document.createElement('meta');
+    m.name = 'geez-art:analytics';
+    m.content = JSON.stringify({ provider: 'beacon', endpoint: '/__stats__' });
+    document.head.appendChild(m);
+    (window as unknown as { __reloadAnalytics?: () => void }).__reloadAnalytics?.();
+    (window as unknown as { __beaconCalls: unknown[] }).__beaconCalls = [];
+  });
+  await uploadSample(page);
+  await page.click('#share');
+  await expect(page.locator('#status')).toContainText('Share cancelled', { timeout: 10000 });
+  await page.waitForFunction(() => {
+    const calls = (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls;
+    return Array.isArray(calls) && calls.some((c) => c.body.includes('share_cancelled'));
+  });
+});
+
+test('keyboard: Enter activates the dropzone and opens the file chooser (L14)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.locator('#dropzone').focus();
+  await page.keyboard.press('Enter');
+  expect(await chooserPromise).toBeTruthy();
+});
+
+test('keyboard: Enter on the empty-state drop target opens the file chooser (L14)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.locator('#emptyHint').focus();
+  await page.keyboard.press('Enter');
+  expect(await chooserPromise).toBeTruthy();
+});
+
+test('a corrupt video shows the friendly message, not a hang (M9)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', { name: 'broken.webm', mimeType: 'video/webm', buffer: Buffer.from('garbage bytes') });
+  await expect(page.locator('#status')).toContainText("couldn't read that video", { timeout: 10000 });
+});
+
+test('pausing a video disables both video and GIF export (L28/M9)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  await page.click('#playBtn'); // pause — exports would be static otherwise
+  await expect(page.locator('#dlVideo')).toBeDisabled();
+  await expect(page.locator('#dlGif')).toBeDisabled();
 });
 
 test('video download shows an in-app replay', async ({ page }) => {
@@ -798,7 +1046,8 @@ test('an undecodable HEIC photo shows a friendly conversion message', async ({ p
   });
   await expect(page.locator('#status')).toContainText('HEIC', { timeout: 10000 });
   // And a plain unreadable file still gets the generic message, not the HEIC one.
-  await page.waitForTimeout(5200); // let the HEIC message time out back to "Ready"
+  // M13: poll for the flash to expire instead of a hard 5.2s sleep.
+  await page.waitForFunction(() => document.getElementById('status')!.textContent === 'Ready', null, { timeout: 8000 });
   await page.setInputFiles('#file', {
     name: 'broken.png',
     mimeType: 'image/png',

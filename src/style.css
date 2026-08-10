@@ -498,7 +498,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
   overflow-y: auto;
   padding-right: 4px;
 }
-.fam { display: grid; grid-template-columns: 1fr 20px; gap: 3px; align-items: center; }
+.fam { display: grid; grid-template-columns: 1fr 44px; gap: 3px; align-items: center; }
 .fam-tile {
   min-height: 44px; /* L27: ≥44px touch target */
   padding: 0;
@@ -514,7 +514,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
 .fam-tile.off { color: var(--mist); background: transparent; opacity: 1; border-color: var(--line); }
 .fam-expand {
   min-height: 44px;
-  min-width: 36px;
+  min-width: 44px; /* L8: the exact control a mobile user needs — was 36px in a 20px column */
   padding: 0;
   font-size: 13px;
   color: var(--mist);

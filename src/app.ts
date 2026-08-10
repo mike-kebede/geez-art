@@ -7,9 +7,11 @@
 import '@fontsource-variable/noto-sans-ethiopic';
 import '@fontsource-variable/inter';
 import { loadEthiopicFont, buildRamp, getAllGlyphs, rampFromGlyphs, COMMON_AMHARIC, type GlyphInfo, type RampPreset } from './fonts';
+import ethiopicWoffUrl from '@fontsource-variable/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-wght-normal.woff2';
 import { renderMosaic, invalidateSource, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone, isHeic, isVideoFile } from './input';
-import { downloadCanvasPNG, gridToText, selfContainedHTML, makeShareImage, shareCanvas, downscaleCanvas, paintBrandedCapture } from './export';
+import { downloadCanvasPNG, gridToText, selfContainedHTML, makeShareImage, shareCanvas, downscaleCanvas, paintBrandedCapture, triggerDownload } from './export';
+import { RENDER_DEBOUNCE_MS, MAX_FILE_BYTES } from './limits';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
 import { getSamples } from './samples';
 import { startVideoLoop, recordCanvas, recordGIF, canRecordVideo, type VideoHandle } from './video';
@@ -32,6 +34,10 @@ let zoom = 1;
 let customTouched = false;
 /** Track the currently-shown replay object URL so a new one replaces (revokes) the old. */
 let replayUrl: string | null = null;
+/** The source-video object URL, stored so it can be revoked by the STRING — not by
+ *  reading videoEl.src after the video element has been torn down (M1: that read
+ *  returns '' after removeAttribute('src'), making the revoke a silent no-op). */
+let videoUrl: string | null = null;
 
 const EMPTY_DEFAULT = {
   title: 'Choose a photo or video',
@@ -65,6 +71,20 @@ const SITE_URL: string = (() => {
 
 function $(id: string): HTMLElement {
   return document.getElementById(id)!;
+}
+
+/** M3: preload the 198KB Ethiopic woff2 as early as possible so the hero ፊደል
+ *  and Amharic lines don't flash as tofu on iOS/macOS (no system Ethiopic font)
+ *  during the cold viral visit. Runs before the font/ramp awaits in init. */
+function preloadEthiopicFont(): void {
+  if (document.querySelector('link[rel="preload"][as="font"]')) return;
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'font';
+  link.type = 'font/woff2';
+  link.crossOrigin = 'anonymous';
+  link.href = ethiopicWoffUrl;
+  document.head.appendChild(link);
 }
 
 /** Reset everything and restore the idle empty state (also the "Clear" handler). */
@@ -193,8 +213,9 @@ function queueRender(): void {
   // Busy cue (M8): show work in progress during the debounce window so a
   // multi-second synchronous render doesn't look frozen. render() restores
   // the idle status when it finishes.
-  if ($('status').textContent !== 'Rendering…') $('status').textContent = 'Rendering…';
-  renderTimer = window.setTimeout(render, 120); // debounce sliders
+  // I6: don't clobber an active flash message with the busy cue.
+  if (flashTimer === undefined && $('status').textContent !== 'Rendering…') $('status').textContent = 'Rendering…';
+  renderTimer = window.setTimeout(render, RENDER_DEBOUNCE_MS); // debounce sliders
 }
 
 function applyPalette(p: ArtPalette): void {
@@ -251,16 +272,7 @@ async function downloadHTML(): Promise<void> {
 }
 
 function downloadTextFile(name: string, text: string, type: string): void {
-  const blob = new Blob([text], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  triggerDownload(new Blob([text], { type }), name);
 }
 
 let flashTimer: number | undefined;
@@ -294,20 +306,33 @@ function clearReplay(returnFocusTo?: HTMLElement | null): void {
 async function doShare(): Promise<void> {
   if (!mosaicCanvas) return;
   trackEvent('share_started');
-  // M1: downscale the mosaic FIRST, then stamp the band at final resolution —
-  // stamping on the full-res canvas and shrinking the whole thing crushed the
-  // URL band to ~4px after messenger recompression. The band must be legible:
-  // it is the entire viral CTA.
-  const compact = downscaleCanvas(mosaicCanvas, 1600);
-  const branded = makeShareImage(compact, SITE_URL);
-  const result = await shareCanvas(branded, `Turn your photo into Ethiopic letters — ${SITE_URL}`);
-  // M6: track the OUTCOME so the viral loop's K-factor is observable (only
-  // fires when a provider is configured — otherwise a no-op).
-  trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
-  // L7: a dismissed share sheet is not a "Saved" success.
-  if (result === 'shared') flash('Shared — just the mosaic, not your original, and nothing is uploaded');
-  else if (result === 'cancelled') flash('Share cancelled — nothing was sent.');
-  else flash('Saved — only the mosaic is shared; your photo never leaves your device');
+  // L10: downscale + brand + toBlob is ~300–500ms of silent async work — show
+  // progress and disable the CTA so the tap doesn't feel dead.
+  const shareBtns: HTMLButtonElement[] = [];
+  for (const id of ['share', 'shareTop']) {
+    const b = document.getElementById(id) as HTMLButtonElement | null;
+    if (b) shareBtns.push(b);
+  }
+  for (const b of shareBtns) b.disabled = true;
+  flash('Preparing…', 3000);
+  try {
+    // M1: downscale the mosaic FIRST, then stamp the band at final resolution —
+    // stamping on the full-res canvas and shrinking the whole thing crushed the
+    // URL band to ~4px after messenger recompression. The band must be legible:
+    // it is the entire viral CTA.
+    const compact = downscaleCanvas(mosaicCanvas, 1600);
+    const branded = makeShareImage(compact, SITE_URL);
+    const result = await shareCanvas(branded, `Turn your photo into Ethiopic letters — ${SITE_URL}`);
+    // M6: track the OUTCOME so the viral loop's K-factor is observable (only
+    // fires when a provider is configured — otherwise a no-op).
+    trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
+    // L7: a dismissed share sheet is not a "Saved" success.
+    if (result === 'shared') flash('Shared — just the mosaic, not your original, and nothing is uploaded');
+    else if (result === 'cancelled') flash('Share cancelled — nothing was sent.');
+    else flash('Saved — only the mosaic is shared; your photo never leaves your device');
+  } finally {
+    for (const b of shareBtns) b.disabled = false;
+  }
 }
 
 /** Keep every Share control honest: disabled until a mosaic exists. */
@@ -359,6 +384,12 @@ function applyZoom(): void {
 
 /** Route a picked file to photo or video mode. */
 function handlePickedFile(file: File): void {
+  // L7: guard BEFORE createObjectURL — a multi-GB file would pin memory and hang
+  // the tab for no gain (nothing is uploaded, but it's still wasted work).
+  if (file.size > MAX_FILE_BYTES) {
+    flash('That file is over 200 MB — try a smaller one.', 5000);
+    return;
+  }
   if (isVideoFile(file)) {
     void handleVideoFile(file).catch(() => flash("We couldn't read that video — try another one."));
   } else {
@@ -384,6 +415,7 @@ function handlePickedFile(file: File): void {
 async function handleVideoFile(file: File): Promise<void> {
   clearAll();
   const url = URL.createObjectURL(file);
+  videoUrl = url; // M1: revoke by this stored string, never videoEl.src
   const v = document.createElement('video');
   v.muted = true;
   v.loop = true;
@@ -405,7 +437,8 @@ async function handleVideoFile(file: File): Promise<void> {
       }, { once: true });
     });
   } catch (e) {
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(videoUrl ?? url);
+    videoUrl = null;
     clearAll(); // restore the empty state the load was supposed to leave
     throw e;
   }
@@ -426,6 +459,12 @@ async function handleVideoFile(file: File): Promise<void> {
   $('emptyHint').style.display = 'none';
   $('playBtn').hidden = false;
   ($('playBtn') as HTMLButtonElement).textContent = 'Pause';
+  // L5: respect prefers-reduced-motion — show one static frame and let the
+  // user resume on demand instead of auto-animating at up to 12fps.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    videoHandle.togglePlay();
+    ($('playBtn') as HTMLButtonElement).textContent = 'Play';
+  }
   // iOS Safari can't captureStream the canvas, so video export is unavailable
   // there — swap the button for a hint pointing at GIF (which works everywhere).
   const canRecord = canRecordVideo();
@@ -457,9 +496,12 @@ function stopVideo(): void {
     videoHandle.stop();
     videoHandle = null;
   }
-  if (videoEl) {
-    URL.revokeObjectURL(videoEl.src);
-    videoEl = null;
+  if (videoEl) videoEl = null;
+  // M1: revoke the STORED URL. Reading videoEl.src here would return '' because
+  // videoHandle.stop() already removed the attribute — a silent no-op leak.
+  if (videoUrl) {
+    URL.revokeObjectURL(videoUrl);
+    videoUrl = null;
   }
   $('playBtn').hidden = true;
   $('dlVideo').hidden = true;
@@ -469,15 +511,7 @@ function stopVideo(): void {
 }
 
 function downloadBlob(name: string, blob: Blob): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  triggerDownload(blob, name);
 }
 
 /** Show the converted video back in-app so the user can replay it there and then. */
@@ -613,7 +647,11 @@ function updatePickerUI(): void {
     tile.classList.toggle('on', letters.length > 0 && on === letters.length);
     tile.classList.toggle('off', on === 0);
     tile.classList.toggle('partial', on > 0 && on < letters.length);
-    tile.setAttribute('aria-pressed', letters.length > 0 && on === letters.length ? 'true' : on > 0 ? 'mixed' : 'false');
+    // L2: aria-pressed accepts only true/false (WAI-ARIA 1.2). Partial state is
+    // conveyed by the .partial class + an explicit label, not an invalid 'mixed'.
+    tile.setAttribute('aria-pressed', letters.length > 0 && on === letters.length ? 'true' : 'false');
+    if (on > 0 && on < letters.length) tile.setAttribute('aria-label', 'Letter family partially selected — tap to toggle all');
+    else tile.removeAttribute('aria-label');
   });
   const total = allGlyphs.length;
   const used = allGlyphs.filter((g) => selectedCps.has(g.cp)).length;
@@ -665,7 +703,7 @@ async function applyCustomRamp(): Promise<void> {
     out.height = 0;
     mosaicCanvas = null;
     lastResult = null;
-    out.removeAttribute('aria-label');
+    out.setAttribute('aria-label', 'Ethiopic letter mosaic — no letters selected'); // L3: role=img must keep a name
     $('mosaicStat').textContent = '';
     updateShareState();
     $('status').textContent = 'No letters selected — tap some in the picker.';
@@ -685,9 +723,53 @@ async function applyCustomRamp(): Promise<void> {
   queueRender();
 }
 
+/**
+ * Wire the file picker, dropzone, paste, empty-state, and Clear listeners.
+ * Called FIRST in init() so the primary CTA (dropzone / giant ፊደል) is live at
+ * DOM-interactive — it used to wait for font download + full glyph-ramp
+ * measurement, leaving the page's only call-to-action dead for seconds on a
+ * cold visit (M4). Dropping a photo before the ramp is ready just sets the
+ * source; the render is gated on ramp.length and init re-renders afterwards.
+ */
+function wireInput(): void {
+  const file = $('file') as HTMLInputElement;
+  file.addEventListener('change', () => {
+    const f = file.files?.[0];
+    if (f) handlePickedFile(f);
+    file.value = '';
+  });
+  $('dropzone').addEventListener('click', () => {
+    trackEvent('dropzone_opened'); // opt-in analytics only
+    file.click();
+  });
+  $('dropzone').addEventListener('keydown', (ev: KeyboardEvent) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      file.click();
+    }
+  });
+  setupDropZone($('dropzone'), handlePickedFile);
+  setupPaste(document.body, handlePickedFile);
+  // The giant ፊደል empty state IS the drop target — click it to choose a photo.
+  const emptyState = $('emptyHint');
+  emptyState.addEventListener('click', () => file.click());
+  emptyState.addEventListener('keydown', (ev: KeyboardEvent) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      file.click();
+    }
+  });
+  $('clearBtn').addEventListener('click', () => {
+    clearAll();
+    $('emptyHint').focus(); // L4: return focus to the restored empty state
+  });
+}
+
 async function init(): Promise<void> {
   const status = $('status');
   initAnalytics(); // opt-in: a no-op unless a provider meta tag is present
+  preloadEthiopicFont(); // M3: start the woff2 fetch before anything blocks
+  wireInput(); // M4: primary CTA live at DOM-interactive, not after ramp setup
   try {
     await loadEthiopicFont();
     status.textContent = 'Preparing the letters…';
@@ -698,6 +780,8 @@ async function init(): Promise<void> {
       (window as unknown as { __commonSet?: number[] }).__commonSet = Array.from(COMMON_AMHARIC);
     }
     status.textContent = `Ready · ${ramp.length} letters`;
+    // M4: repaint anything the user dropped while the ramp was still loading.
+    if (source) render();
   } catch {
     status.textContent = 'Something went wrong — try reloading.';
     return;
@@ -734,36 +818,9 @@ async function init(): Promise<void> {
   }
   applyPalette(DEFAULT_PALETTE);
 
-  // Input: file picker via the dropzone, drag-drop, paste.
-  const file = $('file') as HTMLInputElement;
-  file.addEventListener('change', () => {
-    const f = file.files?.[0];
-    if (f) handlePickedFile(f);
-    file.value = '';
-  });
-  $('dropzone').addEventListener('click', () => {
-    trackEvent('dropzone_opened'); // M6 funnel — opt-in analytics only
-    file.click();
-  });
-  $('dropzone').addEventListener('keydown', (ev: KeyboardEvent) => {
-    if (ev.key === 'Enter' || ev.key === ' ') {
-      ev.preventDefault();
-      file.click();
-    }
-  });
-  setupDropZone($('dropzone'), handlePickedFile);
-  setupPaste(document.body, handlePickedFile);
-  // The giant ፊደል empty state IS the drop target — click it to choose a photo.
-  const emptyState = $('emptyHint');
-  emptyState.addEventListener('click', () => file.click());
-  emptyState.addEventListener('keydown', (ev: KeyboardEvent) => {
-    if (ev.key === 'Enter' || ev.key === ' ') {
-      ev.preventDefault();
-      file.click();
-    }
-  });
-  $('clearBtn').addEventListener('click', clearAll);
-
+  // Input listeners are wired at the top of init() via wireInput() so the
+  // primary CTA is live at DOM-interactive (M4), not after font + ramp setup.
+  // (wireInput is called before the font awaits — see init below.)
 
   // Controls
   const updateWidthVal = () => ($('widthVal')).textContent = ($('width') as HTMLInputElement).value;
@@ -840,8 +897,10 @@ async function init(): Promise<void> {
     trackEvent('export', { kind: 'text' });
   });
   $('dlHtml').addEventListener('click', () => {
-    void downloadHTML();
     trackEvent('export', { kind: 'html' });
+    // L1: the embedded-font fetch can fail (offline / file://) — don't let
+    // 'Save as HTML' fail silently.
+    void downloadHTML().catch(() => flash("Couldn't build that file — try again.", 4000));
   });
   $('mixBtn').addEventListener('click', mixItUp);
   $('exampleBtn').addEventListener('click', () => {
@@ -861,7 +920,9 @@ async function init(): Promise<void> {
     if (videoHandle) {
       const paused = videoHandle.togglePlay();
       ($('playBtn') as HTMLButtonElement).textContent = paused ? 'Play' : 'Pause';
+      // L28: a paused source would yield a static GIF — disable both exports.
       (document.getElementById('dlVideo') as HTMLButtonElement).disabled = paused;
+      (document.getElementById('dlGif') as HTMLButtonElement).disabled = paused;
     }
   });
   $('dlVideo').addEventListener('click', async () => {

@@ -2,6 +2,8 @@
 
 /// <reference types="vite/client" />
 
+import { MAX_SOURCE_EDGE } from './limits';
+
 
 export interface VideoHandle {
   stop(): void;
@@ -48,9 +50,9 @@ export function startVideoLoop(
       if (video.videoWidth > 0) {
         const t0 = performance.now();
         try {
-          // Downscale the frame: cap the long edge at 1600px so low-end phones
-          // don't sample full 1080p/4K pixels every tick.
-          const scale = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight));
+          // Downscale the frame: cap the long edge so low-end phones don't
+          // sample full 1080p/4K pixels every tick.
+          const scale = Math.min(1, MAX_SOURCE_EDGE / Math.max(video.videoWidth, video.videoHeight));
           const capW = Math.max(1, Math.round(video.videoWidth * scale));
           const capH = Math.max(1, Math.round(video.videoHeight * scale));
           // Only resize when the dimensions actually change, so the canvas isn't

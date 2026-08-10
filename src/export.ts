@@ -3,6 +3,7 @@
 
 import { FONT } from './fonts';
 import ethiopicWoffUrl from '@fontsource-variable/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-wght-normal.woff2';
+import { MAX_SOURCE_EDGE } from './limits';
 
 const DEFAULT_FILENAME = 'geez-art.png';
 
@@ -23,22 +24,32 @@ export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 }
 
 /**
+ * Trigger a browser download of a blob via a temporary anchor, revoking the
+ * object URL once the download has had a chance to start. Single helper used by
+ * every download path (L23) — was duplicated across app.ts and export.ts.
+ */
+export function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
  * Trigger a browser download of the canvas as a PNG.
  * Uses a Blob URL (smaller than a data URL) and revokes it after the
  * download has a chance to start.
  */
 export function downloadCanvasPNG(canvas: HTMLCanvasElement, filename: string = DEFAULT_FILENAME): void {
-  void canvasToBlob(canvas).then((blob) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  });
+  void canvasToBlob(canvas)
+    .then((blob) => triggerDownload(blob, filename))
+    // L1: a failed toBlob must not surface as an unhandled rejection.
+    .catch(() => {});
 }
 
 /**
@@ -135,8 +146,10 @@ export function paintBrandedCapture(
   maxEdge = 1280,
 ): void {
   const scale = Math.min(1, maxEdge / Math.max(1, mosaic.width, mosaic.height));
-  const w = Math.max(1, Math.round(mosaic.width * scale));
-  const h = Math.max(1, Math.round(mosaic.height * scale));
+  // VP8/VP9 (Chromium WebM) and H.264 (Safari MP4) require EVEN dimensions —
+  // MediaRecorder throws on odd canvas sizes (M2). Snap to even, not just round.
+  const w = (Math.max(2, Math.round(mosaic.width * scale)) & ~1);
+  const h = (Math.max(2, Math.round(mosaic.height * scale)) & ~1);
   const bandH = Math.max(32, Math.min(64, Math.round(w * 0.05)));
   if (target.width !== w || target.height !== h + bandH) {
     target.width = w;
@@ -154,7 +167,7 @@ export function paintBrandedCapture(
  * it already fits. Share sheets on budget phones choke on multi-MB PNGs, and
  * WhatsApp/Telegram recompress anyway — so the shared image is capped (M13).
  */
-export function downscaleCanvas(canvas: HTMLCanvasElement, maxEdge = 1600): HTMLCanvasElement {
+export function downscaleCanvas(canvas: HTMLCanvasElement, maxEdge = MAX_SOURCE_EDGE): HTMLCanvasElement {
   const long = Math.max(canvas.width, canvas.height);
   if (long <= maxEdge) return canvas;
   const k = maxEdge / long;
