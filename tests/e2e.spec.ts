@@ -373,6 +373,52 @@ test('zoom reset returns to fit', async ({ page }) => {
   await expect(page.locator('#zoomVal')).toHaveText('100%');
 });
 
+test('zoom out returns to fit', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.click('#zoomIn');
+  await expect(page.locator('#zoomVal')).toHaveText('125%');
+  await page.click('#zoomOut');
+  await expect(page.locator('#zoomVal')).toHaveText('100%');
+});
+
+test('clicking the dropzone opens a file chooser that loads a photo', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.click('#dropzone')]);
+  await chooser.setFiles(SAMPLE);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+});
+
+test('clicking the empty canvas opens a file chooser that loads a photo', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.click('#emptyHint')]);
+  await chooser.setFiles(SAMPLE);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+});
+
+test('full set and all palette options render', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.selectOption('#charset', 'all');
+  await page.waitForFunction(() => document.getElementById('status')!.textContent!.includes('Ready'));
+  await expect(page.locator('#mosaicStat')).toContainText('letters');
+  for (const pal of ['manuscript', 'mono', 'church']) {
+    await page.selectOption('#palette', pal);
+    await page.waitForTimeout(250);
+    await expect(page.locator('#mosaicStat')).toContainText('letters');
+  }
+});
+
 test('dense and light presets both render a mosaic', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
@@ -418,6 +464,76 @@ test('download PNG produces a file', async ({ page }) => {
   await page.click('#dlPng');
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toContain('geez-art');
+});
+
+test('download video produces a file', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  await expect(page.locator('#dlVideo')).toBeVisible();
+  const downloadPromise = page.waitForEvent('download');
+  await page.click('#dlVideo');
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/geez-art-video\.(webm|mp4)/);
+  expect(errors).toEqual([]);
+});
+
+test('save as HTML produces a file', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  const downloadPromise = page.waitForEvent('download');
+  await page.click('#dlHtml');
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toContain('geez-art.html');
+});
+
+test('share does not error', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.click('#share');
+  await page.waitForTimeout(600);
+  expect(errors).toEqual([]);
+});
+
+test('dropping a file onto the canvas loads it', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const buffer = fs.readFileSync(SAMPLE);
+  const dt = await page.evaluateHandle((data) => {
+    const t = new DataTransfer();
+    t.items.add(new File([new Uint8Array(data)], 'sample.png', { type: 'image/png' }));
+    return t;
+  }, Array.from(buffer));
+  await page.dispatchEvent('#dropzone', 'drop', { dataTransfer: dt });
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+});
+
+test('pasting an image loads it', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await waitReady(page);
+  const buffer = fs.readFileSync(SAMPLE);
+  await page.evaluate((data) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([new Uint8Array(data)], 'sample.png', { type: 'image/png' }));
+    document.body.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt }));
+  }, Array.from(buffer));
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  expect(errors).toEqual([]);
 });
 
 test('a video runs through the fidel filter and the mosaic animates', async ({ page }) => {

@@ -620,9 +620,12 @@ async function init(): Promise<void> {
     }
   });
   $('dlVideo').addEventListener('click', async () => {
-    if (!mosaicCanvas) return;
+    const out = document.getElementById('mosaic') as HTMLCanvasElement | null;
+    if (!out || out.width === 0) return;
     flash('Recording a few seconds…');
-    const rec = await recordCanvas(mosaicCanvas, 4, 12);
+    // Capture the on-page canvas (repainted every video frame) — captureStream
+    // needs changing frames; the offscreen render canvas is static each frame.
+    const rec = await recordCanvas(out, 4, 12);
     if (rec.blob) downloadBlob('geez-art-video.' + rec.ext, rec.blob);
     flash('Video saved');
   });
