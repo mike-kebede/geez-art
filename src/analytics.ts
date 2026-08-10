@@ -48,6 +48,15 @@ export function initAnalytics(): void {
   } catch {
     cfg = null; // malformed config → stay silent; never break the app
   }
+  // M12: a visitor who arrived via a shared image carries ?ref=share — measure
+  // the viral loop's inbound when analytics are on.
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  if (ref) trackEvent('referral_visit', { ref });
+}
+
+/** True once a provider is configured — the UI can disclose it (L20). */
+export function analyticsEnabled(): boolean {
+  return cfg !== null;
 }
 
 /**

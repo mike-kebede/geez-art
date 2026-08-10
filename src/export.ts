@@ -159,7 +159,30 @@ export function paintBrandedCapture(
   ctx.fillStyle = BRAND.band;
   ctx.fillRect(0, 0, target.width, target.height);
   ctx.drawImage(mosaic, 0, 0, w, h);
-  drawBrandBand(ctx, w, h, bandH, siteUrl);
+  // Video/GIF watermark: a single English URL, sized to fit — the full wordmark
+  // + CTA band overflows on the narrower capture canvas (the ?ref= suffix plus
+  // wordmark collided). The URL alone is the whole viral CTA.
+  drawUrlBand(ctx, w, h, bandH, siteUrl);
+}
+
+/** Minimal watermark for video/GIF exports: the site URL centered on the dark
+ *  band, gold, shrunk until it fits on one line. No overflow, no script mixing. */
+function drawUrlBand(ctx: CanvasRenderingContext2D, mosaicW: number, mosaicH: number, bandH: number, siteUrl: string): void {
+  ctx.fillStyle = BRAND.band;
+  ctx.fillRect(0, mosaicH, mosaicW, bandH);
+  ctx.fillStyle = BRAND.gold;
+  ctx.fillRect(0, mosaicH, mosaicW, 2); // gold hairline
+  const PAD = 12;
+  const maxW = Math.max(40, mosaicW - PAD * 2);
+  let size = Math.round(bandH * 0.42);
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  for (; size >= 9; size--) {
+    ctx.font = `${size}px ui-monospace,Menlo,monospace`;
+    if (ctx.measureText(siteUrl).width <= maxW) break;
+  }
+  ctx.fillStyle = BRAND.gold;
+  ctx.fillText(siteUrl, mosaicW / 2, mosaicH + bandH / 2);
 }
 
 /**

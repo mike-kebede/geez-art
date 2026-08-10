@@ -182,7 +182,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   // fast — per-cell fillText is what froze video mode on low-end devices.
   const chars: string[][] = [];
   if (colorize) {
-    const { atlas, tileW, palette } = colorAtlasFor(ramp, cellPx, paper, cellRgb);
+    const { atlas, tileW, palette } = colorAtlasFor(ramp, cellPx, paper, cellRgb, ink);
     const tileH = Math.ceil(cellPx * 1.4);
     for (let r = 0; r < rows; r++) {
       const row: string[] = [];
@@ -337,12 +337,21 @@ function colorAtlasFor(
   cellPx: number,
   paper: string,
   cellRgb: Uint8ClampedArray,
+  ink: string,
 ): { atlas: HTMLCanvasElement; tileW: number; palette: Uint32Array } {
   const quant = (v: number): number => (v >> 6) << 6;
+  // M7: blend each cell color a few stops toward the palette ink so choosing a
+  // palette visibly governs colorful mode — "Mono" mutes the letters, "Church
+  // mural" warms them — without losing the colorful-on-by-default look.
+  const [ir, ig, ib] = hexToRgb(ink);
+  const T = 0.14;
   const colors = new Map<number, number>();
   const palette = new Uint32Array(cellRgb.length / 3);
   for (let i = 0; i < palette.length; i++) {
-    const key = (quant(cellRgb[i * 3]) << 16) | (quant(cellRgb[i * 3 + 1]) << 8) | quant(cellRgb[i * 3 + 2]);
+    const r = cellRgb[i * 3] * (1 - T) + ir * T;
+    const g = cellRgb[i * 3 + 1] * (1 - T) + ig * T;
+    const b = cellRgb[i * 3 + 2] * (1 - T) + ib * T;
+    const key = (quant(r) << 16) | (quant(g) << 8) | quant(b);
     let idx = colors.get(key);
     if (idx === undefined) {
       idx = colors.size;
@@ -386,6 +395,13 @@ function colorAtlasFor(
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return [0, 0, 0];
+  const n = parseInt(m[1], 16);
+  return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
 }
 
 function hashNoise(x: number, y: number): number {

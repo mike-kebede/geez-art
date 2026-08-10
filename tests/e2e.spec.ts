@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
 import { execSync } from 'node:child_process';
+import zlib from 'node:zlib';
 
 let distBuilt = false;
 function ensureBuilt(): void {
@@ -889,6 +890,25 @@ test('pausing a video disables both video and GIF export (L28/M9)', async ({ pag
   await expect(page.locator('#dlGif')).toBeDisabled();
 });
 
+test('dist perf budget: main JS gzipped under 30KB, Ethiopic font present (L30)', async ({ page }) => {
+  ensureBuilt();
+  const server = serveDist(5196);
+  await listenServer(server, 5196);
+  try {
+    const html = await (await page.request.get('http://localhost:5196/')).text();
+    const js = html.match(/assets\/index-[^"]+\.js/);
+    const css = html.match(/assets\/index-[^"]+\.css/);
+    expect(js).toBeTruthy();
+    expect(css).toBeTruthy();
+    const jsBytes = await (await page.request.get('http://localhost:5196/' + js![0])).body();
+    expect(zlib.gzipSync(jsBytes).length).toBeLessThan(30 * 1024); // ~24KB today
+    const cssText = await (await page.request.get('http://localhost:5196/' + css![0])).text();
+    expect(cssText).toContain('noto-sans-ethiopic-ethiopic-wght-normal'); // the 198KB face is in the build
+  } finally {
+    server.close();
+  }
+});
+
 test('video download shows an in-app replay', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
@@ -1117,19 +1137,26 @@ test('the density ramp is non-empty — the Ethiopic font actually loaded (M2)',
   expect(n).toBeGreaterThan(100);
 });
 
-test('the share hint keeps its Amharic line after the app initializes (M3)', async ({ page }) => {
+test('language toggle: the share hint switches between English and Amharic (M3)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
+  await expect(page.locator('#shareHint')).toContainText('Ready');
+  await page.selectOption('#lang', 'am');
   await expect(page.locator('#shareHint')).toContainText('ዝግጁ');
+  await page.selectOption('#lang', 'en');
+  await expect(page.locator('#shareHint')).toContainText('Ready');
 });
 
-test('Amharic empty-state stays in sync when switching to the letter picker (M4)', async ({ page }) => {
+test('language toggle: empty state and picker guidance switch languages (M4)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
-  await expect(page.locator('#emptyTitleAm')).toContainText('ይምረጡ');
+  await expect(page.locator('#emptyTitle')).toContainText('Choose a photo');
+  await page.selectOption('#lang', 'am');
+  await expect(page.locator('#emptyTitle')).toContainText('ይምረጡ');
   await page.selectOption('#charset', 'custom');
+  await expect(page.locator('#emptyTitle')).toContainText('ፊደሎችዎን');
+  await page.selectOption('#lang', 'en');
   await expect(page.locator('#emptyTitle')).toContainText('Pick your letters');
-  await expect(page.locator('#emptyTitleAm')).toContainText('ፊደሎችን');
 });
 
 test('try an example loads the icon-classical sample, not the fallback face (L32)', async ({ page }) => {

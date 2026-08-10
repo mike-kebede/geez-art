@@ -15,7 +15,8 @@ import { RENDER_DEBOUNCE_MS, MAX_FILE_BYTES } from './limits';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
 import { getSamples } from './samples';
 import { startVideoLoop, recordCanvas, recordGIF, canRecordVideo, type VideoHandle } from './video';
-import { initAnalytics, trackEvent } from './analytics';
+import { initAnalytics, trackEvent, analyticsEnabled } from './analytics';
+import { setLang, getLang, t } from './i18n';
 
 let ramp: GlyphInfo[] = [];
 let source: HTMLCanvasElement | null = null;
@@ -39,22 +40,10 @@ let replayUrl: string | null = null;
  *  returns '' after removeAttribute('src'), making the revoke a silent no-op). */
 let videoUrl: string | null = null;
 
-const EMPTY_DEFAULT = {
-  title: 'Choose a photo or video',
-  sub: 'It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.',
-  am: {
-    title: 'ምስል ወይም ቪዲዮ ይምረጡ',
-    sub: 'ወደ የኢትዮጵያ ፊደላት ሞዛይክ ይቀየራል። ነፃ ነው፣ ምንም አይሰቀልም።',
-  },
-};
-const EMPTY_PICK = {
-  title: 'Pick your letters',
-  sub: 'Choose which letters appear — only the ones you tap will be used.',
-  am: {
-    title: 'ፊደሎችን ይምረጡ',
-    sub: 'የሚመርጧቸው ፊደላት ብቻ ጥቅም ላይ ይውላሉ።',
-  },
-};
+/** Which guidance the empty state is showing — re-applied on language toggle. */
+let emptyMode: 'default' | 'pick' = 'default';
+/** Whether the video filter is paused — drives the Play/Pause label on toggle. */
+let videoPaused = false;
 
 /**
  * The URL stamped onto shared images + share text (M14). Derived from the live
@@ -68,6 +57,11 @@ const SITE_URL: string = (() => {
   if (origin && origin.startsWith('http') && !origin.includes('localhost')) return origin;
   return 'https://geez-art.pages.dev';
 })();
+
+/** The URL baked into shared images carries a referral token so the viral loop's
+ *  K-factor is measurable (M12). The share-TEXT URL stays BARE so WhatsApp and
+ *  Telegram auto-linkify it — only the band gets the token. */
+const BAND_URL = `${SITE_URL}?ref=share`;
 
 function $(id: string): HTMLElement {
   return document.getElementById(id)!;
@@ -106,7 +100,7 @@ function clearAll(): void {
   $('mosaicStat').textContent = '';
   mosaicCanvas = null;
   lastResult = null;
-  setEmpty(EMPTY_DEFAULT);
+  setEmpty('default');
   $('clearBtn').hidden = true;
   const sh = document.getElementById('shareHint');
   if (sh) sh.hidden = true;
@@ -145,7 +139,7 @@ function readRenderOpts(): { cols: number; contrast: number; invert: boolean; co
 function render(): void {
   if (source) renderSource(source, true);
   // Clear the M8 busy cue once the synchronous render has run.
-  if ($('status').textContent === 'Rendering…') $('status').textContent = 'Ready';
+  if ($('status').textContent === t('rendering')) $('status').textContent = t('ready');
 }
 
 /** Run one source image (photo frame or video frame) through the mosaic renderer. */
@@ -181,7 +175,7 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
     });
     // Announce on a fresh source render (not every slider tweak) so screen
     // readers get a live-region "ready" cue via the role=status line.
-    if (firstRender) flash('Your picture is ready!');
+    if (firstRender) flash(t('pictureReady'));
   }
   // In video mode the stat/aria/distinct work is recomputed every frame; throttle
   // it to ~1×/s so 12fps playback doesn't churn DOM layout on low-end devices (H1).
@@ -214,7 +208,7 @@ function queueRender(): void {
   // multi-second synchronous render doesn't look frozen. render() restores
   // the idle status when it finishes.
   // I6: don't clobber an active flash message with the busy cue.
-  if (flashTimer === undefined && $('status').textContent !== 'Rendering…') $('status').textContent = 'Rendering…';
+  if (flashTimer === undefined && $('status').textContent !== t('rendering')) $('status').textContent = t('rendering');
   renderTimer = window.setTimeout(render, RENDER_DEBOUNCE_MS); // debounce sliders
 }
 
@@ -238,7 +232,7 @@ function copyText(): void {
   const text = gridToText(res.chars);
   if (navigator.clipboard?.writeText) {
     void navigator.clipboard.writeText(text).then(
-      () => flash('Copied'),
+      () => flash(t('copied')),
       () => fallbackCopy(text),
     );
   } else {
@@ -255,9 +249,9 @@ function fallbackCopy(text: string): void {
   ta.select();
   try {
     document.execCommand('copy');
-    flash('Copied');
+    flash(t('copied'));
   } catch {
-    flash("Couldn't copy — try again.");
+    flash(t('copyFailed'));
   }
   document.body.removeChild(ta);
 }
@@ -284,7 +278,7 @@ function flash(msg: string, ms = 1500): void {
   status.textContent = msg;
   flashTimer = window.setTimeout(() => {
     flashTimer = undefined;
-    status.textContent = 'Ready';
+    status.textContent = t('ready');
   }, ms);
 }
 
@@ -314,22 +308,22 @@ async function doShare(): Promise<void> {
     if (b) shareBtns.push(b);
   }
   for (const b of shareBtns) b.disabled = true;
-  flash('Preparing…', 3000);
+  flash(t('preparingShare'), 3000);
   try {
     // M1: downscale the mosaic FIRST, then stamp the band at final resolution —
     // stamping on the full-res canvas and shrinking the whole thing crushed the
     // URL band to ~4px after messenger recompression. The band must be legible:
     // it is the entire viral CTA.
     const compact = downscaleCanvas(mosaicCanvas, 1600);
-    const branded = makeShareImage(compact, SITE_URL);
+    const branded = makeShareImage(compact, BAND_URL); // M12: referral token rides the band
     const result = await shareCanvas(branded, `Turn your photo into Ethiopic letters — ${SITE_URL}`);
     // M6: track the OUTCOME so the viral loop's K-factor is observable (only
     // fires when a provider is configured — otherwise a no-op).
     trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
     // L7: a dismissed share sheet is not a "Saved" success.
-    if (result === 'shared') flash('Shared — just the mosaic, not your original, and nothing is uploaded');
-    else if (result === 'cancelled') flash('Share cancelled — nothing was sent.');
-    else flash('Saved — only the mosaic is shared; your photo never leaves your device');
+    if (result === 'shared') flash(t('shared'));
+    else if (result === 'cancelled') flash(t('shareCancelled'));
+    else flash(t('saved'));
   } finally {
     for (const b of shareBtns) b.disabled = false;
   }
@@ -344,18 +338,27 @@ function updateShareState(): void {
   }
 }
 
-/** Swap the idle frame's guidance text (EN + the matching Amharic line, M4). */
-function setEmpty(t: { title: string; sub: string; am?: { title: string; sub: string } }): void {
+/** Swap the idle frame's guidance (choose-a-photo vs pick-letters), in the
+ *  CURRENT language — the whole UI is single-language via the toggle. */
+function setEmpty(mode: 'default' | 'pick'): void {
+  emptyMode = mode;
   const tEl = document.getElementById('emptyTitle');
   const sEl = document.getElementById('emptySub');
-  if (tEl) tEl.textContent = t.title;
-  if (sEl) sEl.textContent = t.sub;
-  if (t.am) {
-    const taEl = document.getElementById('emptyTitleAm');
-    const saEl = document.getElementById('emptySubAm');
-    if (taEl) taEl.textContent = t.am.title;
-    if (saEl) saEl.textContent = t.am.sub;
+  if (tEl) tEl.textContent = t(mode === 'pick' ? 'pickerTitle' : 'emptyTitle');
+  if (sEl) sEl.textContent = t(mode === 'pick' ? 'pickerSub' : 'emptySub');
+}
+
+/** Re-render every [data-i18n] element for the active language (language toggle). */
+function applyLang(): void {
+  for (const el of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    const key = el.dataset.i18n;
+    if (key) el.textContent = t(key);
   }
+  setEmpty(emptyMode);
+  const status = $('status');
+  if (status.textContent === 'Ready' || status.textContent === 'ዝግጁ') status.textContent = t('ready');
+  const pb = $('playBtn') as HTMLButtonElement;
+  if (!pb.hidden) pb.textContent = videoPaused ? t('play') : t('pause');
 }
 
 /** Apply the mosaic zoom (CSS scale via width) so letters can be seen up close. */
@@ -387,11 +390,11 @@ function handlePickedFile(file: File): void {
   // L7: guard BEFORE createObjectURL — a multi-GB file would pin memory and hang
   // the tab for no gain (nothing is uploaded, but it's still wasted work).
   if (file.size > MAX_FILE_BYTES) {
-    flash('That file is over 200 MB — try a smaller one.', 5000);
+    flash(t('tooLarge'), 5000);
     return;
   }
   if (isVideoFile(file)) {
-    void handleVideoFile(file).catch(() => flash("We couldn't read that video — try another one."));
+    void handleVideoFile(file).catch(() => flash(t('videoReadFailed')));
   } else {
     stopVideo();
     void imageFileToCanvas(file)
@@ -402,11 +405,7 @@ function handlePickedFile(file: File): void {
       .catch(() => {
         // HEIC is decodable on iPhone but not most other devices — say so
         // plainly instead of a generic "couldn't read that picture".
-        if (isHeic(file)) {
-          flash("That's a HEIC photo — your browser can't open it. Convert it to JPG or PNG (or screenshot it) and drop it again.", 5000);
-        } else {
-          flash("We couldn't read that picture — try another one.");
-        }
+        flash(isHeic(file) ? t('heicFailed') : t('pictureFailed'), isHeic(file) ? 5000 : 1500);
       });
   }
 }
@@ -452,18 +451,20 @@ async function handleVideoFile(file: File): Promise<void> {
     12,
     // M9: a throw inside a frame used to kill the loop silently — the loop now
     // stops itself and reports so the user isn't staring at a frozen Pause.
-    () => flash('Something interrupted the filter — try the video again.', 4000),
+    () => flash(t('interrupted'), 4000),
   );
   zoom = 1;
   applyZoom();
   $('emptyHint').style.display = 'none';
   $('playBtn').hidden = false;
-  ($('playBtn') as HTMLButtonElement).textContent = 'Pause';
+  videoPaused = false;
+  ($('playBtn') as HTMLButtonElement).textContent = t('pause');
   // L5: respect prefers-reduced-motion — show one static frame and let the
   // user resume on demand instead of auto-animating at up to 12fps.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     videoHandle.togglePlay();
-    ($('playBtn') as HTMLButtonElement).textContent = 'Play';
+    videoPaused = true;
+    ($('playBtn') as HTMLButtonElement).textContent = t('play');
   }
   // iOS Safari can't captureStream the canvas, so video export is unavailable
   // there — swap the button for a hint pointing at GIF (which works everywhere).
@@ -488,7 +489,7 @@ async function handleVideoFile(file: File): Promise<void> {
       /* no decoded frame yet — the video loop handles it */
     }
   }
-  flash('Playing — the filter is live');
+  flash(t('playing'));
 }
 
 function stopVideo(): void {
@@ -503,6 +504,7 @@ function stopVideo(): void {
     URL.revokeObjectURL(videoUrl);
     videoUrl = null;
   }
+  videoPaused = false;
   $('playBtn').hidden = true;
   $('dlVideo').hidden = true;
   $('dlGif').hidden = true;
@@ -657,8 +659,8 @@ function updatePickerUI(): void {
   const used = allGlyphs.filter((g) => selectedCps.has(g.cp)).length;
   const sum = $('pickSummary');
   if (sum) {
-    const base = used === total ? 'All letters' : `${used} of ${total} letters`;
-    sum.textContent = source ? base : `${base} — add a photo to see them`;
+    const base = used === total ? t('allLetters') : `${used} ${t('of')} ${total} ${t('letters')}`;
+    sum.textContent = source ? base : `${base} — ${t('addPhotoToSee')}`;
   }
 }
 
@@ -682,7 +684,7 @@ function mixItUp(): void {
   $('picker').hidden = false;
   updatePickerUI();
   void applyCustomRamp();
-  flash('Randomized');
+  flash(t('randomized'));
 }
 
 async function applyCustomRamp(): Promise<void> {
@@ -706,7 +708,7 @@ async function applyCustomRamp(): Promise<void> {
     out.setAttribute('aria-label', 'Ethiopic letter mosaic — no letters selected'); // L3: role=img must keep a name
     $('mosaicStat').textContent = '';
     updateShareState();
-    $('status').textContent = 'No letters selected — tap some in the picker.';
+    $('status').textContent = t('noLetters');
     return;
   }
   // Live strip: the letters actually in use — instant feedback per tap.
@@ -719,7 +721,7 @@ async function applyCustomRamp(): Promise<void> {
       preview.appendChild(s);
     }
   }
-  $('status').textContent = `Custom · ${ramp.length} letters in use`;
+  $('status').textContent = t('customReady');
   queueRender();
 }
 
@@ -770,36 +772,47 @@ async function init(): Promise<void> {
   initAnalytics(); // opt-in: a no-op unless a provider meta tag is present
   preloadEthiopicFont(); // M3: start the woff2 fetch before anything blocks
   wireInput(); // M4: primary CTA live at DOM-interactive, not after ramp setup
+  // Language toggle: the entire UI is English-only or Amharic-only.
+  const langSel = $('lang') as HTMLSelectElement;
+  langSel.value = getLang();
+  langSel.addEventListener('change', () => {
+    setLang(langSel.value === 'am' ? 'am' : 'en');
+    applyLang();
+  });
+  applyLang(); // render data-i18n for the initial language
+  // M5: on coarse-pointer / low-memory devices, lower the default detail so the
+  // synchronous renderer doesn't freeze them before they can touch a slider.
+  {
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory;
+    if (coarse && (deviceMemory === undefined || deviceMemory <= 4)) {
+      ($('width') as HTMLInputElement).value = '120';
+    }
+  }
+  // L20: if a deployer enabled opt-in analytics, say so in the privacy note.
+  if (analyticsEnabled()) {
+    const body = document.getElementById('privacyBody');
+    if (body) body.textContent += ' This site uses anonymous, opt-in analytics.';
+  }
   try {
     await loadEthiopicFont();
-    status.textContent = 'Preparing the letters…';
+    status.textContent = t('preparing');
     ramp = await buildRamp('common');
     allGlyphs = await getAllGlyphs();
     selectedCps = new Set(allGlyphs.map((g) => g.cp));
     if (import.meta.env.DEV) {
       (window as unknown as { __commonSet?: number[] }).__commonSet = Array.from(COMMON_AMHARIC);
     }
-    status.textContent = `Ready · ${ramp.length} letters`;
+    status.textContent = t('ready');
     // M4: repaint anything the user dropped while the ramp was still loading.
     if (source) render();
   } catch {
-    status.textContent = 'Something went wrong — try reloading.';
+    status.textContent = t('somethingWrong');
     return;
   }
 
-  // Share privacy: only the rendered mosaic leaves the device — never the source
-  // photo, and nothing goes to geez·art's servers (this page is fully client-side).
-  // Update ONLY the leading English text node: shareHint.textContent would wipe
-  // the embedded Amharic <span> on every load (M3).
-  const shareHint = document.getElementById('shareHint');
-  if (shareHint) {
-    const en = shareHint.childNodes[0];
-    if (en && en.nodeType === Node.TEXT_NODE) {
-      en.textContent = "Ready — hit Share. Only the mosaic is shared — not your original — and nothing goes to geez·art's servers.";
-    } else {
-      shareHint.textContent = "Ready — hit Share. Only the mosaic is shared — not your original — and nothing goes to geez·art's servers.";
-    }
-  }
+  // Share hint text comes from the i18n dictionary (data-i18n="shareHint") — no
+  // JS overwrite needed, and it re-renders on the language toggle.
 
   // Palette selector — guarded so a missing element can never kill the wiring.
   const palSel = document.getElementById('palette') as HTMLSelectElement | null;
@@ -854,14 +867,14 @@ async function init(): Promise<void> {
         selectedCps = new Set();
         updatePickerUI();
       }
-      if (!source && !videoEl) setEmpty(EMPTY_PICK);
+      if (!source && !videoEl) setEmpty('pick');
       await applyCustomRamp();
     } else {
       $('picker').hidden = true;
-      setEmpty(EMPTY_DEFAULT);
+      setEmpty('default');
       try {
         ramp = await buildRamp(preset);
-        status.textContent = `Ready · ${ramp.length} letters`;
+        status.textContent = t('ready');
         queueRender();
       } catch {
         status.textContent = "Couldn't build that letter set.";
@@ -900,7 +913,7 @@ async function init(): Promise<void> {
     trackEvent('export', { kind: 'html' });
     // L1: the embedded-font fetch can fail (offline / file://) — don't let
     // 'Save as HTML' fail silently.
-    void downloadHTML().catch(() => flash("Couldn't build that file — try again.", 4000));
+    void downloadHTML().catch(() => flash(t('buildFailed'), 4000));
   });
   $('mixBtn').addEventListener('click', mixItUp);
   $('exampleBtn').addEventListener('click', () => {
@@ -919,7 +932,8 @@ async function init(): Promise<void> {
   $('playBtn').addEventListener('click', () => {
     if (videoHandle) {
       const paused = videoHandle.togglePlay();
-      ($('playBtn') as HTMLButtonElement).textContent = paused ? 'Play' : 'Pause';
+      videoPaused = paused;
+      ($('playBtn') as HTMLButtonElement).textContent = paused ? t('play') : t('pause');
       // L28: a paused source would yield a static GIF — disable both exports.
       (document.getElementById('dlVideo') as HTMLButtonElement).disabled = paused;
       (document.getElementById('dlGif') as HTMLButtonElement).disabled = paused;
@@ -933,14 +947,14 @@ async function init(): Promise<void> {
       return;
     }
     trackEvent('export', { kind: 'video' });
-    flash('Recording a few seconds…');
+    flash(t('recording'));
     // M2+M10: record from a downscaled, URL-branded copy of the LIVE mosaic so
     // video shares carry the loop URL and encode fast on budget phones. The copy
     // is repainted every frame — captureStream needs changing frames.
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
     const paint = () => {
-      paintBrandedCapture(recCanvas, out, SITE_URL);
+      paintBrandedCapture(recCanvas, out, BAND_URL) // M12;
       recRaf = requestAnimationFrame(paint);
     };
     paint();
@@ -969,7 +983,7 @@ async function init(): Promise<void> {
         downloadBlob('geez-art-video.' + rec.ext, rec.blob);
         showReplay(rec.blob);
       }
-      flash(rec.blob ? 'Video saved' : "Couldn't record the video.");
+      flash(rec.blob ? t('videoSaved') : t('videoFailed'));
     } finally {
       cancelAnimationFrame(recRaf);
       if (videoEl) {
@@ -982,13 +996,13 @@ async function init(): Promise<void> {
     const out = document.getElementById('mosaic') as HTMLCanvasElement | null;
     if (!out || out.width === 0) return;
     trackEvent('export', { kind: 'gif' });
-    flash('Making a GIF…');
+    flash(t('makingGif'));
     // M2: brand the GIF with the URL band too. The copy is repainted on rAF —
     // recordGIF awaits between its frame captures, so the animation survives.
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
     const paint = () => {
-      paintBrandedCapture(recCanvas, out, SITE_URL);
+      paintBrandedCapture(recCanvas, out, BAND_URL) // M12;
       recRaf = requestAnimationFrame(paint);
     };
     paint();
@@ -996,10 +1010,10 @@ async function init(): Promise<void> {
       const bytes = await recordGIF(recCanvas, 3, 8);
       if (bytes) {
         downloadBlob('geez-art.gif', new Blob([bytes.buffer as ArrayBuffer], { type: 'image/gif' }));
-        flash('GIF saved');
+        flash(t('gifSaved'));
       } else {
         // recordGIF collapses failures to null — don't claim success (M5).
-        flash("Couldn't make the GIF — try again.", 4000);
+        flash(t('gifFailed'), 4000);
       }
     } finally {
       cancelAnimationFrame(recRaf);

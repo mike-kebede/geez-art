@@ -86,6 +86,18 @@ body {
   font-size: 12px;
   color: var(--mist);
 }
+.lang-toggle {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  margin-right: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  cursor: pointer;
+}
 
 /* ---------- stage ---------- */
 .stage {
@@ -160,10 +172,9 @@ body {
   display: flex;
   align-items: center;
   gap: 2px;
-  background: rgba(28, 25, 23, 0.8);
+  background: #1c1917; /* L24: solid ink pill (was translucent frosted glass) */
   border-radius: 999px;
   padding: 3px;
-  backdrop-filter: blur(4px);
 }
 .zoom-controls[hidden] { display: none; }
 .zoom-controls button {
@@ -207,7 +218,7 @@ body {
   font-size: 110px;
   font-weight: 700;
   line-height: 1;
-  color: var(--gold);
+  color: #b98a2f; /* L26: deepened gold — var(--gold) was ~1.4:1, invisible outdoors */
   opacity: 0.9;
   animation: fidelSettle 0.7s ease-out both;
 }
@@ -307,8 +318,7 @@ body {
 
 /* ---------- controls — floating glass panel ---------- */
 .controls {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(14px);
+  background: #fffdf8; /* L24: solid warm surface — frosted glass read as template residue vs the mural chrome */
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 8px 22px 26px;
@@ -428,6 +438,7 @@ button.share { width: 100%; font-weight: 700; font-size: 15px; }
 .dropzone:hover, .dropzone:focus-visible { border-color: var(--accent); background: #fffaf4; }
 .dropzone.dragover { border-color: var(--accent); background: rgba(166, 43, 22, 0.08); box-shadow: 0 0 0 4px rgba(166, 43, 22, 0.16); }
 .dz-main { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+.dz-am { margin: 2px 0 0; font-size: 12.5px; color: var(--mist); }
 .dz-sub { margin: 4px 0 0; font-size: 12px; color: var(--mist); }
 
 /* sliders & selects */
@@ -463,7 +474,9 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
 .row-inline { display: flex; align-items: center; gap: 9px; font-size: 14px; color: var(--ink); cursor: pointer; }
 .row-inline input { accent-color: var(--accent); width: 17px; height: 17px; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.btn-row button { flex: 1; min-width: 0; padding: 9px 10px; font-size: 13px; }
+/* Two per row (not four squeezed in a 330px panel) so labels like
+   "Download video" / "Download GIF" wrap instead of overflowing. */
+.btn-row button { flex: 1 1 45%; min-width: 0; padding: 9px 8px; font-size: 12.5px; white-space: normal; line-height: 1.2; }
 .btn-stack { display: flex; flex-direction: column; gap: 12px; }
 
 /* letter picker */

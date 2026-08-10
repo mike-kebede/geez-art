@@ -6,6 +6,8 @@
   <meta name="description" content="geez-art — turn photos into art made of Ethiopic (Ge'ez) fidel letters. Made with respect for the script.">
   <meta name="theme-color" content="#f6f4f0">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='75' font-size='80' text-anchor='middle' fill='%23d9a441'%3Eፊ%3C/text%3E%3C/svg%3E">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -37,11 +39,15 @@
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-  <a class="skip-link" href="#frame">Skip to artwork</a>
+  <a class="skip-link" href="#frame" data-i18n="skipLink">Skip to artwork</a>
   <header class="topbar">
     <h1 class="wordmark"><span class="wm-latin">geez·art</span></h1>
-    <p id="status" class="status" role="status">Loading the Ethiopic font…</p>
-    <button id="shareTop" class="primary share-top" disabled>Share</button>
+    <p id="status" class="status" role="status" data-i18n="statusLoading">Loading the Ethiopic font…</p>
+    <select id="lang" class="lang-toggle" aria-label="Language">
+      <option value="en">EN</option>
+      <option value="am">አማ</option>
+    </select>
+    <button id="shareTop" class="primary share-top" disabled data-i18n="shareTop">Share</button>
   </header>
 
   <main class="stage">
@@ -60,9 +66,7 @@
             <div class="empty-state" id="emptyHint" tabindex="0" role="button">
               <span class="empty-fidel" aria-hidden="true">ፊደል</span>
               <h2 id="emptyTitle">Choose a photo or video</h2>
-              <p lang="am" class="fidel empty-am" id="emptyTitleAm">ምስል ወይም ቪዲዮ ይምረጡ</p>
               <p id="emptySub">It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.</p>
-              <p lang="am" class="fidel empty-am" id="emptySubAm">ወደ የኢትዮጵያ ፊደላት ሞዛይክ ይቀየራል። ነፃ ነው፣ ምንም አይሰቀልም።</p>
             </div>
           </div>
         </div>
@@ -74,122 +78,123 @@
         </span>
         <span id="mosaicStat" class="stat"></span>
       </div>
-      <p class="share-hint" id="shareHint" hidden>Ready — hit Share. The link rides along, so they can make their own. <span lang="am" class="fidel">ዝግጁ ነው — አጋሩ፣ የመጀመሪያው ምስል አይለቀቅም፣ ወደ አገልጋይም አይላክም።</span></p>
+      <p class="share-hint" id="shareHint" hidden data-i18n="shareHint">Ready — hit Share. Only the mosaic is shared — not your original — and nothing goes to geez·art’s servers.</p>
       <div id="replay" class="replay" hidden>
         <video id="replayVideo" controls playsinline></video>
         <div class="replay-actions">
-          <button id="dlReplay" class="primary">Download</button>
-          <button id="closeReplay" class="ghost">Close</button>
+          <button id="dlReplay" class="primary" data-i18n="downloadReplay">Download</button>
+          <button id="closeReplay" class="ghost" data-i18n="closeReplay">Close</button>
         </div>
       </div>
     </section>
 
     <aside class="controls" aria-label="Controls">
       <section class="group">
-        <h2>Start</h2>
+        <h2 data-i18n="groupStart">Start</h2>
         <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose a photo or video">
           <input type="file" id="file" accept="image/*,video/*" hidden>
-          <p class="dz-main">Choose a photo or video</p>
-          <p class="dz-sub">tap to pick a photo or video</p>
+          <p class="dz-main" data-i18n="dropzoneMain">Choose a photo or video</p>
+          <p class="dz-sub" data-i18n="dropzoneSub">tap to pick a photo or video</p>
         </div>
-        <button id="playBtn" class="ghost play-btn" type="button" hidden>Pause</button>
-        <button id="clearBtn" class="ghost" type="button" hidden>Clear</button>
-        <button id="exampleBtn" class="ghost" type="button">Try an example</button>
+        <button id="playBtn" class="ghost play-btn" type="button" hidden data-i18n="pause">Pause</button>
+        <button id="clearBtn" class="ghost" type="button" hidden data-i18n="clearBtn">Clear</button>
+        <button id="exampleBtn" class="ghost" type="button" data-i18n="exampleBtn">Try an example</button>
       </section>
 
       <section class="group">
-        <h2>Export</h2>
+        <h2 data-i18n="groupExport">Export</h2>
         <div class="btn-stack">
-          <button id="share" class="primary share">Share</button>
-          <button id="dlPng">Download PNG</button>
+          <button id="share" class="primary share" data-i18n="shareTop">Share</button>
+          <button id="dlPng" data-i18n="dlPng">Download PNG</button>
         </div>
       </section>
 
       <details id="advanced">
-        <summary>Advanced</summary>
+        <summary data-i18n="advancedSummary">Advanced</summary>
 
         <section class="group">
-          <h2>Adjust</h2>
+          <h2 data-i18n="groupAdjust">Adjust</h2>
           <label class="slider">
-            Detail <span id="widthVal" class="val"></span>
+            <span data-i18n="sliderDetail">Detail</span> <span id="widthVal" class="val"></span>
             <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail" aria-label="Detail">
           </label>
           <label class="slider">
-            Contrast <span id="contrastVal" class="val"></span>
+            <span data-i18n="sliderContrast">Contrast</span> <span id="contrastVal" class="val"></span>
             <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark" aria-label="Contrast">
           </label>
           <label class="slider">
-            Edges <span id="edgeVal" class="val"></span>
+            <span data-i18n="sliderEdges">Edges</span> <span id="edgeVal" class="val"></span>
             <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges" aria-label="Edges">
           </label>
           <div class="checks">
-            <label class="row-inline"><input type="checkbox" id="invert"> Invert</label>
-            <label class="row-inline"><input type="checkbox" id="colorize" checked> Colorful letters</label>
+            <label class="row-inline"><input type="checkbox" id="invert"> <span data-i18n="invert">Invert</span></label>
+            <label class="row-inline"><input type="checkbox" id="colorize" checked> <span data-i18n="colorize">Colorful letters</span></label>
           </div>
           <label class="select">
-            Texture
+            <span data-i18n="texture">Texture</span>
             <select id="dither">
-              <option value="scatter" selected>Scatter</option>
-              <option value="ordered">Even</option>
-              <option value="fs">Grainy</option>
+              <option value="scatter" selected data-i18n="ditherScatter">Scatter</option>
+              <option value="ordered" data-i18n="ditherOrdered">Even</option>
+              <option value="fs" data-i18n="ditherFs">Grainy</option>
             </select>
           </label>
           <label class="select">
-            Palette
+            <span data-i18n="paletteLabel">Palette</span>
             <select id="palette"></select>
           </label>
-          <p class="attribution">Colors inspired by the manuscript and mural tradition of the Ethiopian Orthodox Church.</p>
+          <p class="attribution" data-i18n="attribution">Colors inspired by the manuscript and mural tradition of the Ethiopian Orthodox Church.</p>
         </section>
 
         <section class="group">
-          <h2>Letters</h2>
-          <button id="mixBtn" class="mix-btn" type="button">Randomize letters</button>
+          <h2 data-i18n="groupLetters">Letters</h2>
+          <button id="mixBtn" class="mix-btn" type="button" data-i18n="mixBtn">Randomize letters</button>
           <label class="select">
-            Alphabet
+            <span data-i18n="alphabetLabel">Alphabet</span>
             <select id="charset">
-              <option value="common" selected>Common Amharic</option>
-              <option value="all">Full set</option>
-              <option value="dense">Dense only</option>
-              <option value="light">Light only</option>
-              <option value="custom">Pick your own</option>
+              <option value="common" selected data-i18n="charsetCommon">Common Amharic</option>
+              <option value="all" data-i18n="charsetAll">Full set</option>
+              <option value="dense" data-i18n="charsetDense">Dense only</option>
+              <option value="light" data-i18n="charsetLight">Light only</option>
+              <option value="custom" data-i18n="charsetCustom">Pick your own</option>
             </select>
           </label>
           <div id="picker" class="picker" hidden>
             <div class="picker-bar">
               <span id="pickSummary" class="hint">All letters</span>
               <div class="picker-actions">
-                <button id="pickAll" class="ghost" type="button">Use all</button>
-                <button id="pickNone" class="ghost" type="button">Use none</button>
+                <button id="pickAll" class="ghost" type="button" data-i18n="pickAll">Use all</button>
+                <button id="pickNone" class="ghost" type="button" data-i18n="pickNone">Use none</button>
               </div>
             </div>
-            <p class="hint">Tap a family to use it. Tap <span class="plus">+</span> to pick individual letters.</p>
+            <p class="hint" data-i18n="pickerHint">Tap a family to use it. Tap <span class="plus">+</span> to pick individual letters.</p>
             <div id="rampPreview" class="ramp-preview" aria-label="Letters in use"></div>
             <div id="pickerGrid" class="picker-grid"></div>
           </div>
         </section>
 
         <section class="group">
-          <h2>More exports</h2>
+          <h2 data-i18n="groupMore">More exports</h2>
           <div class="btn-row">
-            <button id="dlVideo" hidden>Download video</button>
-            <button id="dlGif" hidden>Download GIF</button>
-            <button id="copyText">Copy as text</button>
-            <button id="dlHtml">Save as HTML</button>
+            <button id="dlVideo" hidden data-i18n="dlVideo">Download video</button>
+            <button id="dlGif" hidden data-i18n="dlGif">Download GIF</button>
+            <button id="copyText" data-i18n="copyText">Copy as text</button>
+            <button id="dlHtml" data-i18n="dlHtml">Save as HTML</button>
           </div>
-          <p id="videoCapHint" class="hint" hidden>Video export isn't supported on this device — grab a GIF instead. <span lang="am" class="fidel">ቪዲዮ ማውረድ በዚህ መሣሪያ አይገኝም — GIF ይውሰዱ።</span></p>
+          <p id="videoCapHint" class="hint" hidden data-i18n="videoCapHint">Video export isn't supported on this device — grab a GIF instead.</p>
         </section>
       </details>
     </aside>
   </main>
 
   <footer>
-    <p>Made with respect for the Ethiopic script, <span class="fidel">ፊደል</span>. If a photo shows a real person, ask before sharing it. <span lang="am" class="fidel">ለፊደል በአክብሮት</span></p>
+    <p><span data-i18n="footerRespect">Made with respect for the Ethiopic script,</span> <span class="fidel">ፊደል</span>. <span data-i18n="consent">If a photo shows a real person, ask before sharing it.</span></p>
     <details class="privacy-note">
-      <summary>Privacy &amp; parents</summary>
-      <p>Everything runs on your device: your photo or video is never uploaded, and this page makes no server
-      requests. Optional analytics are off by default and only send anonymous event counts if the site owner
-      enables them. For parents: no accounts, no cookies, no tracking — a child's photo never leaves their
-      device. Please ask before sharing a real person's picture.</p>
+      <summary data-i18n="privacySummary">Privacy &amp; parents</summary>
+      <p id="privacyBody" data-i18n="privacyBody">Everything runs on your device: your photo or video is never uploaded, and this page
+      makes no server requests. Controller: the site operator. Data: none — all processing is on-device, and
+      nothing is stored or retained. Optional analytics are off by default and only send anonymous event
+      counts if the site owner enables them. For parents: no accounts, no cookies, no tracking — a child's
+      photo never leaves their device. Please ask before sharing a real person's picture.</p>
     </details>
   </footer>
 
