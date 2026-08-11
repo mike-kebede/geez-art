@@ -19,8 +19,11 @@ export function getLang(): Lang {
   return currentLang;
 }
 
+/** Every i18n key — F25: a typo in a t() call is now a compile error. */
+export type I18nKey = keyof typeof STRINGS['en'];
+
 /** Translate a key for the current language, falling back to English. */
-export function t(key: string): string {
+export function t(key: I18nKey): string {
   const en = STRINGS.en[key];
   const am = STRINGS.am[key];
   if (currentLang === 'am') return am ?? en ?? key;
@@ -35,6 +38,15 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     skipLink: 'Skip to artwork',
     statusLoading: 'Loading the Ethiopic font…',
     shareTop: 'Share',
+    sourceChip: 'source',
+    langAria: 'Language',
+    zoomOutAria: 'Zoom out',
+    zoomInAria: 'Zoom in',
+    zoomResetAria: 'Fit to width',
+    mosaicAriaEmpty: 'Ethiopic letter mosaic — add a photo to create one.',
+    mosaicAriaStart: 'Mosaic of Ethiopic letters,',
+    mosaicAriaDistinct: 'distinct letters,',
+    mosaicAriaSample: 'Fidel text sample:',
     emptyTitle: 'Choose a photo or video',
     emptySub:
       'It becomes a mosaic of Ethiopian letters — a picture from far, letters up close. Free, and nothing is uploaded.',
@@ -68,7 +80,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     charsetDense: 'Dense only',
     charsetLight: 'Light only',
     charsetCustom: 'Pick your own',
-    pickerHint: 'Tap a family to use it. Tap + to pick individual letters.',
+    pickerHint: 'Tap a family to use it. Tap',
+    pickerHint2: 'to pick individual letters.',
     pickAll: 'Use all',
     pickNone: 'Use none',
     allLetters: 'All letters',
@@ -88,7 +101,16 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     privacyBody:
       'Everything runs on your device: your photo or video is never uploaded, and this page makes no server requests. Controller: the site operator. Data: none — all processing is on-device, and nothing is stored or retained. Optional analytics are off by default and only send anonymous event counts if the site owner enables them. For parents: no accounts, no cookies, no tracking — a child’s photo never leaves their device. Please ask before sharing a real person’s picture.',
 
+    // palette names (t('palette_' + id))
+    palette_mono: 'Mono',
+    palette_manuscript: 'Parchment',
+    palette_icon: 'Icon',
+    palette_church: 'Church mural',
     // dynamic (t())
+    statPrefix: 'Your picture —',
+    setupError: 'Setup error:',
+    shareText: 'Turn your photo into Ethiopic letters —',
+    analyticsDisclosure: 'This site uses anonymous, opt-in analytics.',
     ready: 'Ready',
     rendering: 'Rendering…',
     preparing: 'Preparing the letters…',
@@ -128,13 +150,22 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     skipLink: 'ወደ ሥዕሉ ይዝለሉ',
     statusLoading: 'የኢትዮጵያ ፊደል በመጫን ላይ…',
     shareTop: 'ያጋሩ',
+    sourceChip: 'ምንጭ',
+    langAria: 'ቋንቋ',
+    zoomOutAria: 'አጉልለው ይዝጉ',
+    zoomInAria: 'አጉልለው ይክፈቱ',
+    zoomResetAria: 'ከስፋቱ ጋር አስተካክሉ',
+    mosaicAriaEmpty: 'የኢትዮጵያ ፊደላት ሞዛይክ — ለመስራት ምስል ይጨምሩ።',
+    mosaicAriaStart: 'የኢትዮጵያ ፊደላት ሞዛይክ፣',
+    mosaicAriaDistinct: 'የተለያዩ ፊደላት፣',
+    mosaicAriaSample: 'የፊደል ጽሑፍ ናሙና፡',
     emptyTitle: 'ምስል ወይም ቪዲዮ ይምረጡ',
     emptySub:
       'የኢትዮጵያ ፊደላት ሞዛይክ ይቀየራል — ከሩቅ ሲታይ ምስል፣ በቅርብ ሲታይ ፊደላት። ነፃ ነው፣ ምንም አይሰቀልም።',
     pickerTitle: 'ፊደሎችዎን ይምረጡ',
     pickerSub: 'የትኞቹ ፊደላት እንደሚታዩ ይምረጡ — የሚነኩዋቸው ብቻ ጥቅም ላይ ይውላሉ።',
     dropzoneMain: 'ምስል ወይም ቪዲዮ ይምረጡ',
-    dropzoneSub: 'ፎቶ ወይም ቪዲዮ ለመምረጥ ይንኩ',
+    dropzoneSub: 'ምስል ወይም ቪዲዮ ለመምረጥ ይንኩ',
     groupStart: 'ይጀምሩ',
     clearBtn: 'ያጽዱ',
     exampleBtn: 'ምሳሌ ይሞክሩ',
@@ -154,21 +185,22 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     ditherFs: 'ጥራጥሬ',
     attribution: 'ከኢትዮጵያ ኦርቶዶክስ ቤተክርስቲያን የብራናና የግድግድ ሥዕል ባህል የተነሳሱ ቀለሞች።',
     groupLetters: 'ፊደላት',
-    mixBtn: 'ፊደላትን ይቀይሩ',
+    mixBtn: 'ፊደላትን በዘፈቀደ ይቀይሩ',
     alphabetLabel: 'ፊደላት',
     charsetCommon: 'የተለመደ አማርኛ',
     charsetAll: 'ሙሉ ስብስብ',
     charsetDense: 'ጥቅጥቅ ብቻ',
     charsetLight: 'ቀላል ብቻ',
     charsetCustom: 'የራስዎን ይምረጡ',
-    pickerHint: 'ቤተሰብን ለመጠቀም ይንኩ። ነጠላ ፊደላት ለመምረጥ + ይንኩ።',
+    pickerHint: 'ቤተሰብን ለመጠቀም ይንኩ።',
+    pickerHint2: 'ነጠላ ፊደላት ለመምረጥ።',
     pickAll: 'ሁሉን ይጠቀሙ',
     pickNone: 'አንዳቸውንም አይጠቀሙ',
     allLetters: 'ሁሉም ፊደላት',
     of: 'ከ',
     letters: 'ፊደላት',
-    addPhotoToSee: 'ለማየት ፎቶ ይጨምሩ',
-    groupMore: 'ተጨማሪ ውጤቶች',
+    addPhotoToSee: 'ለማየት ምስል ይጨምሩ',
+    groupMore: 'ተጨማሪ ማስወጫዎች',
     dlVideo: 'ቪዲዮ ያውርዱ',
     dlGif: 'GIF ያውርዱ',
     copyText: 'እንደ ጽሑፍ ይቅዱ',
@@ -182,7 +214,16 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     privacyBody:
       'ሁሉም በመሣሪያዎ ላይ ይሰራል፤ ፎቶዎ ወይም ቪዲዮዎ በጭራሽ አይሰቀልም፣ ይህ ገጽም የአገልጋይ ጥያቄ አያደርግም። ተቆጣጣሪ፡ የገጹ ባለቤት። መረጃ፡ የለም — ሁሉም ሂደት በመሣሪያው ላይ ነው፣ ምንም አይከማችም። አማራጭ ስታቲስቲክስ በነባሪ ጠፍቷል — የገጹ ባለቤት ካስቻለው ብቻ ማንነት-አልባ ቆጠራ ይላካል። ለወላጆች፡ መለያ የለም፣ ኩኪ የለም፣ ክትትል የለም — የልጅዎ ፎቶ መሣሪያውን አይለቅም። የእውነተኛ ሰው ፎቶ ከማጋራትዎ በፊት ይጠይቁ።',
 
+    // palette names (t('palette_' + id))
+    palette_mono: 'ሞኖ',
+    palette_manuscript: 'ብራና',
+    palette_icon: 'አዶ',
+    palette_church: 'የቤተክርስቲያን ሥዕል',
     // dynamic (t()) — pending native review
+    statPrefix: 'ምስልዎ —',
+    setupError: 'የማዋቀር ስህተት፡',
+    shareText: 'ፎቶዎን ወደ ኢትዮጵያ ፊደላት ይቀይሩ —',
+    analyticsDisclosure: 'ይህ ጣቢያ ማንነት-አልባ፣ አማራጭ ስታቲስቲክስ ይጠቀማል።',
     ready: 'ዝግጁ',
     rendering: 'እየተሰራ ነው…',
     preparing: 'ፊደላት በመዘጋጀት ላይ…',

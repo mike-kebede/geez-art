@@ -150,7 +150,9 @@ function orientAndComposite(src: Decoded, orientation: number | undefined): HTML
   const canvas = document.createElement('canvas');
   canvas.width = outW;
   canvas.height = outH;
-  const ctx = canvas.getContext('2d');
+  // F5: the mosaic renderer reads this canvas back via getImageData every render
+  // — flag it so the canvas doesn't stay GPU-accelerated and stall on readback.
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) throw new Error('Canvas 2D context unavailable');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high'; // keep downscaled photos crisp

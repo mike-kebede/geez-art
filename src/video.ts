@@ -28,6 +28,8 @@ export function startVideoLoop(
   onError?: (e: unknown) => void,
 ): VideoHandle {
   const srcCanvas = document.createElement('canvas');
+  // F5: the renderer reads every frame back via getImageData — flag for CPU reads.
+  void srcCanvas.getContext('2d', { willReadFrequently: true });
   let raf = 0;
   let last = 0;
   let paused = false;

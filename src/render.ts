@@ -182,7 +182,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   // fast — per-cell fillText is what froze video mode on low-end devices.
   const chars: string[][] = [];
   if (colorize) {
-    const { atlas, tileW, palette } = colorAtlasFor(ramp, cellPx, paper, cellRgb, ink);
+    const { atlas, tileW, palette } = colorAtlasFor(ramp, paper, cellRgb, ink);
     const tileH = Math.ceil(cellPx * 1.4);
     for (let r = 0; r < rows; r++) {
       const row: string[] = [];
@@ -334,7 +334,6 @@ const COLOR_ATLAS_LRU = 3;
  */
 function colorAtlasFor(
   ramp: GlyphInfo[],
-  cellPx: number,
   paper: string,
   cellRgb: Uint8ClampedArray,
   ink: string,
@@ -345,22 +344,30 @@ function colorAtlasFor(
   // mural" warms them — without losing the colorful-on-by-default look.
   const [ir, ig, ib] = hexToRgb(ink);
   const T = 0.14;
-  const colors = new Map<number, number>();
-  const palette = new Uint32Array(cellRgb.length / 3);
-  for (let i = 0; i < palette.length; i++) {
-    const r = cellRgb[i * 3] * (1 - T) + ir * T;
-    const g = cellRgb[i * 3 + 1] * (1 - T) + ig * T;
-    const b = cellRgb[i * 3 + 2] * (1 - T) + ib * T;
-    const key = (quant(r) << 16) | (quant(g) << 8) | quant(b);
-    let idx = colors.get(key);
-    if (idx === undefined) {
-      idx = colors.size;
-      colors.set(key, idx);
-    }
-    palette[i] = idx;
+  // F1: a cell's row index is its position in the SORTED color set, computed
+  // identically on every build, so a cache hit can never pair a fresh palette
+  // with a stale atlas layout (insertion-order rows were the bug).
+  const keys = new Uint32Array(cellRgb.length / 3);
+  const colorSet = new Set<number>();
+  for (let i = 0; i < keys.length; i++) {
+    const key =
+      (quant(cellRgb[i * 3] * (1 - T) + ir * T) << 16) |
+      (quant(cellRgb[i * 3 + 1] * (1 - T) + ig * T) << 8) |
+      quant(cellRgb[i * 3 + 2] * (1 - T) + ib * T);
+    keys[i] = key;
+    colorSet.add(key);
   }
-  const colorsKey = [...colors.keys()].sort((a, b) => a - b).join(',');
-  const key = `${ramp.length}:${cellPx}:${paper}:${colorsKey}`;
+  const sorted = [...colorSet].sort((a, b) => a - b);
+  const rowOf = new Map<number, number>();
+  sorted.forEach((c, i) => rowOf.set(c, i));
+  const palette = new Uint32Array(keys.length);
+  for (let i = 0; i < keys.length; i++) palette[i] = rowOf.get(keys[i])!;
+  // F4: rasterize at a FIXED reference size and let drawImage scale to cellPx —
+  // the atlas then rebuilds only when the glyph/color set changes, NOT on every
+  // Detail-slider step (cellPx is deliberately left out of the cache key).
+  const REF_CELL = 16;
+  const colorsKey = sorted.join(',');
+  const key = `${ramp.length}:${paper}:${colorsKey}`;
   const hit = colorAtlasCache.get(key);
   if (hit) {
     // touch for LRU recency
@@ -368,21 +375,22 @@ function colorAtlasFor(
     colorAtlasCache.set(key, hit);
     return { atlas: hit.atlas, tileW: hit.tileW, palette };
   }
-  const tileW = Math.ceil(cellPx * 1.2);
-  const tileH = Math.ceil(cellPx * 1.4);
+  const tileW = Math.ceil(REF_CELL * 1.2);
+  const tileH = Math.ceil(REF_CELL * 1.4);
   const atlas = document.createElement('canvas');
   atlas.width = ramp.length * tileW;
-  atlas.height = colors.size * tileH;
+  atlas.height = sorted.length * tileH;
   const ctx = atlas.getContext('2d')!;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, atlas.width, atlas.height);
-  ctx.font = `${cellPx}px ${FONT}`;
+  ctx.font = `${REF_CELL}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (const [rgbKey, idx] of colors) {
+  for (let row = 0; row < sorted.length; row++) {
+    const rgbKey = sorted[row];
     ctx.fillStyle = `rgb(${(rgbKey >> 16) & 0xff},${(rgbKey >> 8) & 0xff},${rgbKey & 0xff})`;
     for (let k = 0; k < ramp.length; k++) {
-      ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, idx * tileH + tileH / 2 + cellPx * 0.06);
+      ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, row * tileH + tileH / 2 + REF_CELL * 0.06);
     }
   }
   colorAtlasCache.set(key, { atlas, tileW });

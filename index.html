@@ -43,7 +43,7 @@
   <header class="topbar">
     <h1 class="wordmark"><span class="wm-latin">geez·art</span></h1>
     <p id="status" class="status" role="status" data-i18n="statusLoading">Loading the Ethiopic font…</p>
-    <select id="lang" class="lang-toggle" aria-label="Language">
+    <select id="lang" class="lang-toggle" aria-label="Language" data-i18n-aria="langAria">
       <option value="en">EN</option>
       <option value="am">አማ</option>
     </select>
@@ -55,14 +55,14 @@
       <div class="halo" aria-hidden="true"></div>
       <div class="frame" id="frame" tabindex="-1">
         <div class="zoom-controls" id="zoomControls" hidden>
-          <button id="zoomOut" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+          <button id="zoomOut" type="button" title="Zoom out" aria-label="Zoom out" data-i18n-aria="zoomOutAria" data-i18n-title="zoomOutAria">−</button>
           <span id="zoomVal" class="zoom-val">100%</span>
-          <button id="zoomIn" type="button" title="Zoom in" aria-label="Zoom in">+</button>
-          <button id="zoomReset" type="button" title="Fit to width" aria-label="Fit to width">Fit</button>
+          <button id="zoomIn" type="button" title="Zoom in" aria-label="Zoom in" data-i18n-aria="zoomInAria" data-i18n-title="zoomInAria">+</button>
+          <button id="zoomReset" type="button" title="Fit to width" aria-label="Fit to width" data-i18n-aria="zoomResetAria" data-i18n-title="zoomResetAria">Fit</button>
         </div>
         <div class="frame-inner">
           <div class="zoom-wrap">
-            <canvas id="mosaic" width="0" height="0" role="img" tabindex="-1" aria-label="Ethiopic letter mosaic — add a photo to create one."></canvas>
+            <canvas id="mosaic" width="0" height="0" role="img" tabindex="-1" aria-label="Ethiopic letter mosaic — add a photo to create one." data-i18n-aria="mosaicAriaEmpty"></canvas>
             <div class="empty-state" id="emptyHint" tabindex="0" role="button">
               <span class="empty-fidel" aria-hidden="true">ፊደል</span>
               <h2 id="emptyTitle">Choose a photo or video</h2>
@@ -73,7 +73,7 @@
       </div>
       <div class="plaque">
         <span class="source-chip" id="sourceChip">
-          <span class="chip-label">source</span>
+          <span class="chip-label" data-i18n="sourceChip">source</span>
           <canvas id="source" width="0" height="0" aria-hidden="true"></canvas>
         </span>
         <span id="mosaicStat" class="stat"></span>
@@ -91,7 +91,7 @@
     <aside class="controls" aria-label="Controls">
       <section class="group">
         <h2 data-i18n="groupStart">Start</h2>
-        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose a photo or video">
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose a photo or video" data-i18n-aria="dropzoneMain">
           <input type="file" id="file" accept="image/*,video/*" hidden>
           <p class="dz-main" data-i18n="dropzoneMain">Choose a photo or video</p>
           <p class="dz-sub" data-i18n="dropzoneSub">tap to pick a photo or video</p>
@@ -116,15 +116,15 @@
           <h2 data-i18n="groupAdjust">Adjust</h2>
           <label class="slider">
             <span data-i18n="sliderDetail">Detail</span> <span id="widthVal" class="val"></span>
-            <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail" aria-label="Detail">
+            <input type="range" id="width" min="20" max="400" step="2" value="170" title="How many columns of letters — more = more detail" aria-label="Detail" data-i18n-aria="sliderDetail">
           </label>
           <label class="slider">
             <span data-i18n="sliderContrast">Contrast</span> <span id="contrastVal" class="val"></span>
-            <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark" aria-label="Contrast">
+            <input type="range" id="contrast" min="0" max="100" value="0" title="Punch up the light and dark" aria-label="Contrast" data-i18n-aria="sliderContrast">
           </label>
           <label class="slider">
             <span data-i18n="sliderEdges">Edges</span> <span id="edgeVal" class="val"></span>
-            <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges" aria-label="Edges">
+            <input type="range" id="edge" min="0" max="100" value="0" title="Darken outlines to emphasize edges" aria-label="Edges" data-i18n-aria="sliderEdges">
           </label>
           <div class="checks">
             <label class="row-inline"><input type="checkbox" id="invert"> <span data-i18n="invert">Invert</span></label>
@@ -166,7 +166,7 @@
                 <button id="pickNone" class="ghost" type="button" data-i18n="pickNone">Use none</button>
               </div>
             </div>
-            <p class="hint" data-i18n="pickerHint">Tap a family to use it. Tap <span class="plus">+</span> to pick individual letters.</p>
+            <p class="hint"><span data-i18n="pickerHint">Tap a family to use it. Tap</span> <span class="plus">+</span> <span data-i18n="pickerHint2">to pick individual letters.</span></p>
             <div id="rampPreview" class="ramp-preview" aria-label="Letters in use"></div>
             <div id="pickerGrid" class="picker-grid"></div>
           </div>

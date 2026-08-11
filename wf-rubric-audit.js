@@ -50,8 +50,15 @@ code confirms them):
   the full recording window; videoBitsPerSecond applies to mp4 too + recording downscaled ≤1280;
   empty-MIME .heic reaches the friendly error + video routing by extension; share-sheet cancel reports
   "cancelled"; zero-upload network-interception test; DEPLOY.md analytics/CSP reconciliation.
+- Round 3.5 (just committed): LANGUAGE TOGGLE — the whole UI switches between English-only and
+  Amharic-only via a topbar selector (src/i18n.ts dictionary; data-i18n re-rendering; dynamic t() calls);
+  all Amharic verified by two 3-linguist panels. Video/GIF watermark is now a URL-only English band sized
+  to fit (no overflow). Export buttons wrap two-per-row. M5 device-aware default detail. M7 palettes
+  govern colorful mode (cell colors blended toward palette ink). M12 referral ?ref=share on the image
+  band + referral_visit event. L20 in-page analytics disclosure; L21 expanded privacy note; L24 solid
+  surfaces; L25 status copy; L26 hero-fidel gold; L27 PWA manifest + icons; L30 dist perf-budget test.
 
-Test suite: tests/e2e.spec.ts — 51 Playwright tests expected green (Chromium; the suite builds dist and
+Test suite: tests/e2e.spec.ts — 63 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
 do not execute it.
 

@@ -16,7 +16,7 @@ import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
 import { getSamples } from './samples';
 import { startVideoLoop, recordCanvas, recordGIF, canRecordVideo, type VideoHandle } from './video';
 import { initAnalytics, trackEvent, analyticsEnabled } from './analytics';
-import { setLang, getLang, t } from './i18n';
+import { setLang, getLang, t, type Lang, type I18nKey } from './i18n';
 
 let ramp: GlyphInfo[] = [];
 let source: HTMLCanvasElement | null = null;
@@ -44,6 +44,8 @@ let videoUrl: string | null = null;
 let emptyMode: 'default' | 'pick' = 'default';
 /** Whether the video filter is paused — drives the Play/Pause label on toggle. */
 let videoPaused = false;
+/** F2: bumps each video load so a superseded metadata-wait can't orphan a loop. */
+let videoGen = 0;
 
 /**
  * The URL stamped onto shared images + share text (M14). Derived from the live
@@ -58,9 +60,10 @@ const SITE_URL: string = (() => {
   return 'https://geez-art.pages.dev';
 })();
 
-/** The URL baked into shared images carries a referral token so the viral loop's
- *  K-factor is measurable (M12). The share-TEXT URL stays BARE so WhatsApp and
- *  Telegram auto-linkify it — only the band gets the token. */
+/** The share-sheet TEXT link carries a referral token; the visible image band
+ *  stays BARE (typable, no query friction — F21). The token measures the
+ *  share_success → referral_visit funnel as a K-factor PROXY (F10) — a constant
+ *  token can't measure per-sharer reproduction without a backend. */
 const BAND_URL = `${SITE_URL}?ref=share`;
 
 function $(id: string): HTMLElement {
@@ -96,7 +99,7 @@ function clearAll(): void {
   out.width = 0;
   out.height = 0;
   delete out.dataset.distinct;
-  out.setAttribute('aria-label', 'Ethiopic letter mosaic — add a photo to create one.'); // L22: no stale render label
+  out.setAttribute('aria-label', t('mosaicAriaEmpty')); // L22: no stale render label
   $('mosaicStat').textContent = '';
   mosaicCanvas = null;
   lastResult = null;
@@ -127,7 +130,9 @@ function setSource(c: HTMLCanvasElement): void {
 
 function readRenderOpts(): { cols: number; contrast: number; invert: boolean; colorize: boolean; dither: DitherMode; edge: number } {
   return {
-    cols: parseInt(($('width') as HTMLInputElement).value, 10),
+    // F3: the renderer is synchronous — clamp columns during video playback so
+    // a 400-col frame can't freeze a low-end device.
+    cols: Math.min(videoHandle ? 140 : 400, parseInt(($('width') as HTMLInputElement).value, 10)),
     contrast: 1 + parseInt(($('contrast') as HTMLInputElement).value, 10) / 100,
     edge: parseInt(($('edge') as HTMLInputElement).value, 10) / 100,
     invert: ($('invert') as HTMLInputElement).checked,
@@ -193,11 +198,11 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
       (window as unknown as { __lastChars?: string[] }).__lastChars = Array.from(distinct);
     }
     const stat = $('mosaicStat');
-    stat.textContent = `Your picture — ${(res.cols * res.rows).toLocaleString()} letters · ${currentPalette.name}`;
+    stat.textContent = `${t('statPrefix')} ${(res.cols * res.rows).toLocaleString()} ${t('letters')} · ${t(('palette_' + currentPalette.id) as I18nKey)}`;
     // Readable sample of the actual fidel grid so the canvas isn't a silent
     // picture to screen-reader users.
     const sample = res.chars.map((row) => row.join('')).join('').slice(0, 200);
-    out.setAttribute('aria-label', `Mosaic of Ethiopic letters, ${res.cols} × ${res.rows}, ${distinct.size} distinct letters, ${currentPalette.name}. Fidel text sample: ${sample}`);
+    out.setAttribute('aria-label', `${t('mosaicAriaStart')} ${res.cols} × ${res.rows}, ${distinct.size} ${t('mosaicAriaDistinct')} ${t(('palette_' + currentPalette.id) as I18nKey)}. ${t('mosaicAriaSample')} ${sample}`);
   }
   $('clearBtn').hidden = false;
 }
@@ -315,8 +320,11 @@ async function doShare(): Promise<void> {
     // URL band to ~4px after messenger recompression. The band must be legible:
     // it is the entire viral CTA.
     const compact = downscaleCanvas(mosaicCanvas, 1600);
-    const branded = makeShareImage(compact, BAND_URL); // M12: referral token rides the band
-    const result = await shareCanvas(branded, `Turn your photo into Ethiopic letters — ${SITE_URL}`);
+    // F21: the visible image band shows the BARE domain (no ?ref — typable, no
+    // query friction); the referral token rides the share-sheet TEXT link, which
+    // is tapped, not typed.
+    const branded = makeShareImage(compact, SITE_URL);
+    const result = await shareCanvas(branded, `${t('shareText')} ${BAND_URL}`);
     // M6: track the OUTCOME so the viral loop's K-factor is observable (only
     // fires when a provider is configured — otherwise a no-op).
     trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
@@ -352,13 +360,43 @@ function setEmpty(mode: 'default' | 'pick'): void {
 function applyLang(): void {
   for (const el of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
     const key = el.dataset.i18n;
-    if (key) el.textContent = t(key);
+    if (key) el.textContent = t(key as I18nKey);
+  }
+  // F6: ARIA names/titles follow the language too, so AT users don't hear
+  // English labels with an Amharic voice.
+  for (const el of document.querySelectorAll<HTMLElement>('[data-i18n-aria]')) {
+    const key = el.dataset.i18nAria;
+    if (key) el.setAttribute('aria-label', t(key as I18nKey));
+  }
+  for (const el of document.querySelectorAll<HTMLElement>('[data-i18n-title]')) {
+    const key = el.dataset.i18nTitle;
+    if (key) el.setAttribute('title', t(key as I18nKey));
   }
   setEmpty(emptyMode);
+  // F8: palette option names follow the language too.
+  const palSel = document.getElementById('palette') as HTMLSelectElement | null;
+  if (palSel) {
+    for (const opt of palSel.options) {
+      opt.textContent = t(('palette_' + opt.value) as I18nKey);
+    }
+  }
+  // F6: re-render the dynamic mosaic aria-label in the new language.
+  if (lastResult) {
+    const out = $('mosaic') as HTMLCanvasElement;
+    const distinct = new Set<string>();
+    for (const row of lastResult.chars) for (const ch of row) distinct.add(ch);
+    const sample = lastResult.chars.map((r) => r.join('')).join('').slice(0, 200);
+    out.setAttribute('aria-label', `${t('mosaicAriaStart')} ${lastResult.cols} × ${lastResult.rows}, ${distinct.size} ${t('mosaicAriaDistinct')} ${t(('palette_' + currentPalette.id) as I18nKey)}. ${t('mosaicAriaSample')} ${sample}`);
+  }
   const status = $('status');
   if (status.textContent === 'Ready' || status.textContent === 'ዝግጁ') status.textContent = t('ready');
   const pb = $('playBtn') as HTMLButtonElement;
   if (!pb.hidden) pb.textContent = videoPaused ? t('play') : t('pause');
+  // F24: the language re-render wipes the analytics disclosure — re-append it.
+  if (analyticsEnabled()) {
+    const body = document.getElementById('privacyBody');
+    if (body && !body.textContent.endsWith(t('analyticsDisclosure'))) body.textContent += ' ' + t('analyticsDisclosure');
+  }
 }
 
 /** Apply the mosaic zoom (CSS scale via width) so letters can be seen up close. */
@@ -413,6 +451,7 @@ function handlePickedFile(file: File): void {
 /** Load a video, then run it through the mosaic filter live. */
 async function handleVideoFile(file: File): Promise<void> {
   clearAll();
+  const gen = ++videoGen; // F2: supersede any earlier in-flight video load
   const url = URL.createObjectURL(file);
   videoUrl = url; // M1: revoke by this stored string, never videoEl.src
   const v = document.createElement('video');
@@ -440,6 +479,13 @@ async function handleVideoFile(file: File): Promise<void> {
     videoUrl = null;
     clearAll(); // restore the empty state the load was supposed to leave
     throw e;
+  }
+  // F2: a newer video was chosen while this one was still loading — abandon it
+  // (revoke + don't start a loop that would clobber the newer one).
+  if (gen !== videoGen) {
+    URL.revokeObjectURL(videoUrl ?? url);
+    videoUrl = null;
+    return;
   }
   videoEl = v;
   videoHandle = startVideoLoop(
@@ -473,6 +519,12 @@ async function handleVideoFile(file: File): Promise<void> {
   $('dlGif').hidden = false;
   const capHint = document.getElementById('videoCapHint');
   if (capHint) capHint.hidden = canRecord;
+  // F22: reduced-motion auto-pause must also disable the exports — a static
+  // source would otherwise record a frozen 4s/3s clip.
+  if (videoPaused) {
+    (document.getElementById('dlVideo') as HTMLButtonElement).disabled = true;
+    (document.getElementById('dlGif') as HTMLButtonElement).disabled = true;
+  }
   trackEvent('source', { kind: 'video' });
   const chip = $('sourceChip');
   if (chip) chip.classList.add('visible');
@@ -772,11 +824,20 @@ async function init(): Promise<void> {
   initAnalytics(); // opt-in: a no-op unless a provider meta tag is present
   preloadEthiopicFont(); // M3: start the woff2 fetch before anything blocks
   wireInput(); // M4: primary CTA live at DOM-interactive, not after ramp setup
-  // Language toggle: the entire UI is English-only or Amharic-only.
+  // Language toggle: the entire UI is English-only or Amharic-only. F19:
+  // remember the choice, and default Amharic-first visitors to Amharic.
+  let storedLang: Lang | null = null;
+  try {
+    const s = localStorage.getItem('geez-art.lang');
+    if (s === 'en' || s === 'am') storedLang = s;
+  } catch { /* private mode — no persistence */ }
+  const detectedLang: Lang = (navigator.language || '').toLowerCase().startsWith('am') ? 'am' : 'en';
+  setLang(storedLang ?? detectedLang);
   const langSel = $('lang') as HTMLSelectElement;
   langSel.value = getLang();
   langSel.addEventListener('change', () => {
     setLang(langSel.value === 'am' ? 'am' : 'en');
+    try { localStorage.setItem('geez-art.lang', getLang()); } catch { /* private mode */ }
     applyLang();
   });
   applyLang(); // render data-i18n for the initial language
@@ -789,11 +850,8 @@ async function init(): Promise<void> {
       ($('width') as HTMLInputElement).value = '120';
     }
   }
-  // L20: if a deployer enabled opt-in analytics, say so in the privacy note.
-  if (analyticsEnabled()) {
-    const body = document.getElementById('privacyBody');
-    if (body) body.textContent += ' This site uses anonymous, opt-in analytics.';
-  }
+  // L20/F24: the analytics disclosure is appended by applyLang() (called below),
+  // so it survives language toggles — not appended here.
   try {
     await loadEthiopicFont();
     status.textContent = t('preparing');
@@ -820,16 +878,20 @@ async function init(): Promise<void> {
     for (const p of PALETTES) {
       const o = document.createElement('option');
       o.value = p.id;
-      o.textContent = p.name;
+      o.textContent = t(('palette_' + p.id) as I18nKey); // F8: localized palette names
       palSel.appendChild(o);
     }
-    palSel.value = DEFAULT_PALETTE.id;
+    // F19: remember the palette across visits.
+    let storedPal = DEFAULT_PALETTE.id;
+    try { storedPal = localStorage.getItem('geez-art.palette') ?? DEFAULT_PALETTE.id; } catch { /* private mode */ }
+    palSel.value = PALETTES.some((p) => p.id === storedPal) ? storedPal : DEFAULT_PALETTE.id;
     palSel.addEventListener('change', () => {
       const p = PALETTES.find((x) => x.id === palSel.value) ?? DEFAULT_PALETTE;
+      try { localStorage.setItem('geez-art.palette', p.id); } catch { /* private mode */ }
       applyPalette(p);
     });
   }
-  applyPalette(DEFAULT_PALETTE);
+  applyPalette(PALETTES.find((p) => p.id === (palSel ? palSel.value : DEFAULT_PALETTE.id)) ?? DEFAULT_PALETTE);
 
   // Input listeners are wired at the top of init() via wireInput() so the
   // primary CTA is live at DOM-interactive (M4), not after font + ramp setup.
@@ -954,7 +1016,7 @@ async function init(): Promise<void> {
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
     const paint = () => {
-      paintBrandedCapture(recCanvas, out, BAND_URL) // M12;
+      paintBrandedCapture(recCanvas, out, SITE_URL) // F21: bare domain on the visible band;
       recRaf = requestAnimationFrame(paint);
     };
     paint();
@@ -1002,7 +1064,7 @@ async function init(): Promise<void> {
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
     const paint = () => {
-      paintBrandedCapture(recCanvas, out, BAND_URL) // M12;
+      paintBrandedCapture(recCanvas, out, SITE_URL) // F21: bare domain on the visible band;
       recRaf = requestAnimationFrame(paint);
     };
     paint();
@@ -1037,5 +1099,5 @@ async function init(): Promise<void> {
 // silently dead page (which is what happened when an element went missing).
 void init().catch((e) => {
   const s = document.getElementById('status');
-  if (s) s.textContent = 'Setup error: ' + (e instanceof Error ? e.message : String(e));
+  if (s) s.textContent = `${t('setupError')} ${e instanceof Error ? e.message : String(e)}`;
 });

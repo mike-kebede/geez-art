@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import { execSync } from 'node:child_process';
 import zlib from 'node:zlib';
+import { STRINGS } from '../src/i18n';
 
 let distBuilt = false;
 function ensureBuilt(): void {
@@ -1157,6 +1158,40 @@ test('language toggle: empty state and picker guidance switch languages (M4)', a
   await expect(page.locator('#emptyTitle')).toContainText('ፊደሎችዎን');
   await page.selectOption('#lang', 'en');
   await expect(page.locator('#emptyTitle')).toContainText('Pick your letters');
+});
+
+test('language toggle: controls, export buttons, and palette options switch too (F8)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.selectOption('#lang', 'am');
+  await expect(page.locator('[data-i18n="groupExport"]')).toHaveText('ያስወጡ');
+  await expect(page.locator('#dlPng')).toHaveText('PNG ያውርዱ');
+  await expect(page.locator('#exampleBtn')).toHaveText('ምሳሌ ይሞክሩ');
+  await expect(page.locator('#palette option[value="mono"]')).toHaveText('ሞኖ');
+  await page.selectOption('#lang', 'en');
+  await expect(page.locator('#dlPng')).toHaveText('Download PNG');
+  await expect(page.locator('#palette option[value="church"]')).toHaveText('Church mural');
+});
+
+test('i18n dictionary is in sync: every data-i18n key exists in both languages (F25)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const keys = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-i18n]')].map((el) => (el as HTMLElement).dataset.i18n ?? ''),
+  );
+  const ariaKeys = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-i18n-aria], [data-i18n-title]')].map((el) => {
+      const a = (el as HTMLElement).getAttribute('data-i18n-aria');
+      const t2 = (el as HTMLElement).getAttribute('data-i18n-title');
+      return [a, t2].filter(Boolean) as string[];
+    }).flat(),
+  );
+  const unique = [...new Set([...keys, ...ariaKeys].filter(Boolean))];
+  expect(unique.length).toBeGreaterThan(15);
+  for (const k of unique) {
+    expect(STRINGS.en[k], `missing en.${k}`).toBeTruthy();
+    expect(STRINGS.am[k], `missing am.${k}`).toBeTruthy();
+  }
 });
 
 test('try an example loads the icon-classical sample, not the fallback face (L32)', async ({ page }) => {

@@ -1,8 +1,10 @@
 /*
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'; object-src 'none'; worker-src 'none'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self'; font-src 'self' data:; connect-src 'self'
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'; object-src 'none'; worker-src 'none'; script-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self'; font-src 'self' data:; connect-src 'self'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cross-Origin-Opener-Policy: same-origin
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
