@@ -278,12 +278,14 @@ export function setupDropZone(el: HTMLElement, onFile: (file: File) => void): vo
 
   el.addEventListener('dragenter', (ev: DragEvent) => {
     ev.preventDefault();
+    ev.stopPropagation(); // #5: #emptyHint nests inside #frame — don't double-fire
     depth++;
     el.classList.add('dragover');
   });
 
   el.addEventListener('dragover', (ev: DragEvent) => {
     ev.preventDefault(); // required to signal that dropping is allowed
+    ev.stopPropagation();
   });
 
   el.addEventListener('dragleave', () => {
@@ -296,6 +298,7 @@ export function setupDropZone(el: HTMLElement, onFile: (file: File) => void): vo
 
   el.addEventListener('drop', (ev: DragEvent) => {
     ev.preventDefault();
+    ev.stopPropagation(); // #5
     depth = 0;
     el.classList.remove('dragover');
     const files = ev.dataTransfer?.files;

@@ -601,6 +601,14 @@ test('the built app works under its own production CSP headers (blob: media allo
   // blob: media fails here.
   test.setTimeout(120000);
   ensureBuilt();
+  // #9: the harness must parse _headers like Cloudflare — assert the global
+  // rule + every security header exist, so a deleted '/*' line can't silently
+  // ship a header-less site while the suite stays green.
+  const rawHeaders = fs.readFileSync(path.resolve('public', '_headers'), 'utf8');
+  expect(rawHeaders).toContain('/*');
+  for (const h of ['Content-Security-Policy', 'X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy', 'Cross-Origin-Opener-Policy']) {
+    expect(rawHeaders, `missing ${h}`).toMatch(new RegExp(`^\\s*${h}:`, 'm'));
+  }
   const server = serveDist(5197);
   await listenServer(server, 5197);
   try {
@@ -785,6 +793,7 @@ test('save as HTML embeds the Ethiopic font (self-contained) (L12)', async ({ pa
   const download = await downloadPromise;
   const html = fs.readFileSync((await download.path())!, 'utf8');
   expect(html).toContain('data:font/woff2;base64,');
+  expect(html).toMatch(/geez-art.pages.dev|localhost/); // #1: the export is attributed
   expect(html).toMatch(/[ሀ-፿]/); // real fidel in the exported <pre>
 });
 
@@ -1327,7 +1336,7 @@ test('i18n dictionary is in sync: every data-i18n key exists in both languages (
   }
 });
 
-test('try an example loads the icon-classical sample, not the fallback face (L32)', async ({ page }) => {
+test('try an example loads the bundled demo photo, not a fallback face (L32)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
   await page.click('#exampleBtn');
@@ -1336,7 +1345,7 @@ test('try an example loads the icon-classical sample, not the fallback face (L32
     return c.width > 10;
   });
   const name = await page.evaluate(() => (window as unknown as { __currentSample?: string }).__currentSample);
-  expect(name).toBe('icon-classical');
+  expect(name).toBe('demo'); // the bundled demo photo, decoded through the real input path
 });
 
 test.describe('mobile (Pixel 7 — F-7)', () => {

@@ -13,7 +13,7 @@ import { imageFileToCanvas, setupPaste, setupDropZone, isHeic, isVideoFile } fro
 import { downloadCanvasPNG, gridToText, selfContainedHTML, makeShareImage, shareCanvas, downscaleCanvas, paintBrandedCapture, triggerDownload } from './export';
 import { RENDER_DEBOUNCE_MS, MAX_FILE_BYTES } from './limits';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
-import { getSamples } from './samples';
+// (getSamples removed — the example now uses a bundled demo photo)
 import { startVideoLoop, recordCanvas, recordGIF, canRecordVideo, type VideoHandle } from './video';
 import { initAnalytics, trackEvent, analyticsEnabled } from './analytics';
 import { setLang, getLang, t, type Lang, type I18nKey } from './i18n';
@@ -61,9 +61,13 @@ let mediaDest: MediaStreamAudioDestinationNode | null = null;
  */
 /** M2: cap desktop still-render columns by RAM so a 6-8GB machine can't hard-freeze. */
 const DESKTOP_MAX_COLS = (() => {
+  // #4: coarse-pointer devices and anything with no deviceMemory signal (iOS
+  // Safari, Firefox mobile, WebViews) get the low-mem cap too — an old iPhone
+  // at detail 240 is a 1-3s freeze.
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
   const m = (navigator as { deviceMemory?: number }).deviceMemory;
-  if (m !== undefined && m < 4) return 160;
-  if (m !== undefined && m < 8) return 200;
+  if (coarse || m === undefined || m < 8) return 200;
+  if (m < 4) return 160;
   return 400;
 })();
 
@@ -80,7 +84,8 @@ const SITE_URL: string = (() => {
  *  share mints its own ?ref=share-XXXX so the funnel can be bucketed per share.
  */
 function shareLink(): string {
-  return `${SITE_URL}?ref=share-${Math.random().toString(36).slice(2, 8)}`;
+  // #3: the recipient lands on a live demo, not a blank canvas.
+  return `${SITE_URL}?ref=share-${Math.random().toString(36).slice(2, 8)}&demo=1`;
 }
 
 /** Hide the status line when it's just the idle "Ready" (it shows only real
@@ -141,6 +146,19 @@ function clearAll(): void {
   if (zc) zc.hidden = true;
   firstRenderDone = false;
   updateShareState();
+}
+
+/** Load the bundled demo photo (a real image) through the same decode path. */
+async function loadDemoPhoto(): Promise<void> {
+  try {
+    const resp = await fetch('/demo.png');
+    if (!resp.ok) throw new Error('demo fetch failed');
+    const c = await imageFileToCanvas(new File([await resp.blob()], 'demo.png', { type: 'image/png' }));
+    if (import.meta.env.DEV) (window as unknown as { __currentSample?: string }).__currentSample = 'demo';
+    setSource(c);
+  } catch {
+    flash(t('pictureFailed'));
+  }
 }
 
 function setSource(c: HTMLCanvasElement): void {
@@ -304,7 +322,7 @@ async function downloadHTML(): Promise<void> {
   if (!res) return;
   // Self-contained: embeds the Ethiopic font so the exported file renders on
   // macOS/iOS (which have no system Ethiopic font).
-  const html = await selfContainedHTML(res.chars, { ink: currentPalette.ink, paper: currentPalette.paper });
+  const html = await selfContainedHTML(res.chars, { ink: currentPalette.ink, paper: currentPalette.paper, siteUrl: SITE_URL }); // #1: HTML export carries attribution
   downloadTextFile('geez-art.html', html, 'text/html;charset=utf-8');
 }
 
@@ -991,8 +1009,7 @@ async function init(): Promise<void> {
     if (source) render();
     // M10: a shared ?demo=1 link lands on a live demo, not a blank canvas.
     if (new URLSearchParams(window.location.search).get('demo') === '1') {
-      const demos = getSamples();
-      setSource((demos.find((s) => s.name === 'icon-classical') ?? demos[0]).render());
+      void loadDemoPhoto();
     }
   } catch {
     status.textContent = t('somethingWrong');
@@ -1122,17 +1139,8 @@ async function init(): Promise<void> {
   });
   $('mixBtn').addEventListener('click', mixItUp);
   $('exampleBtn').addEventListener('click', () => {
-    // First-run demo: show the effect in 3 seconds. Uses the icon-classical
-    // sample; swap in real user photos whenever available. (L32: the sample's
-    // real name is 'icon-classical', not 'icon' — the old lookup silently fell
-    // through to the 'face' sample.)
-    const demos = getSamples();
-    const sample = demos.find((s) => s.name === 'icon-classical') ?? demos[0];
-    trackEvent('example_used'); // M6 funnel — opt-in analytics only
-    if (import.meta.env.DEV) {
-      (window as unknown as { __currentSample?: string }).__currentSample = sample.name;
-    }
-    setSource(sample.render());
+    trackEvent('example_used'); // opt-in analytics only
+    void loadDemoPhoto();
   });
   $('playBtn').addEventListener('click', () => {
     if (videoHandle) {
@@ -1174,6 +1182,7 @@ async function init(): Promise<void> {
     paint();
     // F-1: reuse the per-load MediaStreamDestination (built in handleVideoFile —
     // createMediaElementSource is one-shot, so it CANNOT be created here).
+    if (audioCtx && audioCtx.state === 'suspended') void audioCtx.resume(); // #2
     const audio = mediaDest?.stream ?? null;
     try {
       // F8: export at the loop's EFFECTIVE rate (it backs off to ~6fps on slow

@@ -252,12 +252,16 @@ export function gridToText(chars: string[][]): string {
 /** Shared shell for the exported HTML document; `extraHead` adds <head> lines (e.g. an embedded @font-face style). */
 function htmlDocument(
   chars: string[][],
-  opts: { ink?: string; paper?: string; fontSize?: string } | undefined,
+  opts: { ink?: string; paper?: string; fontSize?: string; siteUrl?: string } | undefined,
   fontFamily: string,
   extraHead: readonly string[],
 ): string {
-  const { ink = '#2a1a12', paper = '#f3ecdd', fontSize = '13px' } = opts ?? {};
+  const { ink = '#2a1a12', paper = '#f3ecdd', fontSize = '13px', siteUrl } = opts ?? {};
   const body = escapeHTML(gridToText(chars));
+  // #1: the one export that carried no attribution — a credit line under the pre.
+  const credit = siteUrl
+    ? `<p style="font-family:'Fidel',sans-serif;font-size:12px;color:#8a6d2f;margin:18px 0 0;">made with ግዕዝ geez·art — ${escapeHTML(siteUrl)}</p>`
+    : '';
   return [
     '<!DOCTYPE html>',
     '<html lang="en">',
@@ -269,6 +273,7 @@ function htmlDocument(
     '</head>',
     `<body style="margin:0;padding:16px;background:${paper};color:${ink};">`,
     `<pre style="font-family:${fontFamily};font-size:${fontSize};line-height:1.1;margin:0;letter-spacing:0;">${body}</pre>`,
+    credit,
     '</body>',
     '</html>',
     '',
@@ -288,7 +293,7 @@ function htmlDocument(
  */
 export async function selfContainedHTML(
   chars: string[][],
-  opts?: { ink?: string; paper?: string; fontSize?: string },
+  opts?: { ink?: string; paper?: string; fontSize?: string; siteUrl?: string },
 ): Promise<string> {
   const face = await embeddedFidelFontFace();
   const fontFamily = `"Fidel",${FONT}`;
