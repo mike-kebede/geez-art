@@ -150,7 +150,8 @@ export function paintBrandedCapture(
   // MediaRecorder throws on odd canvas sizes (M2). Snap to even, not just round.
   const w = (Math.max(2, Math.round(mosaic.width * scale)) & ~1);
   const h = (Math.max(2, Math.round(mosaic.height * scale)) & ~1);
-  const bandH = Math.max(32, Math.min(64, Math.round(w * 0.05)));
+  // #6: snap the band height to EVEN so h+bandH never hands MediaRecorder an odd canvas.
+  const bandH = Math.max(32, Math.min(64, Math.round(w * 0.05))) & ~1;
   if (target.width !== w || target.height !== h + bandH) {
     target.width = w;
     target.height = h + bandH;

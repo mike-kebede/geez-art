@@ -104,6 +104,10 @@ code confirms them):
   Ethiopic woff2 preload in head; recording repaint throttled; video render
   clamped by total cell count (~20k); zoomPanAria Amharic corrected; ?demo=1
   auto-demo.
+- Round 3.14 (just committed): video-download test asserts real container + size
+  floor; still renders get a total-cell budget (25-40k); superseded video loads
+  revoke only their OWN url; Download PNG is branded; drops work on the giant
+  fidel + loaded mosaic + never navigate; replay focus moves in/out correctly.
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so

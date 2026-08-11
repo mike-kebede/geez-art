@@ -138,12 +138,12 @@ export async function recordCanvas(
   fps = 12,
   audio: MediaStream | null = null,
 ): Promise<RecordResult> {
-  const tracks: MediaStreamTrack[] = [];
+  // #2: stop ONLY the video tracks this function creates — the audio track is
+  // the caller's SHARED MediaStreamDestination; stopping it kills every later export.
+  let videoTracks: MediaStreamTrack[] = [];
   try {
-    const videoTracks = canvas.captureStream(fps).getVideoTracks();
-    tracks.push(...videoTracks);
+    videoTracks = canvas.captureStream(fps).getVideoTracks();
     const audioTracks = audio ? audio.getAudioTracks() : [];
-    tracks.push(...audioTracks);
     const stream = new MediaStream([...videoTracks, ...audioTracks]);
     // M4: prefer MP4/H.264 so iPhone WhatsApp users can play the clip — WebM is
     // not previewable in-chat on iOS. Fall back to WebM only when MP4 is unsupported.
@@ -176,9 +176,8 @@ export async function recordCanvas(
   } catch {
     return { blob: null, ext: 'mp4' };
   } finally {
-    // Never leak capture tracks — a stopped captureStream otherwise keeps the
-    // recording camera/media live (M15).
-    for (const t of tracks) t.stop();
+    // M15: never leak the captureStream's video tracks.
+    for (const t of videoTracks) t.stop();
   }
 }
 

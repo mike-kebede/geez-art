@@ -711,6 +711,7 @@ function buildPicker(): void {
     tile.type = 'button';
     tile.className = 'fam-tile';
     tile.title = t('toggleFamily');
+    tile.setAttribute('data-i18n-title', 'toggleFamily');
     tile.textContent = head.ch;
     tile.setAttribute('aria-pressed', 'false');
     tile.addEventListener('click', () => toggleFamily(members));
@@ -719,6 +720,8 @@ function buildPicker(): void {
     expand.className = 'fam-expand';
     expand.textContent = '+';
     expand.title = t('pickIndividual');
+    expand.setAttribute('aria-label', t('pickIndividual')); // #3: the visible '+' is not an accessible name
+    expand.setAttribute('data-i18n-title', 'pickIndividual');
     expand.dataset.fam = String(fam);
     expand.setAttribute('aria-expanded', 'false');
     expand.addEventListener('click', () => {
@@ -796,6 +799,13 @@ function updatePickerUI(): void {
     tile.setAttribute('aria-pressed', letters.length > 0 && on === letters.length ? 'true' : 'false');
     if (on > 0 && on < letters.length) tile.setAttribute('aria-label', t('familyPartial'));
     else tile.removeAttribute('aria-label');
+    // #3: refresh titles/aria on toggle (buildPicker froze them at build time).
+    tile.setAttribute('title', t('toggleFamily'));
+    const exp = cell.querySelector<HTMLElement>('.fam-expand');
+    if (exp) {
+      exp.title = t('pickIndividual');
+      exp.setAttribute('aria-label', t('pickIndividual'));
+    }
   });
   const total = allGlyphs.length;
   const used = allGlyphs.filter((g) => selectedCps.has(g.cp)).length;

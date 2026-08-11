@@ -20,8 +20,6 @@ export function getLang(): Lang {
 }
 
 /** Every i18n key — F25: a typo in a t() call is now a compile error. */
-export type I18nKey = keyof typeof STRINGS['en'];
-
 /** Translate a key for the current language, falling back to English. */
 export function t(key: I18nKey): string {
   const en = STRINGS.en[key];
@@ -32,8 +30,7 @@ export function t(key: I18nKey): string {
 
 // Every user-visible string, keyed by language. data-i18n="key" attributes in
 // index.html are re-rendered by applyLang(); dynamic strings call t(key).
-export const STRINGS: Record<Lang, Record<string, string>> = {
-  en: {
+const enDict = {
     // static (data-i18n)
     skipLink: 'Skip to artwork',
     statusLoading: 'Loading the Ethiopic font…',
@@ -154,8 +151,12 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     showcaseAria: 'Mosaic preview',
     controlsAria: 'Controls',
     rampPreviewAria: 'Letters in use',
-  },
+};
 
+export type I18nKey = keyof typeof enDict;
+
+export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
+  en: enDict,
   am: {
     // static (data-i18n) — core strings linguist-verified; the rest pending native review
     skipLink: 'ወደ ሥዕሉ ይዝለሉ',
