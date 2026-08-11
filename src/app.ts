@@ -298,7 +298,9 @@ function clearReplay(returnFocusTo?: HTMLElement | null): void {
     URL.revokeObjectURL(replayUrl);
     replayUrl = null;
   }
-  if (returnFocusTo) returnFocusTo.focus();
+  // #5: focus() on a just-hidden element is a no-op — defer one frame so the
+  // panel is display:none when focus lands on the (still-live) Close button.
+  if (returnFocusTo) requestAnimationFrame(() => returnFocusTo.focus());
 }
 
 /** The viral action — branded PNG with the site URL, via native share sheet or download. */
@@ -373,6 +375,8 @@ function applyLang(): void {
     if (key) el.setAttribute('title', t(key as I18nKey));
   }
   setEmpty(emptyMode);
+  applyZoom(); // #4: zoom-pan aria follows the language
+  updatePickerUI(); // #4: picker tile/letter titles follow the language
   // F8: palette option names follow the language too.
   const palSel = document.getElementById('palette') as HTMLSelectElement | null;
   if (palSel) {
@@ -412,7 +416,7 @@ function applyZoom(): void {
     if (zoom > 1) {
       zw.setAttribute('tabindex', '0');
       zw.setAttribute('role', 'region');
-      zw.setAttribute('aria-label', 'Zoomed artwork — use the arrow keys to pan');
+      zw.setAttribute('aria-label', t('zoomPanAria'));
     } else {
       zw.removeAttribute('tabindex');
       zw.removeAttribute('role');
@@ -505,12 +509,17 @@ async function handleVideoFile(file: File): Promise<void> {
   $('playBtn').hidden = false;
   videoPaused = false;
   ($('playBtn') as HTMLButtonElement).textContent = t('pause');
-  // L5: respect prefers-reduced-motion — show one static frame and let the
-  // user resume on demand instead of auto-animating at up to 12fps.
+  // L5/#10: respect prefers-reduced-motion — show ONE static frame and let the
+  // user resume on demand instead of auto-animating at up to 12fps. Pause AFTER
+  // the loop's first tick (rAF callbacks run in order) so a frame is visible.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    videoHandle.togglePlay();
-    videoPaused = true;
-    ($('playBtn') as HTMLButtonElement).textContent = t('play');
+    requestAnimationFrame(() => {
+      videoHandle?.togglePlay();
+      videoPaused = true;
+      ($('playBtn') as HTMLButtonElement).textContent = t('play');
+      (document.getElementById('dlVideo') as HTMLButtonElement).disabled = true;
+      (document.getElementById('dlGif') as HTMLButtonElement).disabled = true;
+    });
   }
   // iOS Safari can't captureStream the canvas, so video export is unavailable
   // there — swap the button for a hint pointing at GIF (which works everywhere).
@@ -519,12 +528,6 @@ async function handleVideoFile(file: File): Promise<void> {
   $('dlGif').hidden = false;
   const capHint = document.getElementById('videoCapHint');
   if (capHint) capHint.hidden = canRecord;
-  // F22: reduced-motion auto-pause must also disable the exports — a static
-  // source would otherwise record a frozen 4s/3s clip.
-  if (videoPaused) {
-    (document.getElementById('dlVideo') as HTMLButtonElement).disabled = true;
-    (document.getElementById('dlGif') as HTMLButtonElement).disabled = true;
-  }
   trackEvent('source', { kind: 'video' });
   const chip = $('sourceChip');
   if (chip) chip.classList.add('visible');
@@ -545,6 +548,9 @@ async function handleVideoFile(file: File): Promise<void> {
 }
 
 function stopVideo(): void {
+  // #1: any teardown (Clear, photo-pick, new video) supersedes an in-flight
+  // video metadata-wait — without this, a pending load could clobber fresh state.
+  videoGen++;
   if (videoHandle) {
     videoHandle.stop();
     videoHandle = null;
@@ -623,7 +629,7 @@ function buildPicker(): void {
     const tile = document.createElement('button');
     tile.type = 'button';
     tile.className = 'fam-tile';
-    tile.title = 'Toggle this family';
+    tile.title = t('toggleFamily');
     tile.textContent = head.ch;
     tile.setAttribute('aria-pressed', 'false');
     tile.addEventListener('click', () => toggleFamily(members));
@@ -631,7 +637,7 @@ function buildPicker(): void {
     expand.type = 'button';
     expand.className = 'fam-expand';
     expand.textContent = '+';
-    expand.title = 'Pick individual letters';
+    expand.title = t('pickIndividual');
     expand.dataset.fam = String(fam);
     expand.setAttribute('aria-expanded', 'false');
     expand.addEventListener('click', () => {
@@ -658,7 +664,7 @@ function buildPicker(): void {
       b.dataset.cp = m.cp.toString(16);
       b.title = `U+${m.cp.toString(16).toUpperCase()}`;
       b.setAttribute('aria-pressed', 'false');
-      b.setAttribute('aria-label', `Letter U+${m.cp.toString(16).toUpperCase()}`);
+      b.setAttribute('aria-label', `${t('letterName')}${m.cp.toString(16).toUpperCase()}`);
       b.addEventListener('click', () => toggleLetter(m.cp));
       detail.appendChild(b);
     }
@@ -704,7 +710,7 @@ function updatePickerUI(): void {
     // L2: aria-pressed accepts only true/false (WAI-ARIA 1.2). Partial state is
     // conveyed by the .partial class + an explicit label, not an invalid 'mixed'.
     tile.setAttribute('aria-pressed', letters.length > 0 && on === letters.length ? 'true' : 'false');
-    if (on > 0 && on < letters.length) tile.setAttribute('aria-label', 'Letter family partially selected — tap to toggle all');
+    if (on > 0 && on < letters.length) tile.setAttribute('aria-label', t('familyPartial'));
     else tile.removeAttribute('aria-label');
   });
   const total = allGlyphs.length;
@@ -757,7 +763,7 @@ async function applyCustomRamp(): Promise<void> {
     out.height = 0;
     mosaicCanvas = null;
     lastResult = null;
-    out.setAttribute('aria-label', 'Ethiopic letter mosaic — no letters selected'); // L3: role=img must keep a name
+    out.setAttribute('aria-label', t('noLettersAria')); // L3: role=img must keep a name
     $('mosaicStat').textContent = '';
     updateShareState();
     $('status').textContent = t('noLetters');
@@ -847,7 +853,9 @@ async function init(): Promise<void> {
     const coarse = window.matchMedia('(pointer: coarse)').matches;
     const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory;
     if (coarse && (deviceMemory === undefined || deviceMemory <= 4)) {
-      ($('width') as HTMLInputElement).value = '120';
+      const w = $('width') as HTMLInputElement;
+      w.value = '120';
+      w.max = '240'; // #2: bound the still-render cost too — 400 cols is a 1-3s freeze on low-end
     }
   }
   // L20/F24: the analytics disclosure is appended by applyLang() (called below),

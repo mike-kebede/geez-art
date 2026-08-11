@@ -143,6 +143,12 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     pause: 'Pause',
     downloadReplay: 'Download',
     closeReplay: 'Close',
+    toggleFamily: 'Toggle this family',
+    pickIndividual: 'Pick individual letters',
+    letterName: 'Letter U+',
+    familyPartial: 'Letter family partially selected — tap to toggle all',
+    zoomPanAria: 'Zoomed artwork — use the arrow keys to pan',
+    noLettersAria: 'Ethiopic letter mosaic — no letters selected',
   },
 
   am: {
@@ -208,7 +214,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     videoCapHint: 'ቪዲዮ ማስወጣት በዚህ መሳሪያ የሚደገፍ አይደለም — GIF ይውሰዱ።',
     shareHint:
       'ዝግጁ ነው — ያጋሩ። የሚጋራው ሞዛይኩ ብቻ ነው፣ የመጀመሪያው ምስልዎ አይጋራም፤ ወደ አገልጋይም አይላክም።',
-    footerRespect: 'ለኢትዮጵያ ፊደል በአክብሮት የተሰራ።',
+    footerRespect: 'ለኢትዮጵያ ፊደል በአክብሮት የተሰራ፣', // #6: ፣ joins the decorative ፊደል. — ። stranded a fragment
     consent: 'ፎቶ ላይ እውነተኛ ሰው ካለ፣ ከማጋራትዎ በፊት ይጠይቁ።',
     privacySummary: 'ግላዊነት እና ወላጆች',
     privacyBody:
@@ -256,5 +262,11 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     pause: 'ያቁሙ',
     downloadReplay: 'ያውርዱ',
     closeReplay: 'ይዝጉ',
+    toggleFamily: 'ይህን ቤተሰብ ይቀይሩ',
+    pickIndividual: 'ነጠላ ፊደላት ይምረጡ',
+    letterName: 'ፊደል U+',
+    familyPartial: 'ቤተሰብ በከፊል ተመርጧል — ሁሉንም ለመቀየር ይንኩ',
+    zoomPanAria: 'የተሳፈረ ሥዕል — ለማንቀሳቀስ የቀስት ቁልፎችን ይጠቀሙ',
+    noLettersAria: 'የኢትዮጵያ ፊደላት ሞዛይክ — ምንም ፊደል አልተመረጠም',
   },
 };

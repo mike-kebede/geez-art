@@ -57,8 +57,17 @@ code confirms them):
   govern colorful mode (cell colors blended toward palette ink). M12 referral ?ref=share on the image
   band + referral_visit event. L20 in-page analytics disclosure; L21 expanded privacy note; L24 solid
   surfaces; L25 status copy; L26 hero-fidel gold; L27 PWA manifest + icons; L30 dist perf-budget test.
+- Round 3.6 (just committed): F1 color-atlas rows keyed by SORTED color position (wrong-color bug);
+  F2 video load-generation token (double-load race); F3 video-mode column clamp (140); F4 color atlas
+  decoupled from cellPx (fixed reference size, drawImage scales); F5 willReadFrequently on source/frame
+  canvases; F6/F8/F9/F24/F27/F28 Amharic-mode completeness (Noto Ethiopic in chrome stack, ARIA
+  names/titles follow the toggle, source chip + stat line + palette names + setup-error localized,
+  analytics disclosure survives toggles, terminology, pickerHint span); F7 shareText localized; F10/F21
+  bare band URL + ref in the share link; F13 CSP hardening (script-src, Permissions-Policy, COOP);
+  F15 48px touch targets; F19 lang/palette persistence + Amharic auto-detect; F25 typed t() keys;
+  F42 dead bilingual CSS removed.
 
-Test suite: tests/e2e.spec.ts — 63 Playwright tests expected green (Chromium; the suite builds dist and
+Test suite: tests/e2e.spec.ts — 65 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
 do not execute it.
 

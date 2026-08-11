@@ -1173,6 +1173,100 @@ test('language toggle: controls, export buttons, and palette options switch too 
   await expect(page.locator('#palette option[value="church"]')).toHaveText('Church mural');
 });
 
+test('a successful share fires share_success and buttons re-enable (audit #8)', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls = [];
+    Object.defineProperty(Navigator.prototype, 'sendBeacon', {
+      configurable: true,
+      value: function (url: string, data: Blob | string | null) {
+        const calls = (window as unknown as { __beaconCalls: Array<{ body: string }> }).__beaconCalls;
+        if (data instanceof Blob) void data.text().then((t) => calls.push({ body: t }));
+        else calls.push({ body: String(data ?? '') });
+        return true;
+      },
+    });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: () => Promise.resolve() });
+  });
+  await page.goto('/');
+  await waitReady(page);
+  await page.evaluate(() => {
+    const m = document.createElement('meta');
+    m.name = 'geez-art:analytics';
+    m.content = JSON.stringify({ provider: 'beacon', endpoint: '/__s__' });
+    document.head.appendChild(m);
+    (window as unknown as { __reloadAnalytics?: () => void }).__reloadAnalytics?.();
+    (window as unknown as { __beaconCalls: unknown[] }).__beaconCalls = [];
+  });
+  await uploadSample(page);
+  await page.click('#share');
+  await expect(page.locator('#status')).toContainText('Shared', { timeout: 10000 });
+  await page.waitForFunction(() => {
+    const calls = (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls;
+    return Array.isArray(calls) && calls.some((c) => c.body.includes('share_success'));
+  });
+  await expect(page.locator('#share')).toBeEnabled();
+  await expect(page.locator('#shareTop')).toBeEnabled();
+});
+
+test('referral_visit fires when arriving with ?ref=share (audit #8)', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls = [];
+    Object.defineProperty(Navigator.prototype, 'sendBeacon', {
+      configurable: true,
+      value: function (url: string, data: Blob | string | null) {
+        const calls = (window as unknown as { __beaconCalls: Array<{ body: string }> }).__beaconCalls;
+        if (data instanceof Blob) void data.text().then((t) => calls.push({ body: t }));
+        else calls.push({ body: String(data ?? '') });
+        return true;
+      },
+    });
+  });
+  await page.goto('/?ref=share');
+  await waitReady(page);
+  await page.evaluate(() => {
+    const m = document.createElement('meta');
+    m.name = 'geez-art:analytics';
+    m.content = JSON.stringify({ provider: 'beacon', endpoint: '/__s__' });
+    document.head.appendChild(m);
+    (window as unknown as { __reloadAnalytics?: () => void }).__reloadAnalytics?.();
+  });
+  await page.waitForFunction(() => {
+    const calls = (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls;
+    return Array.isArray(calls) && calls.some((c) => c.body.includes('referral_visit'));
+  });
+});
+
+test('an oversized file is rejected with the friendly message (audit #9)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  // Playwright caps setInputFiles buffers at 50MB — write a sparse >200MB file
+  // and pass its path (the >200MB guard is what we're testing).
+  const bigPath = path.resolve('tests', 'fixtures', 'huge-tmp.png');
+  fs.closeSync(fs.openSync(bigPath, 'w'));
+  fs.truncateSync(bigPath, 201 * 1024 * 1024);
+  try {
+    await page.setInputFiles('#file', bigPath);
+    await expect(page.locator('#status')).toContainText('200 MB', { timeout: 10000 });
+  } finally {
+    fs.unlinkSync(bigPath);
+  }
+});
+
+test('prefers-reduced-motion pauses the video and disables exports (audit #10)', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  await expect(page.locator('#playBtn')).toHaveText('Play');
+  await expect(page.locator('#dlVideo')).toBeDisabled();
+  await expect(page.locator('#dlGif')).toBeDisabled();
+});
+
 test('i18n dictionary is in sync: every data-i18n key exists in both languages (F25)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
