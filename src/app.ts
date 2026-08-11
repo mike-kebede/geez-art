@@ -169,10 +169,13 @@ function render(): void {
 function renderSource(src: HTMLCanvasElement, fade = false): void {
   if (ramp.length === 0) return;
   const opts = readRenderOpts();
-  if (videoHandle) {
-    // M6: bound the video frame's CELL COUNT (~20k) so portrait doesn't cost 2.5× landscape.
+  {
+    // M1/M6: bound total CELLS (~20k video, ~40k still) so tall/portrait renders
+    // can't hard-freeze — default 170-col square renders (~29k cells) are unaffected;
+    // only the max-detail freeze cases get capped.
     const aspect = src.height / src.width;
-    opts.cols = Math.min(opts.cols, Math.max(40, Math.floor(Math.sqrt(20000 / Math.max(0.1, aspect)))));
+    const budget = videoHandle ? 20000 : DESKTOP_MAX_COLS >= 400 ? 40000 : 25000;
+    opts.cols = Math.min(opts.cols, Math.max(40, Math.floor(Math.sqrt(budget / Math.max(0.1, aspect)))));
   }
   const res = renderMosaic(src, ramp, {
     ...opts,
@@ -312,7 +315,7 @@ function flash(msg: string, ms = 1500): void {
 
 /** Hide + tear down the in-app replay: pause, and revoke its blob URL (M15).
  *  Pass the closing control so focus returns to it (L24, WCAG 2.4.3). */
-function clearReplay(returnFocusTo?: HTMLElement | null): void {
+function clearReplay(): void {
   const panel = document.getElementById('replay');
   const vid = document.getElementById('replayVideo') as HTMLVideoElement | null;
   if (panel) panel.hidden = true;
@@ -321,9 +324,15 @@ function clearReplay(returnFocusTo?: HTMLElement | null): void {
     URL.revokeObjectURL(replayUrl);
     replayUrl = null;
   }
-  // #5: focus() on a just-hidden element is a no-op — defer one frame so the
-  // panel is display:none when focus lands on the (still-live) Close button.
-  if (returnFocusTo) requestAnimationFrame(() => returnFocusTo.focus());
+  // M5: on close, return focus to a STABLE visible control (dlVideo/dlGif are
+  // the obvious originals) — the Close button is inside the now-hidden panel.
+  requestAnimationFrame(() => {
+    const target =
+      (document.getElementById('dlVideo') as HTMLElement | null) ??
+      (document.getElementById('dlGif') as HTMLElement | null) ??
+      (document.getElementById('frame') as HTMLElement | null);
+    if (target && !target.hidden) target.focus();
+  });
 }
 
 /** The viral action — branded PNG with the site URL, via native share sheet or download. */
@@ -480,6 +489,7 @@ async function handleVideoFile(file: File): Promise<void> {
   clearAll();
   const gen = ++videoGen; // F2: supersede any earlier in-flight video load
   const url = URL.createObjectURL(file);
+  const ownUrl = url; // M2: supersede branches revoke ONLY this load's url
   videoUrl = url; // M1: revoke by this stored string, never videoEl.src
   const v = document.createElement('video');
   v.muted = true;
@@ -506,11 +516,12 @@ async function handleVideoFile(file: File): Promise<void> {
     // fresh state stand — the old clearAll() here clobbered a photo the user
     // had just picked while a stale video's error/timeout was settling.
     if (gen !== videoGen) {
-      URL.revokeObjectURL(videoUrl ?? url);
-      videoUrl = null;
+      // M2: this load is superseded — revoke ONLY its own url; never touch
+      // videoUrl (which now belongs to the newer load) and never clear the page.
+      URL.revokeObjectURL(ownUrl);
       return;
     }
-    URL.revokeObjectURL(videoUrl ?? url);
+    URL.revokeObjectURL(ownUrl);
     videoUrl = null;
     clearAll(); // restore the empty state the load was supposed to leave
     throw e;
@@ -522,8 +533,8 @@ async function handleVideoFile(file: File): Promise<void> {
   // F2: a newer video was chosen while this one was still loading — abandon it
   // (revoke + don't start a loop that would clobber the newer one).
   if (gen !== videoGen) {
-    URL.revokeObjectURL(videoUrl ?? url);
-    videoUrl = null;
+    // M2: superseded — revoke only this load's url (videoUrl belongs to the newer load).
+    URL.revokeObjectURL(ownUrl);
     return;
   }
   videoEl = v;
@@ -657,8 +668,11 @@ function showReplay(blob: Blob): void {
   dl.onclick = () => {
     downloadBlob('geez-art-video.' + (blob.type.includes('webm') ? 'webm' : 'mp4'), blob);
   };
-  close.onclick = () => clearReplay(close);
+  close.onclick = () => clearReplay();
   panel.hidden = false;
+  // M5: move focus INTO the replay on open (it sits DOM-early; keyboard users
+  // would otherwise Tab past controls, footer, and topbar to reach it).
+  requestAnimationFrame(() => dl.focus());
 }
 
 /* ---------- custom letter picker ---------- */
@@ -879,6 +893,12 @@ function wireInput(): void {
     }
   });
   setupDropZone($('dropzone'), handlePickedFile);
+  // M4: the designed drop targets — giant fidel empty state + loaded mosaic frame
+  // — accept drops too, and a stray drop anywhere must never navigate the tab.
+  setupDropZone($('frame'), handlePickedFile);
+  setupDropZone($('emptyHint'), handlePickedFile);
+  document.addEventListener('dragover', (ev) => ev.preventDefault());
+  document.addEventListener('drop', (ev) => ev.preventDefault());
   setupPaste(document.body, handlePickedFile);
   // The giant ፊደል empty state IS the drop target — click it to choose a photo.
   const emptyState = $('emptyHint');
@@ -1058,7 +1078,10 @@ async function init(): Promise<void> {
   });
   $('dlPng').addEventListener('click', () => {
     if (mosaicCanvas) {
-      downloadCanvasPNG(mosaicCanvas);
+      // M3: brand the PNG with the URL band so the desktop download-then-post
+      // flow carries the loop (the raw mosaic dead-ended it).
+      const branded = makeShareImage(downscaleCanvas(mosaicCanvas), SITE_URL);
+      downloadCanvasPNG(branded);
       trackEvent('export', { kind: 'png' });
     }
   });

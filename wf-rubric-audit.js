@@ -99,6 +99,11 @@ code confirms them):
   MediaElementSource capture (muted attenuates to RMS 0), speakers silenced via a
   0-gain tap to ctx.destination; recordCanvas rejects on recorder error and races
   a 5s guard (no stranded export buttons).
+- Round 3.13 (just committed): topbar lang-toggle width leak fixed; family-tile
+  48px + picker grid 100px cells; GIF band stamped at GIF-final 480px; static
+  Ethiopic woff2 preload in head; recording repaint throttled; video render
+  clamped by total cell count (~20k); zoomPanAria Amharic corrected; ?demo=1
+  auto-demo.
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so

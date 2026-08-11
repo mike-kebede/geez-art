@@ -545,6 +545,13 @@ test('download video produces a file', async ({ page }) => {
   await page.click('#dlVideo');
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/geez-art-video\.(webm|mp4)/);
+  // H1: assert a REAL container + size floor, not just the filename — a silent
+  // or undecodable export must fail the suite.
+  const bytes = fs.readFileSync((await download.path())!);
+  const isWebm = bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3;
+  const isMp4 = bytes.subarray(4, 8).toString('ascii') === 'ftyp';
+  expect(isWebm || isMp4).toBe(true);
+  expect(bytes.length).toBeGreaterThan(1000);
   expect(errors).toEqual([]);
 });
 
