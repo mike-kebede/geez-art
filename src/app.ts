@@ -48,6 +48,9 @@ let videoPaused = false;
 let videoGen = 0;
 /** F2(b): bumps when the app is torn down so an in-flight recording is cancelled. */
 let recordGen = 0;
+/** F-1: per-video-load audio graph — reused for every recording, closed on teardown. */
+let audioCtx: AudioContext | null = null;
+let mediaDest: MediaStreamAudioDestinationNode | null = null;
 
 /**
  * The URL stamped onto shared images + share text (M14). Derived from the live
@@ -56,9 +59,19 @@ let recordGen = 0;
  * Cloudflare default in dev/file contexts. Keeps the scheme (https://) so
  * WhatsApp/Telegram auto-linkify it.
  */
+/** M2: cap desktop still-render columns by RAM so a 6-8GB machine can't hard-freeze. */
+const DESKTOP_MAX_COLS = (() => {
+  const m = (navigator as { deviceMemory?: number }).deviceMemory;
+  if (m !== undefined && m < 4) return 160;
+  if (m !== undefined && m < 8) return 200;
+  return 400;
+})();
+
 const SITE_URL: string = (() => {
   const origin = window.location.origin;
-  if (origin && origin.startsWith('http') && !origin.includes('localhost')) return origin;
+  // L1: only https (or localhost dev) origins get stamped on shares.
+  if (origin && origin.startsWith('https://')) return origin;
+  if (origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'))) return origin;
   return 'https://geez-art.pages.dev';
 })();
 
@@ -137,7 +150,7 @@ function readRenderOpts(): { cols: number; contrast: number; invert: boolean; co
   return {
     // F3: the renderer is synchronous — clamp columns during video playback so
     // a 400-col frame can't freeze a low-end device.
-    cols: Math.min(videoHandle ? 140 : 400, parseInt(($('width') as HTMLInputElement).value, 10)),
+    cols: Math.min(videoHandle ? 140 : DESKTOP_MAX_COLS, parseInt(($('width') as HTMLInputElement).value, 10)),
     contrast: 1 + parseInt(($('contrast') as HTMLInputElement).value, 10) / 100,
     edge: parseInt(($('edge') as HTMLInputElement).value, 10) / 100,
     invert: ($('invert') as HTMLInputElement).checked,
@@ -509,6 +522,25 @@ async function handleVideoFile(file: File): Promise<void> {
     return;
   }
   videoEl = v;
+  // F-1 (correct): create ONE AudioContext + MediaElementSource per video load —
+  // createMediaElementSource is one-shot per element and a 0-gain node would
+  // silence the captured track. Route the element's audio straight into a
+  // MediaStreamDestination (NOT to speakers) so the captured track carries full
+  // signal while playback stays silent.
+  try {
+    const AC =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (AC) {
+      audioCtx = new AC();
+      const src = audioCtx.createMediaElementSource(v);
+      mediaDest = audioCtx.createMediaStreamDestination();
+      src.connect(mediaDest);
+    }
+  } catch {
+    audioCtx = null;
+    mediaDest = null;
+  }
   videoHandle = startVideoLoop(
     v,
     (c) => {
@@ -573,6 +605,13 @@ function stopVideo(): void {
     videoHandle = null;
   }
   if (videoEl) videoEl = null;
+  // F-1: close the per-load audio graph — the ~6-context browser cap would
+  // otherwise kill capture after repeated loads.
+  if (audioCtx) {
+    try { void audioCtx.close(); } catch { /* already closed */ }
+    audioCtx = null;
+    mediaDest = null;
+  }
   // M1: revoke the STORED URL. Reading videoEl.src here would return '' because
   // videoHandle.stop() already removed the attribute — a silent no-op leak.
   if (videoUrl) {
@@ -1053,6 +1092,9 @@ async function init(): Promise<void> {
     trackEvent('export', { kind: 'video' });
     flash(t('recording'));
     const gen = recordGen; // F2(b): cancelled by Clear/teardown mid-recording
+    // H1: disable exports at entry so a double-tap can't start two recorders.
+    ($('dlVideo') as HTMLButtonElement).disabled = true;
+    ($('dlGif') as HTMLButtonElement).disabled = true;
     // M2+M10: record from a downscaled, URL-branded copy of the LIVE mosaic so
     // video shares carry the loop URL and encode fast on budget phones. The copy
     // is repainted every frame — captureStream needs changing frames.
@@ -1063,33 +1105,10 @@ async function init(): Promise<void> {
       recRaf = requestAnimationFrame(paint);
     };
     paint();
-    let audio: MediaStream | null = null;
+    // F-1: reuse the per-load MediaStreamDestination (built in handleVideoFile —
+    // createMediaElementSource is one-shot, so it CANNOT be created here).
+    const audio = mediaDest?.stream ?? null;
     try {
-      // F-1: capture the decoded audio through a 0-gain MediaStreamDestination
-      // tap instead of element.captureStream() (which reflects the element's
-      // output gain → silence). createMediaElementSource reroutes the element's
-      // audio into the graph; NOT connecting to ctx.destination keeps speakers
-      // quiet while the destination stream carries full signal. The element
-      // stays muted for playback — no restore needed.
-      if (videoEl) {
-        try {
-          const AC =
-            window.AudioContext ??
-            (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-          if (AC) {
-            const ctx = new AC();
-            const source = ctx.createMediaElementSource(videoEl);
-            const gain = ctx.createGain();
-            gain.gain.value = 0;
-            const dest = ctx.createMediaStreamDestination();
-            source.connect(gain);
-            gain.connect(dest);
-            audio = dest.stream;
-          }
-        } catch {
-          audio = null;
-        }
-      }
       // F8: export at the loop's EFFECTIVE rate (it backs off to ~6fps on slow
       // devices — a fixed 12 would duplicate frames and play back at half speed).
       const effFps = Math.max(6, Math.min(12, Math.round(1000 / (videoHandle?.getFrameMs() ?? 83))));
@@ -1103,6 +1122,8 @@ async function init(): Promise<void> {
       flash(rec.blob ? t('videoSaved') : t('videoFailed'));
     } finally {
       cancelAnimationFrame(recRaf);
+      ($('dlVideo') as HTMLButtonElement).disabled = false;
+      ($('dlGif') as HTMLButtonElement).disabled = false;
     }
   });
   $('dlGif').addEventListener('click', async () => {
@@ -1110,6 +1131,8 @@ async function init(): Promise<void> {
     if (!out || out.width === 0) return;
     trackEvent('export', { kind: 'gif' });
     flash(t('makingGif'));
+    ($('dlVideo') as HTMLButtonElement).disabled = true;
+    ($('dlGif') as HTMLButtonElement).disabled = true;
     const gen = recordGen; // F2(b): cancelled by Clear/teardown mid-recording
     // M2: brand the GIF with the URL band too. The copy is repainted on rAF —
     // recordGIF awaits between its frame captures, so the animation survives.
@@ -1132,6 +1155,8 @@ async function init(): Promise<void> {
       }
     } finally {
       cancelAnimationFrame(recRaf);
+      ($('dlVideo') as HTMLButtonElement).disabled = false;
+      ($('dlGif') as HTMLButtonElement).disabled = false;
     }
   });
   $('zoomIn').addEventListener('click', () => {

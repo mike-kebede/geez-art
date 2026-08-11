@@ -577,6 +577,12 @@ footer .fidel { color: var(--accent); font-weight: 700; }
 /* ---------- mobile ---------- */
 @media (max-width: 620px) {
   .topbar { padding: 16px 18px 12px; }
+  @media (max-width: 480px) {
+    /* M5: the status line is the ONLY feedback channel — give it a full-width row
+       so flash messages are never crushed to '…' on 360-390px phones. */
+    .topbar { flex-wrap: wrap; row-gap: 6px; }
+    .status { order: 3; flex-basis: 100%; margin-left: 0; text-align: center; }
+  }
   .stage { padding: 8px 18px 18px; gap: 22px; }
   .status { margin-left: 0; }
   .frame { padding: 10px; }

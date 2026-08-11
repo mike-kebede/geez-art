@@ -112,7 +112,7 @@ test.beforeAll(async ({ browser }) => {
 async function waitReady(page: Page): Promise<string> {
   await page.waitForFunction(() => {
     const s = document.getElementById('status');
-    return s && /Ready|Setup error|Something went wrong/.test(s.textContent || '');
+    return s && /Ready|ዝግጁ|Setup error|Something went wrong|የማዋቀር ስህተት/.test(s.textContent || '');
   });
   // Expand the "Advanced" panel so tests can reach the sliders/picker/exports
   // (it's collapsed by default for the three-tap user flow).
@@ -1358,6 +1358,18 @@ test.describe('mobile (Pixel 7 — F-7)', () => {
     const text = await page.evaluate(() => navigator.clipboard.readText());
     expect(text).toMatch(/ref=share-/);
   });
+});
+
+test('language + palette persist across reloads (M7)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.selectOption('#lang', 'am');
+  await page.selectOption('#palette', 'church');
+  await page.reload();
+  await waitReady(page);
+  await expect(page.locator('#emptyTitle')).toContainText('ይምረጡ');
+  expect(await page.inputValue('#lang')).toBe('am');
+  expect(await page.inputValue('#palette')).toBe('church');
 });
 
 test('use none blanks the mosaic instead of leaving a stale image (L31)', async ({ page }) => {

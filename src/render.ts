@@ -313,8 +313,15 @@ function getSourcePass(source: HTMLCanvasElement, cols: number, rows: number, sW
 let atlasCache: { key: string; atlas: HTMLCanvasElement; tileW: number } | null = null;
 
 /** Pre-rasterize each ramp glyph once, then blit tiles per cell (≈6× faster than fillText). */
+/** M1: stable fingerprint of a ramp's glyph set — Dense/Light halves of the same
+ *  measured set can share a length but differ in letters; a length-only cache key
+ *  rendered the wrong set. */
+function rampKey(ramp: GlyphInfo[]): string {
+  return ramp.map((g) => g.cp).join(',');
+}
+
 function ensureAtlas(ramp: GlyphInfo[], cellPx: number, ink: string, paper: string): { atlas: HTMLCanvasElement; tileW: number } {
-  const key = `${ramp.length}:${cellPx}:${ink}:${paper}`;
+  const key = `${rampKey(ramp)}:${cellPx}:${ink}:${paper}`; // M1: ramp identity, not length
   if (atlasCache && atlasCache.key === key) return atlasCache;
   const tileW = Math.ceil(cellPx * 1.2);
   const tileH = Math.ceil(cellPx * 1.4);
@@ -354,7 +361,7 @@ function colorAtlasFor(
   paper: string,
   ink: string,
 ): { atlas: HTMLCanvasElement; tileW: number; tileH: number } {
-  const key = `${ramp.length}:${paper}:${ink}`;
+  const key = `${rampKey(ramp)}:${paper}:${ink}`; // M1: ramp identity, not length
   if (colorAtlasCache && colorAtlasCache.key === key) return colorAtlasCache;
   const tileW = Math.ceil(COLOR_REF_CELL * 1.2);
   const tileH = Math.ceil(COLOR_REF_CELL * 1.4);

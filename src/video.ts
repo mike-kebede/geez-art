@@ -145,7 +145,13 @@ export async function recordCanvas(
     const audioTracks = audio ? audio.getAudioTracks() : [];
     tracks.push(...audioTracks);
     const stream = new MediaStream([...videoTracks, ...audioTracks]);
-    const mime = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '';
+    // M4: prefer MP4/H.264 so iPhone WhatsApp users can play the clip — WebM is
+    // not previewable in-chat on iOS. Fall back to WebM only when MP4 is unsupported.
+    const mime = MediaRecorder.isTypeSupported('video/mp4')
+      ? 'video/mp4'
+      : MediaRecorder.isTypeSupported('video/webm')
+        ? 'video/webm'
+        : '';
     const ext: 'webm' | 'mp4' = mime === 'video/webm' ? 'webm' : 'mp4';
     // Bound quality/size so encoding stays real-time on budget phones instead of
     // dropping frames on a large canvas (M10). The bitrate cap applies on the

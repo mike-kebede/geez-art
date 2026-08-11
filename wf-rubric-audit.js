@@ -85,8 +85,13 @@ code confirms them):
   controls/ramp-preview ARIA localized; boot status localized; video-frame cap
   512px; exporters use the loop's effective fps; share TEXT carries a per-share
   referral token (band stays bare).
+- Round 3.10 (just committed): video-audio via 0-gain MediaStreamDestination tap;
+  share CTA .catch; getSourcePass pre-downsamples to ~2× grid (first-drop INP);
+  Amharic zoom-out label fixed (ያሳንሱ); --hairline to ~3:1 + off-tile border;
+  lang-toggle/checkbox 48px; topbar status ellipsis; Copy-link action + referral
+  undercount doc; mobile (Pixel 7) test project.
 
-Test suite: tests/e2e.spec.ts — 70 Playwright tests expected green (Chromium; the suite builds dist and
+Test suite: tests/e2e.spec.ts — 73 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
 do not execute it.
 
