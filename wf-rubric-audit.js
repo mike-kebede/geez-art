@@ -90,8 +90,13 @@ code confirms them):
   Amharic zoom-out label fixed (ያሳንሱ); --hairline to ~3:1 + off-tile border;
   lang-toggle/checkbox 48px; topbar status ellipsis; Copy-link action + referral
   undercount doc; mobile (Pixel 7) test project.
+- Round 3.11 (just committed): video-export audio CORRECTED — one MediaElementSource
+  per video load, source→dest direct (no 0-gain), ctx.close on teardown, export
+  buttons disabled at entry; atlas caches keyed by ramp identity (cp fingerprint);
+  desktop still-render col cap by deviceMemory; canonical link; mp4-first
+  recording; status full-width row ≤480px; persistence test.
 
-Test suite: tests/e2e.spec.ts — 73 Playwright tests expected green (Chromium; the suite builds dist and
+Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
 do not execute it.
 

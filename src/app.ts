@@ -522,11 +522,10 @@ async function handleVideoFile(file: File): Promise<void> {
     return;
   }
   videoEl = v;
-  // F-1 (correct): create ONE AudioContext + MediaElementSource per video load —
-  // createMediaElementSource is one-shot per element and a 0-gain node would
-  // silence the captured track. Route the element's audio straight into a
-  // MediaStreamDestination (NOT to speakers) so the captured track carries full
-  // signal while playback stays silent.
+  // H1 (final): the element MUST be UNMUTED for the MediaElementSource to carry
+  // signal — muted=true attenuates the audio before it enters the graph (RMS 0).
+  // Capture source→mediaDest (full signal) AND tap source→Gain(0)→destination so
+  // speakers stay silent. createMediaElementSource is one-shot per element.
   try {
     const AC =
       window.AudioContext ??
@@ -535,11 +534,18 @@ async function handleVideoFile(file: File): Promise<void> {
       audioCtx = new AC();
       const src = audioCtx.createMediaElementSource(v);
       mediaDest = audioCtx.createMediaStreamDestination();
-      src.connect(mediaDest);
+      const muteTap = audioCtx.createGain();
+      muteTap.gain.value = 0;
+      src.connect(mediaDest); // full signal → captured track
+      src.connect(muteTap); // 0-gain → speakers stay silent
+      muteTap.connect(audioCtx.destination);
+      v.muted = false; // unmuted so the captured track has signal
     }
   } catch {
+    // Graph unavailable → degrade to silent playback, no captured audio.
     audioCtx = null;
     mediaDest = null;
+    v.muted = true;
   }
   videoHandle = startVideoLoop(
     v,

@@ -161,13 +161,18 @@ export async function recordCanvas(
     rec.ondataavailable = (e) => {
       if (e.data.size) chunks.push(e.data);
     };
-    const done = new Promise<Blob | null>((resolve) => {
+    const done = new Promise<Blob | null>((resolve, reject) => {
       rec.onstop = () => resolve(chunks.length ? new Blob(chunks, { type: mime || 'video/mp4' }) : null);
+      // M1: a recorder error must reject — never hang the caller (and strand
+      // the export buttons in the caller's finally).
+      rec.onerror = () => reject(new Error('MediaRecorder error'));
     });
     rec.start(250);
     await new Promise((r) => setTimeout(r, seconds * 1000));
     rec.stop();
-    return { blob: await done, ext };
+    // M1: never await `done` forever — a stalled recorder resolves to null.
+    const guard = new Promise<Blob | null>((resolve) => setTimeout(() => resolve(null), 5000));
+    return { blob: await Promise.race([done, guard]), ext };
   } catch {
     return { blob: null, ext: 'mp4' };
   } finally {
