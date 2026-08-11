@@ -629,7 +629,7 @@ test('very tall sources never exceed the 4000px output cap (M3)', async ({ page 
   await page.goto('/');
   await waitReady(page);
   // Max detail on an 8:1 source is the worst case for the height cap.
-  await page.locator('#width').fill('400');
+  await page.locator('#width').fill('200'); // A4: the slider max now reflects the cell budget
   const b64 = await page.evaluate(() => {
     const c = document.createElement('canvas');
     c.width = 100;
@@ -1031,7 +1031,7 @@ test('changing a slider re-renders the mosaic', async ({ page }) => {
   await uploadSample(page);
 
   const before = await page.evaluate(() => (document.getElementById('mosaic') as HTMLCanvasElement).toDataURL());
-  await page.locator('#width').fill('240');
+  await page.locator('#width').fill('200'); // A4
   await page.waitForFunction((prev) => {
     const c = document.getElementById('mosaic') as HTMLCanvasElement;
     return c.width > 0 && c.toDataURL() !== prev;
@@ -1361,7 +1361,7 @@ test.describe('mobile (Pixel 7 — F-7)', () => {
       return { value: el.value, max: el.max };
     });
     expect(w.value).toBe('120');
-    expect(w.max).toBe('240');
+    expect(parseInt(w.max, 10)).toBeLessThan(240); // A4: the max now reflects the cell budget, not an unreachable 240
   });
 
   test('renders a mosaic at the phone viewport without errors', async ({ page }) => {

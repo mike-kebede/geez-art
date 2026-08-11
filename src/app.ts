@@ -46,6 +46,8 @@ let emptyMode: 'default' | 'pick' = 'default';
 let videoPaused = false;
 /** F2: bumps each video load so a superseded metadata-wait can't orphan a loop. */
 let videoGen = 0;
+/** A2: bumps each photo pick so a slow 12MP decode can't clobber a newer one. */
+let photoGen = 0;
 /** F2(b): bumps when the app is torn down so an in-flight recording is cancelled. */
 let recordGen = 0;
 /** F-1: per-video-load audio graph — reused for every recording, closed on teardown. */
@@ -501,8 +503,10 @@ function handlePickedFile(file: File): void {
     void handleVideoFile(file).catch(() => flash(t('videoReadFailed')));
   } else {
     stopVideo();
+    const gen = ++photoGen; // A2
     void imageFileToCanvas(file)
       .then((c) => {
+        if (gen !== photoGen) return; // a newer photo was picked while decoding
         setSource(c);
         trackEvent('source', { kind: 'image' });
       })
@@ -992,6 +996,9 @@ async function init(): Promise<void> {
       w.value = '120';
       w.max = '240'; // bound the still-render cost too
     }
+    // A4: the slider must not advertise an unreachable max — derive it from the
+    // total-cell budget for the current device class.
+    (($('width')) as HTMLInputElement).max = String(Math.min(400, Math.max(120, Math.floor(Math.sqrt(DESKTOP_MAX_COLS >= 400 ? 40000 : 25000)))));
   }
   // L20/F24: the analytics disclosure is appended by applyLang() (called below),
   // so it survives language toggles — not appended here.
@@ -1007,6 +1014,13 @@ async function init(): Promise<void> {
     status.textContent = t('ready');
     // M4: repaint anything the user dropped while the ramp was still loading.
     if (source) render();
+    // A3: warm the 64-level color atlas at idle so the FIRST drop (colorize is
+    // on by default) doesn't pay a ~300-800ms synchronous build.
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => { try { render(); } catch { /* warm only */ } }, { timeout: 2000 });
+    } else {
+      setTimeout(() => { try { render(); } catch { /* warm only */ } }, 500);
+    }
     // M10: a shared ?demo=1 link lands on a live demo, not a blank canvas.
     if (new URLSearchParams(window.location.search).get('demo') === '1') {
       void loadDemoPhoto();

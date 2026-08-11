@@ -118,6 +118,10 @@ code confirms them):
   analytics disclosure "enabled by the site owner"; controls panel max-height;
   DEPLOY referral note corrected (100% miss); render debounce 250ms; WebView
   muted-autoplay fallback.
+- Round 3.17 (just committed): demo photo replaces the procedural example;
+  HTML export attributed; audioCtx resumed pre-export; &demo=1 in share links;
+  coarse/no-deviceMemory still-render cap; nested drop-zone stopPropagation;
+  CSP harness sentinel; 12 Amharic corrections from a 3-linguist pass.
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
