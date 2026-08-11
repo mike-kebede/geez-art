@@ -347,7 +347,8 @@ test('copy as text produces a fidel letter grid', async ({ page, context }) => {
   await uploadSample(page);
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.click('#copyText');
-  await page.waitForTimeout(300);
+  // A5: poll for the async clipboard write instead of a fixed 300ms sleep.
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText().then((t) => t.length)), { timeout: 5000 }).toBeGreaterThan(0);
   const text = await page.evaluate(() => navigator.clipboard.readText());
   expect(text.length).toBeGreaterThan(0);
   expect(text).toMatch(/[ሀ-፿]/);
@@ -1144,6 +1145,7 @@ test('language toggle: the share hint switches between English and Amharic (M3)'
   await expect(page.locator('#shareHint')).toContainText('Ready');
   await page.selectOption('#lang', 'am');
   await expect(page.locator('#shareHint')).toContainText('ዝግጁ');
+  await expect(page.locator('#status')).toContainText('ዝግጁ'); // A1: not stuck on "Loading…"
   await page.selectOption('#lang', 'en');
   await expect(page.locator('#shareHint')).toContainText('Ready');
 });
@@ -1265,6 +1267,27 @@ test('prefers-reduced-motion pauses the video and disables exports (audit #10)',
   await expect(page.locator('#playBtn')).toHaveText('Play');
   await expect(page.locator('#dlVideo')).toBeDisabled();
   await expect(page.locator('#dlGif')).toBeDisabled();
+});
+
+test('a superseded video load cannot clobber a fresh photo (A6)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  // Stall the video's post-metadata processing so the race window is deterministic.
+  await page.evaluate(() => { (window as unknown as { __stallVideoLoad?: boolean }).__stallVideoLoad = true; });
+  await page.setInputFiles('#file', VIDEO); // A: will stall before starting its loop
+  await page.setInputFiles('#file', SAMPLE); // B: photo — must supersede A
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  // Let A's stall elapse: the photo must NOT be replaced by a video loop.
+  await page.waitForTimeout(3200);
+  const src = await page.evaluate(() => {
+    const s = document.getElementById('source') as HTMLCanvasElement;
+    return { w: s.width, h: s.height };
+  });
+  expect(src.w).toBeGreaterThan(0);
+  await expect(page.locator('#playBtn')).toBeHidden(); // no video controls active
 });
 
 test('i18n dictionary is in sync: every data-i18n key exists in both languages (F25)', async ({ page }) => {

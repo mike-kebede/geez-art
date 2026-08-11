@@ -484,6 +484,10 @@ async function handleVideoFile(file: File): Promise<void> {
     clearAll(); // restore the empty state the load was supposed to leave
     throw e;
   }
+  // A6 e2e seam: hold the load open so the supersede race can be tested.
+  if (import.meta.env.DEV && (window as unknown as { __stallVideoLoad?: boolean }).__stallVideoLoad) {
+    await new Promise((r) => setTimeout(r, 2500));
+  }
   // F2: a newer video was chosen while this one was still loading — abandon it
   // (revoke + don't start a loop that would clobber the newer one).
   if (gen !== videoGen) {
@@ -702,6 +706,9 @@ function updatePickerUI(): void {
       const sel = selectedCps.has(parseInt(b.dataset.cp!, 16));
       b.classList.toggle('selected', sel);
       b.setAttribute('aria-pressed', String(sel));
+      // A8: keep the per-letter aria-label in the CURRENT language (buildPicker
+      // froze it at build time — this re-applies on every toggle).
+      b.setAttribute('aria-label', `${t('letterName')}${b.dataset.cp!.toUpperCase()}`);
     });
     const on = letters.filter((b) => selectedCps.has(parseInt(b.dataset.cp!, 16))).length;
     tile.classList.toggle('on', letters.length > 0 && on === letters.length);
@@ -850,12 +857,13 @@ async function init(): Promise<void> {
   // M5: on coarse-pointer / low-memory devices, lower the default detail so the
   // synchronous renderer doesn't freeze them before they can touch a slider.
   {
-    const coarse = window.matchMedia('(pointer: coarse)').matches;
-    const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory;
-    if (coarse && (deviceMemory === undefined || deviceMemory <= 4)) {
+    // A3: every touch device gets the bounded default — the old <=4GB guard
+    // missed 6-8GB Androids (Chromium reports deviceMemory=8), which can still
+    // hit a 1-3s synchronous render at 400 cols.
+    if (window.matchMedia('(pointer: coarse)').matches) {
       const w = $('width') as HTMLInputElement;
       w.value = '120';
-      w.max = '240'; // #2: bound the still-render cost too — 400 cols is a 1-3s freeze on low-end
+      w.max = '240'; // bound the still-render cost too
     }
   }
   // L20/F24: the analytics disclosure is appended by applyLang() (called below),
@@ -947,7 +955,7 @@ async function init(): Promise<void> {
         status.textContent = t('ready');
         queueRender();
       } catch {
-        status.textContent = "Couldn't build that letter set.";
+        status.textContent = t('buildLetterSetFailed');
       }
     }
   });
@@ -1013,7 +1021,7 @@ async function init(): Promise<void> {
     const out = document.getElementById('mosaic') as HTMLCanvasElement | null;
     if (!out || out.width === 0) return;
     if (!canRecordVideo()) {
-      flash("Video export isn't supported on this device — grab a GIF instead.", 4000);
+      flash(t('videoCapHint'), 4000);
       return;
     }
     trackEvent('export', { kind: 'video' });

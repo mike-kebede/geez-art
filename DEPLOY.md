@@ -181,7 +181,17 @@ e.g. a Cloudflare Worker):
 
 Events tracked: `source` (image|video), `share_started` / `share_success` /
 `share_cancelled` / `share_downloaded`, `export` (png|gif|video|html|text),
-`dropzone_opened`, `example_used`.
+`dropzone_opened`, `example_used`, `referral_visit {ref}`.
+
+> **⚠️ Enabling analytics invalidates the shipped privacy copy.** The default
+> page states "no server requests, no cookies, no tracking, nothing stored"
+> (footer + `src/i18n.ts`). Adding any provider makes that copy inaccurate, so
+> update the privacy notice (`index.html` / `i18n.ts`) in the SAME commit.
+> **Plausible** records visitor IPs by default and its outbound-link tracking
+> writes a persistent `plausible_events` localStorage identifier — see its
+> proxy / `data-sharing-off` config. **COPPA:** the app has a children angle; if
+> under-13s are a real audience, keep analytics off or gate on verifiable
+> parental consent.
 
 ---
 

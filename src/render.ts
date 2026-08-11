@@ -182,8 +182,10 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   // fast — per-cell fillText is what froze video mode on low-end devices.
   const chars: string[][] = [];
   if (colorize) {
-    const { atlas, tileW, palette } = colorAtlasFor(ramp, paper, cellRgb, ink);
-    const tileH = Math.ceil(cellPx * 1.4);
+    // A4: the atlas is now a FIXED 64-level index (one build per palette) and the
+    // per-render cost is just the cheap cell→level lookup — no per-frame rebuild.
+    const { atlas, tileW, tileH } = colorAtlasFor(ramp, paper, ink);
+    const palette = cellPalette(cellRgb, ink);
     for (let r = 0; r < rows; r++) {
       const row: string[] = [];
       for (let c = 0; c < cols; c++) {
@@ -320,85 +322,72 @@ function ensureAtlas(ramp: GlyphInfo[], cellPx: number, ink: string, paper: stri
 }
 
 // Small LRU of recent color atlases — video scenes shift their quantized
-// palette (cuts, pans, lighting), so a single-entry cache was rebuilt from
-// scratch every frame at ~15k fillText (M7).
-const colorAtlasCache = new Map<string, { atlas: HTMLCanvasElement; tileW: number }>();
-const COLOR_ATLAS_LRU = 3;
+// A4: the colorized atlas is now a FIXED 64-level index (2 bits/channel), built
+// once per (ramp, paper, ink) — video frames that shift their quantized palette
+// just get a new cheap cell→level lookup instead of a ~16k-fillText rebuild.
+let colorAtlasCache: { key: string; atlas: HTMLCanvasElement; tileW: number; tileH: number } | null = null;
+
+const COLOR_REF_CELL = 16;
 
 /**
- * The colorized equivalent of ensureAtlas: cell colors are quantized to 2 bits
- * per channel (≤64 levels — imperceptible on a letter mosaic), and every
- * (glyph × quantized color) tile is pre-rasterized once, then blitted per cell.
- * This is what keeps the default colorful mode on the ~6× faster drawImage path
- * instead of per-cell fillText (the cost that froze video mode on low-end CPUs).
+ * The colorized equivalent of ensureAtlas. The atlas has one row per possible
+ * quantized level (64 — imperceptible on a letter mosaic) and one column per
+ * glyph, so ANY frame's colorful mosaic is a pure blit from this static atlas.
+ * The per-frame cost is just cellPalette() (a linear pass, no allocation churn).
  */
 function colorAtlasFor(
   ramp: GlyphInfo[],
   paper: string,
-  cellRgb: Uint8ClampedArray,
   ink: string,
-): { atlas: HTMLCanvasElement; tileW: number; palette: Uint32Array } {
-  const quant = (v: number): number => (v >> 6) << 6;
-  // M7: blend each cell color a few stops toward the palette ink so choosing a
-  // palette visibly governs colorful mode — "Mono" mutes the letters, "Church
-  // mural" warms them — without losing the colorful-on-by-default look.
-  const [ir, ig, ib] = hexToRgb(ink);
-  const T = 0.14;
-  // F1: a cell's row index is its position in the SORTED color set, computed
-  // identically on every build, so a cache hit can never pair a fresh palette
-  // with a stale atlas layout (insertion-order rows were the bug).
-  const keys = new Uint32Array(cellRgb.length / 3);
-  const colorSet = new Set<number>();
-  for (let i = 0; i < keys.length; i++) {
-    const key =
-      (quant(cellRgb[i * 3] * (1 - T) + ir * T) << 16) |
-      (quant(cellRgb[i * 3 + 1] * (1 - T) + ig * T) << 8) |
-      quant(cellRgb[i * 3 + 2] * (1 - T) + ib * T);
-    keys[i] = key;
-    colorSet.add(key);
-  }
-  const sorted = [...colorSet].sort((a, b) => a - b);
-  const rowOf = new Map<number, number>();
-  sorted.forEach((c, i) => rowOf.set(c, i));
-  const palette = new Uint32Array(keys.length);
-  for (let i = 0; i < keys.length; i++) palette[i] = rowOf.get(keys[i])!;
-  // F4: rasterize at a FIXED reference size and let drawImage scale to cellPx —
-  // the atlas then rebuilds only when the glyph/color set changes, NOT on every
-  // Detail-slider step (cellPx is deliberately left out of the cache key).
-  const REF_CELL = 16;
-  const colorsKey = sorted.join(',');
-  const key = `${ramp.length}:${paper}:${colorsKey}`;
-  const hit = colorAtlasCache.get(key);
-  if (hit) {
-    // touch for LRU recency
-    colorAtlasCache.delete(key);
-    colorAtlasCache.set(key, hit);
-    return { atlas: hit.atlas, tileW: hit.tileW, palette };
-  }
-  const tileW = Math.ceil(REF_CELL * 1.2);
-  const tileH = Math.ceil(REF_CELL * 1.4);
+): { atlas: HTMLCanvasElement; tileW: number; tileH: number } {
+  const key = `${ramp.length}:${paper}:${ink}`;
+  if (colorAtlasCache && colorAtlasCache.key === key) return colorAtlasCache;
+  const tileW = Math.ceil(COLOR_REF_CELL * 1.2);
+  const tileH = Math.ceil(COLOR_REF_CELL * 1.4);
+  const LEVELS = 64;
   const atlas = document.createElement('canvas');
   atlas.width = ramp.length * tileW;
-  atlas.height = sorted.length * tileH;
+  atlas.height = LEVELS * tileH;
   const ctx = atlas.getContext('2d')!;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, atlas.width, atlas.height);
-  ctx.font = `${REF_CELL}px ${FONT}`;
+  ctx.font = `${COLOR_REF_CELL}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (let row = 0; row < sorted.length; row++) {
-    const rgbKey = sorted[row];
-    ctx.fillStyle = `rgb(${(rgbKey >> 16) & 0xff},${(rgbKey >> 8) & 0xff},${rgbKey & 0xff})`;
+  for (let level = 0; level < LEVELS; level++) {
+    const r = ((level >> 4) & 3) * 64;
+    const g = ((level >> 2) & 3) * 64;
+    const b = (level & 3) * 64;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
     for (let k = 0; k < ramp.length; k++) {
-      ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, row * tileH + tileH / 2 + REF_CELL * 0.06);
+      ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, level * tileH + tileH / 2 + COLOR_REF_CELL * 0.06);
     }
   }
-  colorAtlasCache.set(key, { atlas, tileW });
-  if (colorAtlasCache.size > COLOR_ATLAS_LRU) {
-    const oldest = colorAtlasCache.keys().next().value;
-    if (oldest !== undefined) colorAtlasCache.delete(oldest);
+  colorAtlasCache = { key, atlas, tileW, tileH };
+  return colorAtlasCache;
+}
+
+/** Quantized color level for one RGB channel (0..3). */
+function quantLevel(v: number): number {
+  const c = Math.round(v / 64);
+  return c < 0 ? 0 : c > 3 ? 3 : c;
+}
+
+/**
+ * Per-cell atlas-row index: each cell's blended color (a few stops toward the
+ * palette ink — M7) quantizes to one of 64 levels, which IS the atlas row.
+ */
+function cellPalette(cellRgb: Uint8ClampedArray, ink: string): Uint32Array {
+  const [ir, ig, ib] = hexToRgb(ink);
+  const T = 0.14;
+  const palette = new Uint32Array(cellRgb.length / 3);
+  for (let i = 0; i < palette.length; i++) {
+    const r = cellRgb[i * 3] * (1 - T) + ir * T;
+    const g = cellRgb[i * 3 + 1] * (1 - T) + ig * T;
+    const b = cellRgb[i * 3 + 2] * (1 - T) + ib * T;
+    palette[i] = (quantLevel(r) << 4) | (quantLevel(g) << 2) | quantLevel(b);
   }
-  return { atlas, tileW, palette };
+  return palette;
 }
 
 function clamp01(v: number): number {

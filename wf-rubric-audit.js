@@ -66,8 +66,14 @@ code confirms them):
   bare band URL + ref in the share link; F13 CSP hardening (script-src, Permissions-Policy, COOP);
   F15 48px touch targets; F19 lang/palette persistence + Amharic auto-detect; F25 typed t() keys;
   F42 dead bilingual CSS removed.
+- Round 3.7 (just committed): videoGen supersede race closed (any teardown
+  invalidates in-flight loads); Detail slider MAX capped at 240 on coarse/low-mem;
+  dynamic ARIA (picker tiles, zoom-pan, partial-family, no-letters) localized and
+  re-applied on toggle; replay Close focus deferred a rAF; Amharic footerRespect
+  joins the decorative ፊደል; reduced-motion pauses AFTER the first frame and
+  disables exports.
 
-Test suite: tests/e2e.spec.ts — 65 Playwright tests expected green (Chromium; the suite builds dist and
+Test suite: tests/e2e.spec.ts — 69 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
 do not execute it.
 
