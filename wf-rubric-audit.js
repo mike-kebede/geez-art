@@ -72,8 +72,15 @@ code confirms them):
   re-applied on toggle; replay Close focus deferred a rAF; Amharic footerRespect
   joins the decorative ፊደል; reduced-motion pauses AFTER the first frame and
   disables exports.
+- Round 3.8 (just committed): status line no longer stuck on "Loading…" after a
+  language toggle; two hardcoded live-region strings routed through t();
+  M5 guard widened to all coarse-pointer devices (6-8GB Androids); color atlas is
+  now a FIXED 64-level index built once per palette (no per-frame rebuild in
+  colorful video); clipboard sleep → event poll; videoGen supersede race test
+  (DEV stall seam); DEPLOY.md analytics privacy/COPPA warnings; picker per-letter
+  aria re-applied on toggle.
 
-Test suite: tests/e2e.spec.ts — 69 Playwright tests expected green (Chromium; the suite builds dist and
+Test suite: tests/e2e.spec.ts — 70 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
 do not execute it.
 

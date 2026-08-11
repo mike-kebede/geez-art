@@ -8,6 +8,10 @@
  *  up to the cell count — beyond this is pure waste on low-end phones. */
 export const MAX_SOURCE_EDGE = 1600;
 
+/** Video-FRAME long edge — the video grid is clamped to ~140 cols, so 512px is
+ *  plenty of detail and cuts the per-frame getImageData readback ~10× (F6). */
+export const VIDEO_FRAME_EDGE = 512;
+
 /** Debounce for slider re-renders: long enough to coalesce drag events, short
  *  enough that the preview feels live. */
 export const RENDER_DEBOUNCE_MS = 120;

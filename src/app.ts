@@ -46,6 +46,8 @@ let emptyMode: 'default' | 'pick' = 'default';
 let videoPaused = false;
 /** F2: bumps each video load so a superseded metadata-wait can't orphan a loop. */
 let videoGen = 0;
+/** F2(b): bumps when the app is torn down so an in-flight recording is cancelled. */
+let recordGen = 0;
 
 /**
  * The URL stamped onto shared images + share text (M14). Derived from the live
@@ -60,11 +62,13 @@ const SITE_URL: string = (() => {
   return 'https://geez-art.pages.dev';
 })();
 
-/** The share-sheet TEXT link carries a referral token; the visible image band
- *  stays BARE (typable, no query friction — F21). The token measures the
- *  share_success → referral_visit funnel as a K-factor PROXY (F10) — a constant
- *  token can't measure per-sharer reproduction without a backend. */
-const BAND_URL = `${SITE_URL}?ref=share`;
+/** The share-sheet TEXT link carries a fresh per-share referral token (F10);
+ *  the visible image band stays BARE (typable, no query friction — F21). Each
+ *  share mints its own ?ref=share-XXXX so the funnel can be bucketed per share.
+ */
+function shareLink(): string {
+  return `${SITE_URL}?ref=share-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 function $(id: string): HTMLElement {
   return document.getElementById(id)!;
@@ -86,6 +90,7 @@ function preloadEthiopicFont(): void {
 
 /** Reset everything and restore the idle empty state (also the "Clear" handler). */
 function clearAll(): void {
+  recordGen++; // F2(b): any Clear invalidates an in-flight recording
   clearReplay(); // a stale replay panel would keep playing across Clear (M15)
   stopVideo();
   source = null;
@@ -326,7 +331,7 @@ async function doShare(): Promise<void> {
     // query friction); the referral token rides the share-sheet TEXT link, which
     // is tapped, not typed.
     const branded = makeShareImage(compact, SITE_URL);
-    const result = await shareCanvas(branded, `${t('shareText')} ${BAND_URL}`);
+    const result = await shareCanvas(branded, `${t('shareText')} ${shareLink()}`);
     // M6: track the OUTCOME so the viral loop's K-factor is observable (only
     // fires when a provider is configured — otherwise a no-op).
     trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
@@ -479,6 +484,14 @@ async function handleVideoFile(file: File): Promise<void> {
       }, { once: true });
     });
   } catch (e) {
+    // F1: if a newer action superseded this load, revoke quietly and let the
+    // fresh state stand — the old clearAll() here clobbered a photo the user
+    // had just picked while a stale video's error/timeout was settling.
+    if (gen !== videoGen) {
+      URL.revokeObjectURL(videoUrl ?? url);
+      videoUrl = null;
+      return;
+    }
     URL.revokeObjectURL(videoUrl ?? url);
     videoUrl = null;
     clearAll(); // restore the empty state the load was supposed to leave
@@ -854,6 +867,9 @@ async function init(): Promise<void> {
     applyLang();
   });
   applyLang(); // render data-i18n for the initial language
+  // F5: Amharic-first visitors see a localized boot status (the HTML default is
+  // English and would otherwise show for the whole font+ramp window).
+  status.textContent = t('statusLoading');
   // M5: on coarse-pointer / low-memory devices, lower the default detail so the
   // synchronous renderer doesn't freeze them before they can touch a slider.
   {
@@ -1026,6 +1042,7 @@ async function init(): Promise<void> {
     }
     trackEvent('export', { kind: 'video' });
     flash(t('recording'));
+    const gen = recordGen; // F2(b): cancelled by Clear/teardown mid-recording
     // M2+M10: record from a downscaled, URL-branded copy of the LIVE mosaic so
     // video shares carry the loop URL and encode fast on budget phones. The copy
     // is repainted every frame — captureStream needs changing frames.
@@ -1056,7 +1073,12 @@ async function init(): Promise<void> {
           audio = null;
         }
       }
-      const rec = await recordCanvas(recCanvas, 4, 12, audio);
+      // F8: export at the loop's EFFECTIVE rate (it backs off to ~6fps on slow
+      // devices — a fixed 12 would duplicate frames and play back at half speed).
+      const effFps = Math.max(6, Math.min(12, Math.round(1000 / (videoHandle?.getFrameMs() ?? 83))));
+      const rec = await recordCanvas(recCanvas, 4, effFps, audio);
+      // F2(b): Clear/teardown during the recording → don't surface a stale file.
+      if (gen !== recordGen) return;
       if (rec.blob) {
         downloadBlob('geez-art-video.' + rec.ext, rec.blob);
         showReplay(rec.blob);
@@ -1075,6 +1097,7 @@ async function init(): Promise<void> {
     if (!out || out.width === 0) return;
     trackEvent('export', { kind: 'gif' });
     flash(t('makingGif'));
+    const gen = recordGen; // F2(b): cancelled by Clear/teardown mid-recording
     // M2: brand the GIF with the URL band too. The copy is repainted on rAF —
     // recordGIF awaits between its frame captures, so the animation survives.
     const recCanvas = document.createElement('canvas');
@@ -1085,7 +1108,8 @@ async function init(): Promise<void> {
     };
     paint();
     try {
-      const bytes = await recordGIF(recCanvas, 3, 8);
+      const bytes = await recordGIF(recCanvas, 3, Math.max(4, Math.min(8, Math.round(1000 / (videoHandle?.getFrameMs() ?? 125)))));
+      if (gen !== recordGen) return; // F2(b): superseded → drop the stale file
       if (bytes) {
         downloadBlob('geez-art.gif', new Blob([bytes.buffer as ArrayBuffer], { type: 'image/gif' }));
         flash(t('gifSaved'));

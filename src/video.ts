@@ -2,13 +2,15 @@
 
 /// <reference types="vite/client" />
 
-import { MAX_SOURCE_EDGE } from './limits';
+import { VIDEO_FRAME_EDGE } from './limits';
 
 
 export interface VideoHandle {
   stop(): void;
   /** Returns the new paused state. */
   togglePlay(): boolean;
+  /** Current effective frame interval (ms) — the loop backs off on slow devices. */
+  getFrameMs(): number;
 }
 
 /**
@@ -54,7 +56,9 @@ export function startVideoLoop(
         try {
           // Downscale the frame: cap the long edge so low-end phones don't
           // sample full 1080p/4K pixels every tick.
-          const scale = Math.min(1, MAX_SOURCE_EDGE / Math.max(video.videoWidth, video.videoHeight));
+          // F6: cap the frame at the grid's needs (~512px), not the 1600px photo cap —
+          // cuts the per-frame getImageData readback ~10× on low-end CPUs.
+          const scale = Math.min(1, VIDEO_FRAME_EDGE / Math.max(video.videoWidth, video.videoHeight));
           const capW = Math.max(1, Math.round(video.videoWidth * scale));
           const capH = Math.max(1, Math.round(video.videoHeight * scale));
           // Only resize when the dimensions actually change, so the canvas isn't
@@ -98,6 +102,7 @@ export function startVideoLoop(
       else void video.play().catch(() => {});
       return paused;
     },
+    getFrameMs: () => frameMs,
   };
 }
 

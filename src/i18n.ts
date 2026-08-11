@@ -150,6 +150,9 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     familyPartial: 'Letter family partially selected — tap to toggle all',
     zoomPanAria: 'Zoomed artwork — use the arrow keys to pan',
     noLettersAria: 'Ethiopic letter mosaic — no letters selected',
+    showcaseAria: 'Mosaic preview',
+    controlsAria: 'Controls',
+    rampPreviewAria: 'Letters in use',
   },
 
   am: {
@@ -270,5 +273,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     familyPartial: 'ቤተሰብ በከፊል ተመርጧል — ሁሉንም ለመቀየር ይንኩ',
     zoomPanAria: 'የተሳፈረ ሥዕል — ለማንቀሳቀስ የቀስት ቁልፎችን ይጠቀሙ',
     noLettersAria: 'የኢትዮጵያ ፊደላት ሞዛይክ — ምንም ፊደል አልተመረጠም',
+    showcaseAria: 'የሞዛይክ ቅድመ-እይታ',
+    controlsAria: 'መቆጣጠሪያዎች',
+    rampPreviewAria: 'በጥቅም ላይ ያሉ ፊደላት',
   },
 };

@@ -13,7 +13,7 @@
   --accent-deep: #8a2110;
   --gold: #d9a441;          /* micro-detail: fidel, focus */
   --line: #e0dacd;
-  --hairline: #c7bdad;      /* darkened from #d8d2c8 to lift non-text boundary contrast (M17) */
+  --hairline: #a89c8a;      /* F3: ≥3:1 non-text boundary contrast (was #c7bdad at ~1.8:1) */
   --shadow: 0 18px 50px -26px rgba(28, 25, 23, 0.35);
 }
 
