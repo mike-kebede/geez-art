@@ -273,7 +273,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     pickIndividual: 'ነጠላ ፊደላት ይምረጡ',
     letterName: 'ፊደል U+',
     familyPartial: 'ቤተሰብ በከፊል ተመርጧል — ሁሉንም ለመቀየር ይንኩ',
-    zoomPanAria: 'የተሳፈረ ሥዕል — ለማንቀሳቀስ የቀስት ቁልፎችን ይጠቀሙ',
+    zoomPanAria: 'የተስፋፋ ሥዕል — ለማንቀሳቀስ የቀስት ቁልፎችን ይጠቀሙ', // M7: መሳፈር = to board/ride — wrong verb root
     noLettersAria: 'የኢትዮጵያ ፊደላት ሞዛይክ — ምንም ፊደል አልተመረጠም',
     showcaseAria: 'የሞዛይክ ቅድመ-እይታ',
     controlsAria: 'መቆጣጠሪያዎች',

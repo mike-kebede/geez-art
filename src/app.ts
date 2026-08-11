@@ -169,6 +169,11 @@ function render(): void {
 function renderSource(src: HTMLCanvasElement, fade = false): void {
   if (ramp.length === 0) return;
   const opts = readRenderOpts();
+  if (videoHandle) {
+    // M6: bound the video frame's CELL COUNT (~20k) so portrait doesn't cost 2.5× landscape.
+    const aspect = src.height / src.width;
+    opts.cols = Math.min(opts.cols, Math.max(40, Math.floor(Math.sqrt(20000 / Math.max(0.1, aspect)))));
+  }
   const res = renderMosaic(src, ramp, {
     ...opts,
     paper: currentPalette.paper,
@@ -941,6 +946,11 @@ async function init(): Promise<void> {
     status.textContent = t('ready');
     // M4: repaint anything the user dropped while the ramp was still loading.
     if (source) render();
+    // M10: a shared ?demo=1 link lands on a live demo, not a blank canvas.
+    if (new URLSearchParams(window.location.search).get('demo') === '1') {
+      const demos = getSamples();
+      setSource((demos.find((s) => s.name === 'icon-classical') ?? demos[0]).render());
+    }
   } catch {
     status.textContent = t('somethingWrong');
     return;
@@ -1106,8 +1116,13 @@ async function init(): Promise<void> {
     // is repainted every frame — captureStream needs changing frames.
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
+    let lastPaint = 0;
     const paint = () => {
-      paintBrandedCapture(recCanvas, out, SITE_URL) // F21: bare domain on the visible band;
+      const now = performance.now();
+      if (now - lastPaint >= 100) { // M5: ~10fps paint, not a 60fps rAF churn for a 6-12fps capture
+        lastPaint = now;
+        paintBrandedCapture(recCanvas, out, SITE_URL); // F21: bare domain on the visible band
+      }
       recRaf = requestAnimationFrame(paint);
     };
     paint();
@@ -1145,7 +1160,7 @@ async function init(): Promise<void> {
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
     const paint = () => {
-      paintBrandedCapture(recCanvas, out, SITE_URL) // F21: bare domain on the visible band;
+      paintBrandedCapture(recCanvas, out, SITE_URL, 480); // M3: band at GIF-final res (recordGIF won't re-shrink it)
       recRaf = requestAnimationFrame(paint);
     };
     paint();

@@ -98,6 +98,8 @@ body {
   font-size: 12px;
   font-weight: 600;
   min-height: 48px; /* F-8 */
+  width: auto; /* M1: the global select width:100% leaked in — 1126px pill */
+  flex: 0 0 auto;
   padding: 4px 10px;
   margin-right: 10px;
   background: var(--surface);
@@ -455,7 +457,7 @@ input[type='range'] {
   background: transparent;
   cursor: pointer;
 }
-select {
+.controls select {
   font-family: inherit;
   font-size: 14px;
   padding: 9px 12px;
@@ -502,13 +504,13 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
 .ramp-preview span { opacity: 0.85; }
 .picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* M2: 48px tile + 44px expand + gap */
   gap: 6px;
   max-height: 250px;
   overflow-y: auto;
   padding-right: 4px;
 }
-.fam { display: grid; grid-template-columns: 1fr 44px; gap: 3px; align-items: center; }
+.fam { display: grid; grid-template-columns: minmax(48px, 1fr) 44px; gap: 3px; align-items: center; } /* M2 */
 .fam-tile {
   min-height: 48px; /* F15 */
   padding: 0;

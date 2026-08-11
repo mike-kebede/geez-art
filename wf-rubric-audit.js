@@ -95,6 +95,10 @@ code confirms them):
   buttons disabled at entry; atlas caches keyed by ramp identity (cp fingerprint);
   desktop still-render col cap by deviceMemory; canonical link; mp4-first
   recording; status full-width row ≤480px; persistence test.
+- Round 3.12 (just committed): video-audio FINALLY correct — element UNMUTED for
+  MediaElementSource capture (muted attenuates to RMS 0), speakers silenced via a
+  0-gain tap to ctx.destination; recordCanvas rejects on recorder error and races
+  a 5s guard (no stranded export buttons).
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
