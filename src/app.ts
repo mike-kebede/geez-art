@@ -991,14 +991,24 @@ async function init(): Promise<void> {
   });
 
   // Export
+  $('copyLink').addEventListener('click', () => {
+    // F-4: desktop/feed posters can copy an ATTRIBUTED link (the image band is
+    // deliberately bare so feed shares undercount — this gives a token for them).
+    const text = `${t('shareText')} ${shareLink()}`;
+    if (navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(text).then(() => flash(t('copied')), () => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  });
   $('dlPng').addEventListener('click', () => {
     if (mosaicCanvas) {
       downloadCanvasPNG(mosaicCanvas);
       trackEvent('export', { kind: 'png' });
     }
   });
-  $('share').addEventListener('click', () => void doShare());
-  $('shareTop').addEventListener('click', () => void doShare());
+  $('share').addEventListener('click', () => void doShare().catch(() => flash(t('buildFailed'), 4000)));
+  $('shareTop').addEventListener('click', () => void doShare().catch(() => flash(t('buildFailed'), 4000)));
   $('copyText').addEventListener('click', () => {
     copyText();
     trackEvent('export', { kind: 'text' });
@@ -1054,21 +1064,28 @@ async function init(): Promise<void> {
     };
     paint();
     let audio: MediaStream | null = null;
-    let prevVolume = 1;
     try {
-      // Mix in the source video's audio so the clip isn't silent. The source
-      // <video> is muted for silent playback, but a muted element yields a
-      // silent captureStream audio track — so unmute (volume 0 keeps playback
-      // inaudible) and KEEP it unmuted for the whole recording window. The
-      // restore happens in finally, AFTER recordCanvas resolves (M9: re-muting
-      // before the 4s window silenced the captured track).
+      // F-1: capture the decoded audio through a 0-gain MediaStreamDestination
+      // tap instead of element.captureStream() (which reflects the element's
+      // output gain → silence). createMediaElementSource reroutes the element's
+      // audio into the graph; NOT connecting to ctx.destination keeps speakers
+      // quiet while the destination stream carries full signal. The element
+      // stays muted for playback — no restore needed.
       if (videoEl) {
-        prevVolume = videoEl.volume;
-        videoEl.muted = false;
-        videoEl.volume = 0;
         try {
-          const withStream = videoEl as HTMLVideoElement & { captureStream?: () => MediaStream };
-          audio = withStream.captureStream ? withStream.captureStream() : null;
+          const AC =
+            window.AudioContext ??
+            (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (AC) {
+            const ctx = new AC();
+            const source = ctx.createMediaElementSource(videoEl);
+            const gain = ctx.createGain();
+            gain.gain.value = 0;
+            const dest = ctx.createMediaStreamDestination();
+            source.connect(gain);
+            gain.connect(dest);
+            audio = dest.stream;
+          }
         } catch {
           audio = null;
         }
@@ -1086,10 +1103,6 @@ async function init(): Promise<void> {
       flash(rec.blob ? t('videoSaved') : t('videoFailed'));
     } finally {
       cancelAnimationFrame(recRaf);
-      if (videoEl) {
-        videoEl.muted = true;
-        videoEl.volume = prevVolume;
-      }
     }
   });
   $('dlGif').addEventListener('click', async () => {

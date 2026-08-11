@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, devices } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -1321,6 +1321,43 @@ test('try an example loads the icon-classical sample, not the fallback face (L32
   });
   const name = await page.evaluate(() => (window as unknown as { __currentSample?: string }).__currentSample);
   expect(name).toBe('icon-classical');
+});
+
+test.describe('mobile (Pixel 7 — F-7)', () => {
+  // defaultBrowserType is config-only and invalid in test.use — drop it.
+  const { defaultBrowserType: _dbt, ...pixel7 } = devices['Pixel 7'];
+  test.use(pixel7);
+
+  test('coarse-pointer default is 120 and max is 240', async ({ page }) => {
+    await page.goto('/');
+    await waitReady(page);
+    const w = await page.evaluate(() => {
+      const el = document.getElementById('width') as HTMLInputElement;
+      return { value: el.value, max: el.max };
+    });
+    expect(w.value).toBe('120');
+    expect(w.max).toBe('240');
+  });
+
+  test('renders a mosaic at the phone viewport without errors', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto('/');
+    await waitReady(page);
+    await uploadSample(page);
+    await page.waitForFunction(() => (document.getElementById('mosaic') as HTMLCanvasElement).width > 10);
+    await expect(page.locator('#emptyHint')).toBeHidden();
+    expect(errors).toEqual([]);
+  });
+
+  test('copy link copies an attributed URL (F-4)', async ({ page, context }) => {
+    await page.goto('/');
+    await waitReady(page);
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.click('#copyLink');
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText().then((t) => t.length)), { timeout: 5000 }).toBeGreaterThan(0);
+    const text = await page.evaluate(() => navigator.clipboard.readText());
+    expect(text).toMatch(/ref=share-/);
+  });
 });
 
 test('use none blanks the mosaic instead of leaving a stale image (L31)', async ({ page }) => {

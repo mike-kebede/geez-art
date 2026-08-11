@@ -179,6 +179,10 @@ e.g. a Cloudflare Worker):
 <meta name="geez-art:analytics" content='{"provider":"beacon","endpoint":"https://stats.example.com/e"}'>
 ```
 
+Referral note: the image band is intentionally query-free, so feed/image-post
+shares arrive untokened and undercount `referral_visit`; only share-sheet and
+Copy-link shares carry a token. Use Copy link for attributed shares.
+
 Events tracked: `source` (image|video), `share_started` / `share_success` /
 `share_cancelled` / `share_downloaded`, `export` (png|gif|video|html|text),
 `dropzone_opened`, `example_used`, `referral_visit {ref}`.

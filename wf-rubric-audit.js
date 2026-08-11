@@ -79,6 +79,12 @@ code confirms them):
   colorful video); clipboard sleep → event poll; videoGen supersede race test
   (DEV stall seam); DEPLOY.md analytics privacy/COPPA warnings; picker per-letter
   aria re-applied on toggle.
+- Round 3.9 (just committed): video-supersede ERROR/TIMEOUT path respects the
+  generation token (no fresh-state clobber); recordings cancelled on
+  Clear/teardown; non-text contrast ≥3:1 (--hairline #a89c8a); showcase/
+  controls/ramp-preview ARIA localized; boot status localized; video-frame cap
+  512px; exporters use the loop's effective fps; share TEXT carries a per-share
+  referral token (band stays bare).
 
 Test suite: tests/e2e.spec.ts — 70 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so

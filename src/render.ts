@@ -247,18 +247,32 @@ function getSourcePass(source: HTMLCanvasElement, cols: number, rows: number, sW
   const hit = sourcePassCache.get(cacheKey);
   if (hit) return hit;
 
-  const sctx = source.getContext('2d')!;
-  const sData = sctx.getImageData(0, 0, sW, sH).data;
+  // F-3: pre-downsample the source to ~2× the grid before the readback — the
+  // full ≤1600px getImageData (~2.5M px) is far more than per-cell sampling
+  // needs and blocks the main thread on the first drop.
+  const sW2 = Math.max(1, Math.min(sW, cols * 2));
+  const sH2 = Math.max(1, Math.min(sH, rows * 2));
+  let sData: Uint8ClampedArray;
+  if (sW2 === sW && sH2 === sH) {
+    sData = source.getContext('2d')!.getImageData(0, 0, sW, sH).data;
+  } else {
+    const tmp = document.createElement('canvas');
+    tmp.width = sW2;
+    tmp.height = sH2;
+    const tctx = tmp.getContext('2d', { willReadFrequently: true })!;
+    tctx.drawImage(source, 0, 0, sW2, sH2);
+    sData = tctx.getImageData(0, 0, sW2, sH2).data;
+  }
 
   const lum = new Float32Array(cols * rows);
   const cellRgb = new Uint8ClampedArray(cols * rows * 3);
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const i = r * cols + c;
-      const x0 = Math.floor((c * sW) / cols);
-      const x1 = Math.max(x0 + 1, Math.floor(((c + 1) * sW) / cols));
-      const y0 = Math.floor((r * sH) / rows);
-      const y1 = Math.max(y0 + 1, Math.floor(((r + 1) * sH) / rows));
+      const x0 = Math.floor((c * sW2) / cols);
+      const x1 = Math.max(x0 + 1, Math.floor(((c + 1) * sW2) / cols));
+      const y0 = Math.floor((r * sH2) / rows);
+      const y1 = Math.max(y0 + 1, Math.floor(((r + 1) * sH2) / rows));
       let sum = 0;
       let n = 0;
       let rs = 0;
@@ -266,7 +280,7 @@ function getSourcePass(source: HTMLCanvasElement, cols: number, rows: number, sW
       let bs = 0;
       for (let y = y0; y < y1; y++) {
         for (let x = x0; x < x1; x++) {
-          const p = (y * sW + x) * 4;
+          const p = (y * sW2 + x) * 4;
           const l = 0.2126 * sData[p] + 0.7152 * sData[p + 1] + 0.0722 * sData[p + 2];
           sum += l / 255; // perceptual (sRGB) luminance
           rs += sData[p];
