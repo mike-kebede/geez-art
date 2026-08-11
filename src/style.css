@@ -93,6 +93,7 @@ body {
   font-size: 12px;
   color: var(--mist);
 }
+#status.is-idle { visibility: hidden; } /* hide the persistent 'Ready' — show only real messages */
 .lang-toggle {
   font-family: inherit;
   font-size: 12px;

@@ -113,6 +113,11 @@ code confirms them):
   toggle refresh; og-image regenerated from a real mosaic render (was 90%
   blank); band height snapped even; L30 budget 34KB; I18nKey enforced from the
   en dict.
+- Round 3.16 (just committed): static font-preload deleted (dead hash) — injects
+  the module URL; share-band test asserts gold CTA pixels; GIF byte budget;
+  analytics disclosure "enabled by the site owner"; controls panel max-height;
+  DEPLOY referral note corrected (100% miss); render debounce 250ms; WebView
+  muted-autoplay fallback.
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so

@@ -83,6 +83,17 @@ function shareLink(): string {
   return `${SITE_URL}?ref=share-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/** Hide the status line when it's just the idle "Ready" (it shows only real
+ *  messages now). A MutationObserver centralizes this — every status write is
+ *  caught, no scattered class toggles. */
+function watchStatusIdle(): void {
+  const status = $('status');
+  const sync = () => status.classList.toggle('is-idle', status.textContent === t('ready'));
+  sync();
+  const mo = new MutationObserver(sync);
+  mo.observe(status, { childList: true, characterData: true, subtree: true });
+}
+
 function $(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
@@ -948,6 +959,7 @@ async function init(): Promise<void> {
     applyLang();
   });
   applyLang(); // render data-i18n for the initial language
+  watchStatusIdle(); // hide the idle 'Ready'; show only real messages
   // F5: Amharic-first visitors see a localized boot status (the HTML default is
   // English and would otherwise show for the whole font+ramp window).
   status.textContent = t('statusLoading');
