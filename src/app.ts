@@ -8,7 +8,7 @@ import '@fontsource-variable/noto-sans-ethiopic';
 import '@fontsource-variable/inter';
 import { loadEthiopicFont, buildRamp, getAllGlyphs, rampFromGlyphs, COMMON_AMHARIC, type GlyphInfo, type RampPreset } from './fonts';
 import ethiopicWoffUrl from '@fontsource-variable/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-wght-normal.woff2';
-import { renderMosaic, invalidateSource, type DitherMode } from './render';
+import { renderMosaic, invalidateSource, warmColorAtlas, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone, isHeic, isVideoFile } from './input';
 import { downloadCanvasPNG, gridToText, selfContainedHTML, makeShareImage, shareCanvas, downscaleCanvas, paintBrandedCapture, triggerDownload } from './export';
 import { RENDER_DEBOUNCE_MS, MAX_FILE_BYTES } from './limits';
@@ -122,6 +122,7 @@ function preloadEthiopicFont(): void {
 
 /** Reset everything and restore the idle empty state (also the "Clear" handler). */
 function clearAll(): void {
+  photoGen++; // #2: any Clear invalidates an in-flight photo decode (mirror videoGen)
   recordGen++; // F2(b): any Clear invalidates an in-flight recording
   clearReplay(); // a stale replay panel would keep playing across Clear (M15)
   stopVideo();
@@ -504,6 +505,7 @@ function handlePickedFile(file: File): void {
   } else {
     stopVideo();
     const gen = ++photoGen; // A2
+    flash(t('reading')); // #6: the first tap must not look dead during decode
     void imageFileToCanvas(file)
       .then((c) => {
         if (gen !== photoGen) return; // a newer photo was picked while decoding
@@ -522,6 +524,7 @@ function handlePickedFile(file: File): void {
 async function handleVideoFile(file: File): Promise<void> {
   clearAll();
   const gen = ++videoGen; // F2: supersede any earlier in-flight video load
+  flash(t('loadingVideo')); // #6: the 15s metadata wait must not look dead
   const url = URL.createObjectURL(file);
   const ownUrl = url; // M2: supersede branches revoke ONLY this load's url
   videoUrl = url; // M1: revoke by this stored string, never videoEl.src
@@ -1016,11 +1019,9 @@ async function init(): Promise<void> {
     if (source) render();
     // A3: warm the 64-level color atlas at idle so the FIRST drop (colorize is
     // on by default) doesn't pay a ~300-800ms synchronous build.
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(() => { try { render(); } catch { /* warm only */ } }, { timeout: 2000 });
-    } else {
-      setTimeout(() => { try { render(); } catch { /* warm only */ } }, 500);
-    }
+    const warm = () => { try { warmColorAtlas(ramp, currentPalette.paper, currentPalette.ink); } catch { /* warm only */ } };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(warm, { timeout: 2000 });
+    else setTimeout(warm, 500);
     // M10: a shared ?demo=1 link lands on a live demo, not a blank canvas.
     if (new URLSearchParams(window.location.search).get('demo') === '1') {
       void loadDemoPhoto();

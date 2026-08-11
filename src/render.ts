@@ -38,6 +38,13 @@ export interface MosaicResult {
   rows: number;
 }
 
+/** A3: warm the 64-level color atlas for a ramp+palette so the FIRST drop
+ *  doesn't pay a synchronous ~13k-fillText build. Depends only on the ramp and
+ *  palette, not on any pixels. */
+export function warmColorAtlas(ramp: GlyphInfo[], paper: string, ink: string): void {
+  colorAtlasFor(ramp, paper, ink);
+}
+
 export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts: RenderOpts): MosaicResult {
   const {
     cols: requestedCols,

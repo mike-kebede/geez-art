@@ -235,6 +235,13 @@ export async function shareCanvas(
       return 'cancelled'; // user dismissed the sheet — not an error, but trackable (M6)
     }
   }
+  // #5: iOS Web Share has no file support — share the TEXT link natively AND
+  // download the PNG, so the referral token + native sheet both fire.
+  if (nav.canShare && nav.share && nav.canShare({ text })) {
+    try { await nav.share({ text }); } catch (err) { if ((err as Error).name === 'AbortError') return 'cancelled'; }
+    downloadCanvasPNG(canvas, filename);
+    return 'shared';
+  }
   downloadCanvasPNG(canvas, filename);
   return 'downloaded';
 }

@@ -122,6 +122,11 @@ code confirms them):
   HTML export attributed; audioCtx resumed pre-export; &demo=1 in share links;
   coarse/no-deviceMemory still-render cap; nested drop-zone stopPropagation;
   CSP harness sentinel; 12 Amharic corrections from a 3-linguist pass.
+- Round 3.18 (just committed): photo supersede token; color atlas warmed at
+  idle; Detail slider max derived from the cell budget; PWA icons regenerated
+  with the Ethiopic font loaded (were black tiles).
+- PENDING USER DECISION: the demo photo (public/demo.png) is 97% black — the
+  user chose it; awaiting a well-lit replacement.
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
