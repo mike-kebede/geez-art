@@ -85,7 +85,12 @@ export function startVideoLoop(
     raf = requestAnimationFrame(tick);
   }
 
-  void video.play().catch(() => {});
+  void video.play().catch(() => {
+    // L1: in-app browsers (WhatsApp/Instagram) reject unmuted autoplay — fall
+    // back to muted so the filter at least animates.
+    video.muted = true;
+    void video.play().catch(() => {});
+  });
   raf = requestAnimationFrame(tick);
 
   return {

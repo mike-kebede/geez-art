@@ -14,7 +14,7 @@ export const VIDEO_FRAME_EDGE = 512;
 
 /** Debounce for slider re-renders: long enough to coalesce drag events, short
  *  enough that the preview feels live. */
-export const RENDER_DEBOUNCE_MS = 120;
+export const RENDER_DEBOUNCE_MS = 250; // M1: coalesce slider drags harder (INP)
 
 /** Reject files above this size before createObjectURL (L7) — the app is
  *  client-side, so nothing would be uploaded, but a multi-GB file would pin

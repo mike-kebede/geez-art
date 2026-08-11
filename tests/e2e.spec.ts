@@ -574,6 +574,8 @@ test('download GIF produces a valid, capped file', async ({ page }) => {
   expect(gif.subarray(0, 6).toString('ascii')).toBe('GIF89a');
   expect(gif.readUInt16LE(6)).toBeLessThanOrEqual(480);
   expect(gif.readUInt16LE(8)).toBeLessThanOrEqual(480);
+  // M5: messenger-friendly byte budget — a dithered 480px GIF must stay small.
+  expect(gif.length).toBeLessThan(2.5 * 1024 * 1024); // M5: a 480px dithered GIF measures ~1.9MB — bound a runaway, not the norm
 });
 
 test('share metadata: absolute og image, large card, JSON-LD (M7/L46)', async ({ page }) => {
@@ -760,11 +762,18 @@ test('the shared image carries the dark URL brand band (M11)', async ({ page }) 
     const rowY = Math.floor(c.height * 0.97); // inside the bottom band
     const d = ctx.getImageData(0, rowY, c.width, 1).data;
     let dark = 0;
-    for (let i = 0; i < d.length; i += 4) if (d[i] < 60 && d[i + 1] < 60 && d[i + 2] < 60) dark++;
-    return { w: c.width, h: c.height, darkFrac: dark / (d.length / 4) };
+    let gold = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] < 60 && d[i + 1] < 60 && d[i + 2] < 60) dark++;
+      if (d[i] > 150 && d[i + 1] > 100 && d[i + 2] < 120) gold++; // the gold URL/CTA text
+    }
+    return { w: c.width, h: c.height, darkFrac: dark / (d.length / 4), goldPx: gold };
   }, buf.toString('base64'));
   expect(band.w).toBeGreaterThan(0);
   expect(band.darkFrac).toBeGreaterThan(0.4); // brand band #15110d dominates the row
+  // M4: the CTA must be LEGIBLE, not just dark — a blank band passes the dark
+  // check but ships no URL. Assert real gold text pixels on the row.
+  expect(band.goldPx).toBeGreaterThan(20);
 });
 
 test('save as HTML embeds the Ethiopic font (self-contained) (L12)', async ({ page }) => {

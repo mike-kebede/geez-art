@@ -108,6 +108,11 @@ code confirms them):
   floor; still renders get a total-cell budget (25-40k); superseded video loads
   revoke only their OWN url; Download PNG is branded; drops work on the giant
   fidel + loaded mosaic + never navigate; replay focus moves in/out correctly.
+- Round 3.15 (just committed): recordCanvas stops only its own video tracks (a
+  second export no longer silent); picker tile/expand accessible names +
+  toggle refresh; og-image regenerated from a real mosaic render (was 90%
+  blank); band height snapped even; L30 budget 34KB; I18nKey enforced from the
+  en dict.
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so

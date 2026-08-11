@@ -180,8 +180,10 @@ e.g. a Cloudflare Worker):
 ```
 
 Referral note: the image band is intentionally query-free, so feed/image-post
-shares arrive untokened and undercount `referral_visit`; only share-sheet and
-Copy-link shares carry a token. Use Copy link for attributed shares.
+shares arrive untokened — a 100% miss on the dominant forward channel, not just
+an undercount. Only share-sheet and Copy-link shares carry a token. Use Copy
+link for attributed shares, or route a future short domain through an
+attribution-stamping redirect (e.g. g.geez-art.art 302 → `/?ref=img-XXXX`).
 
 Events tracked: `source` (image|video), `share_started` / `share_success` /
 `share_cancelled` / `share_downloaded`, `export` (png|gif|video|html|text),

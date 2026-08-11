@@ -91,7 +91,8 @@ function $(id: string): HTMLElement {
  *  and Amharic lines don't flash as tofu on iOS/macOS (no system Ethiopic font)
  *  during the cold viral visit. Runs before the font/ramp awaits in init. */
 function preloadEthiopicFont(): void {
-  if (document.querySelector('link[rel="preload"][as="font"]')) return;
+  // M3: ALWAYS inject from the module-resolved URL (hash always correct) — the
+  // static link with a hand-synced hash would 404 on the next fontsource bump.
   const link = document.createElement('link');
   link.rel = 'preload';
   link.as = 'font';

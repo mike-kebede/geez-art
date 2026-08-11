@@ -324,6 +324,8 @@ body {
   box-shadow: var(--shadow);
   position: sticky;
   top: 100px; /* clears the sticky topbar (~80px) so the panel never slides under it */
+  max-height: calc(100vh - 112px); /* M7: with Advanced + picker open it must not pin exports below the fold */
+  overflow-y: auto;
 }
 .group { padding: 16px 0; }
 .group + .group { border-top: 1px solid var(--line); }
