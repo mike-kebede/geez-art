@@ -228,6 +228,7 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
     ...opts,
     paper: currentPalette.paper,
     ink: currentPalette.ink,
+    pigments: currentPalette.pigments,
     // stills omit seed → it rotates each render (fresh flat-area letters);
     // video pins it so the letter texture doesn't boil frame-to-frame.
     seed: videoHandle ? 0 : undefined,
@@ -1064,7 +1065,19 @@ async function init(): Promise<void> {
     status.textContent = t('preparing');
     ramp = await buildRamp('common');
     allGlyphs = await getAllGlyphs();
-    selectedCps = new Set(allGlyphs.map((g) => g.cp));
+    // Maleda UX: "choose your letters" is the default — start the picker with the
+    // common Amharic set PRE-SELECTED (so a dropped photo still renders at once),
+    // and surface it so glyphs like ጨ can be tapped off instead of dominating.
+    selectedCps = new Set(allGlyphs.filter((g) => COMMON_AMHARIC.has(g.cp)).map((g) => g.cp));
+    // NOT customTouched: a real browser fires no change event for an already-
+    // selected option, so the pre-selected common set stays; only switching away
+    // and back to custom (or a test) hits the "start fresh" clean slate.
+    const charsetSel0 = document.getElementById('charset') as HTMLSelectElement | null;
+    if (charsetSel0) charsetSel0.value = 'custom';
+    ensurePickerBuilt();
+    $('picker').hidden = false;
+    const adv = document.getElementById('advanced') as HTMLDetailsElement | null;
+    if (adv) adv.open = true;
     if (import.meta.env.DEV) {
       (window as unknown as { __commonSet?: number[] }).__commonSet = Array.from(COMMON_AMHARIC);
     }
@@ -1078,7 +1091,7 @@ async function init(): Promise<void> {
     // small LRU), so a palette switch — or a cold visit with a persisted
     // non-default palette — never pays the ~15k-fillText build inside a render.
     const warm = () => {
-      try { for (const p of PALETTES) warmColorAtlas(ramp, p.paper, p.ink); } catch { /* warm only */ }
+      try { for (const p of PALETTES) warmColorAtlas(ramp, p.paper, p.ink, p.pigments); } catch { /* warm only */ }
     };
     if (typeof requestIdleCallback === 'function') requestIdleCallback(warm, { timeout: 2000 });
     else setTimeout(warm, 500);

@@ -174,6 +174,16 @@ code confirms them):
   actual rec.mimeType. F29 empty-fidel gold #a67a22 (3.6:1). F36 summary display
   duplicate removed. DEFERRED: F26 font-subset imports (low value), F30
   title/description Amharic (needs native review — same block as F20-F22).
+- Round 3.26 (user critique): the colorize mosaic previously painted in raw
+  source colors (arbitrary RGB — oranges/reds/pinks breaking the Maleda wheel).
+  FIXED: the colorize path now maps every cell to its NEAREST MALEDA PIGMENT
+  (palette.ts pigments[] per preset; colorAtlasFor builds one atlas row per
+  pigment; cellPalette does nearest-pigment). The mosaic paints only in the
+  manuscript pigments (madder·ochre·saffron·gold·verdigris·umber·ink·parchment)
+  — 0% blue-dominant, ~93% within pigment theory (rest = anti-aliased edges).
+  Also: DEFAULT charset is now "Pick your own" (custom) — the picker starts with
+  the common Amharic set pre-selected and OPEN, so glyphs like ጨ can be tapped
+  off instead of dominating.
 - Round 3.25 (user request): FULL MALEDA DESIGN-LANGUAGE RESTYLE
   (dev/maleda-design-language/ — tokens.css is canonical). Parchment gallery
   walls + umber ink; the mosaic is now hung as a GILDED PAINTING (gold mount +

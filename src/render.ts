@@ -29,6 +29,9 @@ export interface RenderOpts {
   ink?: string;
   /** draw each glyph in its source cell's average color instead of ink */
   colorize?: boolean;
+  /** the Maleda pigments this preset's colorize may use — every cell maps to
+   *  its nearest pigment, so the mosaic can never show out-of-theory colors */
+  pigments?: string[];
   /** stable variety seed for video frames (flat areas must not boil); omit for
    *  stills so the seed rotates and the letter mix is fresh every render */
   seed?: number;
@@ -41,11 +44,10 @@ export interface MosaicResult {
   rows: number;
 }
 
-/** A3: warm the 64-level color atlas for a ramp+palette so the FIRST drop
- *  doesn't pay a synchronous ~13k-fillText build. Depends only on the ramp and
- *  palette, not on any pixels. */
-export function warmColorAtlas(ramp: GlyphInfo[], paper: string, ink: string): void {
-  colorAtlasFor(ramp, paper, ink);
+/** A3: warm the pigment atlas for a ramp+palette so the FIRST drop doesn't pay a
+ *  synchronous ~13k-fillText build. Depends only on the ramp and palette. */
+export function warmColorAtlas(ramp: GlyphInfo[], paper: string, ink: string, pigments: string[]): void {
+  colorAtlasFor(ramp, paper, ink, pigments);
 }
 
 export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts: RenderOpts): MosaicResult {
@@ -58,6 +60,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
     paper = '#f3ecdd',
     ink = '#2a1a12',
     colorize = false,
+    pigments = [],
     seed,
   } = opts;
   // Still renders rotate the variety seed (fresh flat-area letters each time);
@@ -197,9 +200,9 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   const chars: string[][] = [];
   if (colorize) {
     // A4: the atlas is now a FIXED 64-level index (one build per palette) and the
-    // per-render cost is just the cheap cell→level lookup — no per-frame rebuild.
-    const { atlas, tileW, tileH } = colorAtlasFor(ramp, paper, ink);
-    const palette = cellPalette(cellRgb, ink);
+    // per-render cost is just the cheap cell→pigment lookup — no per-frame rebuild.
+    const { atlas, tileW, tileH } = colorAtlasFor(ramp, paper, ink, pigments);
+    const palette = cellPalette(cellRgb, pigments);
     for (let r = 0; r < rows; r++) {
       const row: string[] = [];
       for (let c = 0; c < cols; c++) {
@@ -382,36 +385,35 @@ const COLOR_REF_CELL = 16;
 const GLYPH_SCALE = 1.4;
 
 /**
- * The colorized equivalent of ensureAtlas. The atlas has one row per possible
- * quantized level (64 — imperceptible on a letter mosaic) and one column per
- * glyph, so ANY frame's colorful mosaic is a pure blit from this static atlas.
- * The per-frame cost is just cellPalette() (a linear pass, no allocation churn).
+ * The colorized equivalent of ensureAtlas. The atlas has one row per MALEDA
+ * PIGMENT in the preset's pigment list and one column per glyph, so ANY frame's
+ * colorful mosaic is a pure blit from this static atlas. Every source cell maps
+ * to its NEAREST pigment (cellPalette), which is the atlas row — the mosaic can
+ * therefore never use a color outside the design language's wheel (the 180–270°
+ * zone stays empty: no pinks, blues, or purples).
  */
 function colorAtlasFor(
   ramp: GlyphInfo[],
   paper: string,
   ink: string,
+  pigments: string[],
 ): { atlas: HTMLCanvasElement; tileW: number; tileH: number } {
-  const key = `${rampKey(ramp)}:${paper}:${ink}`; // M1: ramp identity, not length
+  const key = `${rampKey(ramp)}:${paper}:${ink}:${pigments.join(',')}`; // M1: ramp identity, not length
   const hit = colorAtlasCache.get(key);
   if (hit) return hit;
   const tileW = Math.ceil(COLOR_REF_CELL * 1.3);
   const tileH = Math.ceil(COLOR_REF_CELL * 1.5);
-  const LEVELS = 64;
   const atlas = document.createElement('canvas');
   atlas.width = ramp.length * tileW;
-  atlas.height = LEVELS * tileH;
+  atlas.height = Math.max(1, pigments.length) * tileH;
   const ctx = atlas.getContext('2d')!;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, atlas.width, atlas.height);
   ctx.font = `${GLYPH_WEIGHT} ${Math.round(COLOR_REF_CELL * GLYPH_SCALE)}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (let level = 0; level < LEVELS; level++) {
-    const r = ((level >> 4) & 3) * 64;
-    const g = ((level >> 2) & 3) * 64;
-    const b = (level & 3) * 64;
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
+  for (let level = 0; level < pigments.length; level++) {
+    ctx.fillStyle = pigments[level];
     for (let k = 0; k < ramp.length; k++) {
       ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, level * tileH + tileH / 2 + COLOR_REF_CELL * 0.02);
     }
@@ -424,25 +426,34 @@ function colorAtlasFor(
   return { atlas, tileW, tileH };
 }
 
-/** Quantized color level for one RGB channel (0..3). */
-function quantLevel(v: number): number {
-  const c = Math.round(v / 64);
-  return c < 0 ? 0 : c > 3 ? 3 : c;
+/** Nearest MALEDA pigment (by RGB distance) for one source cell color. */
+function nearestPigment(r: number, g: number, b: number, pigments: string[]): number {
+  let best = 0;
+  let bestD = Infinity;
+  for (let i = 0; i < pigments.length; i++) {
+    const [pr, pg, pb] = hexToRgb(pigments[i]);
+    const dr = r - pr;
+    const dg = g - pg;
+    const db = b - pb;
+    const d = dr * dr + dg * dg + db * db;
+    if (d < bestD) {
+      bestD = d;
+      best = i;
+    }
+  }
+  return best;
 }
 
 /**
- * Per-cell atlas-row index: each cell's blended color (a few stops toward the
- * palette ink — M7) quantizes to one of 64 levels, which IS the atlas row.
+ * Per-cell atlas-row index: each cell's source color maps to its nearest MALEDA
+ * pigment — the atlas row. No ink-blend, no arbitrary quantization: the mosaic
+ * paints in the manuscript pigments only.
  */
-function cellPalette(cellRgb: Uint8ClampedArray, ink: string): Uint32Array {
-  const [ir, ig, ib] = hexToRgb(ink);
-  const T = 0.14;
+function cellPalette(cellRgb: Uint8ClampedArray, pigments: string[]): Uint32Array {
   const palette = new Uint32Array(cellRgb.length / 3);
+  if (pigments.length === 0) return palette;
   for (let i = 0; i < palette.length; i++) {
-    const r = cellRgb[i * 3] * (1 - T) + ir * T;
-    const g = cellRgb[i * 3 + 1] * (1 - T) + ig * T;
-    const b = cellRgb[i * 3 + 2] * (1 - T) + ib * T;
-    palette[i] = (quantLevel(r) << 4) | (quantLevel(g) << 2) | quantLevel(b);
+    palette[i] = nearestPigment(cellRgb[i * 3], cellRgb[i * 3 + 1], cellRgb[i * 3 + 2], pigments);
   }
   return palette;
 }
