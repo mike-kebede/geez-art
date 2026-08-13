@@ -41,7 +41,7 @@ Text on screen: `ከሩቅ ሥዕል፣ ከቅርብ ፊደል`
 ### 3. TikTok — demo reel (video)
 > The Ethiopic script as art. A jebena, a cross, a face — the script that has
 > stood on church walls and in old manuscripts, one photo at a time. Free, and
-> it works offline.
+> your photo never leaves your phone.
 
 ### 4. Instagram Reels — still image + audio
 > Every ፊደል here is doing real work. The density of each letter carries the
@@ -64,8 +64,8 @@ Text on screen: `ከሩቅ ሥዕል፣ ከቅርብ ፊደል`
 
 ### 8. Telegram — community post (longer)
 > ሰላም ቤተሰብ! A new free tool for us: turn any photo into art made of Ethiopic
-> fidel. No signup, no upload — it all happens on your phone, and it works
-> offline. Drop in an image, pick a palette, download the PNG. Link below.
+> fidel. No signup, no upload — it all happens on your phone. Drop in an
+> image, pick a palette, download the PNG. Link below.
 > Try a jebena, a cross, or a bold portrait and share the result in the
 > group. Made with respect for the script. If it shows a person, ask them
 > before you share.
@@ -78,8 +78,8 @@ Text on screen: `ከሩቅ ሥዕል፣ ከቅርብ ፊደል`
 
 ### 10. TikTok / Reels — "three facts" (video)
 > Three things about this app. One: free, no account. Two: your photo never
-> gets uploaded — everything happens on your phone. Three: works offline.
-> The letters are real Ethiopic glyphs, sorted by how much ink each one
+> gets uploaded — everything happens on your phone. Three: every letter is a
+> real Ethiopic glyph. The letters are sorted by how much ink each one
 > carries, so darker areas get denser letters. That's the whole trick.
 
 ### 11. Instagram / TikTok — "your turn" CTA

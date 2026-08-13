@@ -7,8 +7,9 @@ real glyphs, each one doing honest work carrying the image.
 > The double reading: a face at arm's length, ከሩቅ ሥዕል — from far, a picture;
 > from close, the letters.
 
-It runs entirely in your browser. Zero backend, zero upload, works offline.
-Your picture never leaves your device.
+It runs entirely in your browser. Zero backend, zero upload — your picture
+never leaves your device. Everything it needs is self-hosted (no external
+requests), so once it's open it keeps working even on a flaky connection.
 
 ---
 

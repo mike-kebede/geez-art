@@ -206,7 +206,10 @@ Events tracked: `source` (image|video), `share_started` / `share_success` /
 - [ ] `npm run build` succeeds locally and `dist/` looks right with
       `npm run preview`.
 - [ ] Fonts are bundled (they are — `@fontsource-variable/*` is installed, so
-      the site works fully offline with no external font requests).
+      there are no external font requests; all assets are same-origin).
+      Note: "works offline" as a hard claim needs a service worker, which is
+      not implemented — the copy says "no upload, stays on your device"
+      instead.
 - [ ] The meta description and title are set in `index.html` (they are).
 - [ ] Social copy and share assets are ready (see `social-copy.md`).
 - [ ] If you registered a `.art`/`.com`, DNS has propagated before you
