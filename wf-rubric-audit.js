@@ -144,6 +144,15 @@ code confirms them):
   ~99% black. og-image verified non-blank (mosaic + brand band) but light.
 - GIF-export test flakes under heavy CPU load (passes isolated in 5.6s) — not a
   regression; re-run isolated before treating it as one.
+- Round 3.20 (just committed): all nine round-3.19 findings now closed. A1 demo
+  "97% black" = false positive (file is a real image, verified 4 ways). A2/A3/A4
+  verified present in code (photoGen supersede, atlas warm at idle, slider max
+  from budget). A5 domain single-sourced via SITE_URL (index.html SEO meta is
+  deploy-facing by design). A6 referral rides share-sheet TEXT link, bare URL on
+  image band — documented tradeoff (image-only forwards lose attribution
+  without a backend). A8 icons regenerated (fidel visible). A9 og-image verified
+  non-blank. A7 "works offline" claim softened to the accurate no-upload promise
+  (SW path documented; adding a SW is the option to reclaim the claim).
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
