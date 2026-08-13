@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 96" width="200" height="96" fill="none" preserveAspectRatio="none">
+<rect width="200" height="96" fill="#15090B"/>
+<g><path d="M4.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M8.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M71.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M75.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M40,1 L63,24 L40,47 L17,24 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M40,10 L54,24 L40,38 L26,24 Z" fill="#573928"/>
+<path d="M40,19 L45,24 L40,29 L35,24 Z" fill="#C9962E"/>
+<g stroke-linecap="butt">
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="8"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#573928" stroke-width="4"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="1"/>
+</g>
+</g>
+<g transform="translate(88 0)"><path d="M12.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M12,5 L19,12 L12,19 L5,12 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M12,8 L16,12 L12,16 L8,12 Z" fill="#573928"/>
+<path d="M12,10 L14,12 L12,14 L10,12 Z" fill="#C9962E"/>
+<path d="M12,29 L19,36 L12,43 L5,36 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M12,32 L16,36 L12,40 L8,36 Z" fill="#573928"/>
+<path d="M12,34 L14,36 L12,38 L10,36 Z" fill="#C9962E"/>
+<path d="M12,53 L19,60 L12,67 L5,60 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M12,56 L16,60 L12,64 L8,60 Z" fill="#573928"/>
+<path d="M12,58 L14,60 L12,62 L10,60 Z" fill="#C9962E"/>
+<path d="M12,77 L19,84 L12,91 L5,84 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M12,80 L16,84 L12,88 L8,84 Z" fill="#573928"/>
+<path d="M12,82 L14,84 L12,86 L10,84 Z" fill="#C9962E"/>
+</g>
+<g transform="translate(120 0)"><path d="M4.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M8.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M71.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M75.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M40,1 L63,24 L40,47 L17,24 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M40,10 L54,24 L40,38 L26,24 Z" fill="#573928"/>
+<path d="M40,19 L45,24 L40,29 L35,24 Z" fill="#C9962E"/>
+<g stroke-linecap="butt">
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="8"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#573928" stroke-width="4"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="1"/>
+</g>
+</g>
+</svg>

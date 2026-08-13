@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="geez-art — turn photos into art made of Ethiopic (Ge'ez) fidel letters. Made with respect for the script.">
-  <meta name="theme-color" content="#f6f4f0">
+  <meta name="theme-color" content="#FCF9F3">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='75' font-size='80' text-anchor='middle' fill='%23d9a441'%3Eፊ%3C/text%3E%3C/svg%3E">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -42,12 +42,17 @@
 <body>
   <a class="skip-link" href="#frame" data-i18n="skipLink">Skip to artwork</a>
   <header class="topbar">
-    <h1 class="wordmark"><span class="wm-latin">geez·art</span></h1>
-    <p id="status" class="status" role="status">Loading the Ethiopic font…</p>
+    <h1 class="wordmark"><span class="wm-fidel">ግዕዝ</span><span class="wm-latin">geez·art</span></h1>
+    <div class="status-wrap">
+      <span id="eyedot" class="eye-dot" aria-hidden="true"></span>
+      <span class="weave-loader" id="weaveLoader" aria-hidden="true" hidden><span></span><span></span><span></span></span>
+      <p id="status" class="status" role="status">Loading the Ethiopic font…</p>
+    </div>
     <select id="lang" class="lang-toggle" aria-label="Language" data-i18n-aria="langAria">
       <option value="en">EN</option>
       <option value="am">አማ</option>
     </select>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle light/dark theme">☀</button>
     <button id="shareTop" class="primary share-top" disabled data-i18n="shareTop">Share</button>
   </header>
 
@@ -189,6 +194,12 @@
   </main>
 
   <footer>
+    <svg class="tibeb-spine" aria-hidden="true" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <rect width="24" height="24" fill="#15090B"/>
+      <path d="M0,12.5 H24" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges"/>
+      <path d="M12,5 L19,12 L12,19 L5,12 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+      <path d="M12,8 L16,12 L12,16 L8,12 Z" fill="#573928"/>
+    </svg>
     <p><span data-i18n="footerRespect">Made with respect for the Ethiopic script,</span> <span class="fidel">ፊደል</span>. <span data-i18n="consent">If a photo shows a real person, ask before sharing it.</span></p>
     <details class="privacy-note">
       <summary data-i18n="privacySummary">Privacy &amp; parents</summary>

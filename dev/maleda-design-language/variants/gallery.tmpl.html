@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; script-src 'unsafe-inline'">
+<title>ዜና Zena — The Birr Settles, and Coffee Carries the Weight</title>
+<style>
+@font-face { font-family:'Bela Bereka'; src:url(@@BELA@@) format('woff2'); font-weight:700; font-style:normal; font-display:swap; }
+
+@font-face { font-family:'Noto Sans Ethiopic'; src:url() format('woff2'); font-weight:400; font-style:normal; font-display:swap; }
+@@NOTO_CSS@@
+
+:root{
+  --bg:#FCF9F3; --bg-2:#F5E9D1; --bg-3:#E6D6BC;
+  --ink:#15090B; --ink-soft:#4A3420; --muted:#6C523D;
+  --gold:#E5C193; --gold-deep:#C9962E; --gold-pale:#F8E6B8;
+  --hair:rgba(21,9,11,.20);
+  --accent:#E46F30; --ver:#1A5039; --ox:#A62F1E; --indigo:#181B2D; --saffron:#E8A33D;
+  --kicker:#A62F1E;
+  --mat:#F3E7CF; --ticker:#15090B; --panel:#15090B;
+  --panel-ink:#F8E6B8; --panel-mut:#B99A6E; --panel-ver:#7BC9A8; --panel-ox:#E8836F; --panel-gold:#E8C46A;
+  --shadow:rgba(24,27,45,.34);
+  --ease-ink:cubic-bezier(.16,1,.3,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171009; --bg-2:#22180d; --bg-3:#332515;
+    --ink:#F3E9D5; --ink-soft:#E9D9BC; --muted:#B9A27C;
+    --hair:rgba(243,233,213,.16);
+    --kicker:#E8836F;
+    --mat:#241A10; --ticker:#241A10; --panel:#0D0508;
+    --shadow:rgba(0,0,0,.62);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171009; --bg-2:#22180d; --bg-3:#332515;
+  --ink:#F3E9D5; --ink-soft:#E9D9BC; --muted:#B9A27C;
+  --hair:rgba(243,233,213,.16);
+  --kicker:#E8836F;
+  --mat:#241A10; --ticker:#241A10; --panel:#0D0508;
+  --shadow:rgba(0,0,0,.62);
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html{ -webkit-text-size-adjust:100%; }
+body{
+  background:
+    radial-gradient(120% 80% at 50% -8%, transparent 62%, rgba(24,27,45,.055)),
+    var(--bg);
+  color:var(--ink);
+  font-family:'Noto Sans Ethiopic', system-ui, sans-serif;
+  font-size:17px; line-height:1.8; font-weight:400;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+::selection{ background:var(--gold); color:var(--ink); }
+a{ color:inherit; text-decoration:none; transition:color .5s var(--ease-ink); }
+a:hover{ color:var(--gold-deep); }
+a:focus-visible, .ctl:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:2px; }
+
+.wrap{ max-width:88rem; margin:0 auto; padding:0 clamp(1.25rem,4vw,3.5rem); }
+.display{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; font-weight:700; letter-spacing:.01em; }
+.mono{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+.gez{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-size:1.04em; vertical-align:-.06em; }
+
+/* the eye-dot — diamond signature */
+.eyedot{ display:inline-block; width:7px; height:7px; transform:rotate(45deg); background:var(--gold-deep); flex:none; }
+.eyedot.urgent{ background:var(--kicker); }
+
+/* bilingual copy — only one language renders at a time */
+html[data-lang="am"] .l-en{ display:none; }
+html:not([data-lang="am"]) .l-am{ display:none; }
+
+/* ---------- masthead ---------- */
+.masthead{ padding:2.2rem 0 1.1rem; }
+.brandrow{ display:flex; align-items:flex-end; justify-content:space-between; gap:1.4rem; flex-wrap:wrap; }
+.brand{ display:flex; align-items:center; gap:.75rem; }
+.wordmark{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:1.5rem; letter-spacing:.08em; line-height:1; }
+.right{ display:flex; flex-direction:column; align-items:flex-end; gap:.65rem; }
+.controls{ display:flex; gap:.5rem; align-items:center; }
+.ctl{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-size:.64rem; letter-spacing:.12em; text-transform:uppercase;
+  background:transparent; color:var(--muted); border:1px solid var(--hair); padding:.45rem .8rem; cursor:pointer;
+  transition:color .5s var(--ease-ink), border-color .5s var(--ease-ink); }
+.ctl:hover{ color:var(--ink); border-color:var(--gold-deep); }
+.dateline{ font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-align:right; line-height:1.8; }
+.dateline .mono{ letter-spacing:.02em; text-transform:none; }
+
+.ticker{ margin-top:1.5rem; background:var(--ticker); color:var(--panel-ink); overflow:hidden; }
+.ticker-track{ display:flex; width:max-content; animation:tick 52s linear infinite; }
+.ticker-in{ display:flex; align-items:center; gap:2.2rem; padding:.62rem 1rem; font-size:.78rem; white-space:nowrap; }
+.ticker .label{ font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; color:var(--panel-mut); display:flex; align-items:center; gap:.5rem; flex:none; }
+.tick{ flex:none; }
+.tick b{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-weight:400; font-variant-numeric:tabular-nums; }
+.tick .up{ color:var(--panel-ver); } .tick .dn{ color:var(--panel-ox); }
+.live-dot{ width:6px; height:6px; transform:rotate(45deg); background:var(--panel-gold); flex:none; }
+.live-dot.pulse{ animation:pulse 2.2s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ---------- article ---------- */
+article{ padding:clamp(3.6rem,8vw,6rem) 0 2rem; }
+
+/* the single gold headpiece hairline */
+.headpiece{ display:flex; align-items:center; gap:1rem; max-width:46rem; margin:0 auto clamp(2.6rem,6vw,4rem); }
+.headpiece .line{ flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--gold-deep) 35%, var(--gold-deep) 65%, transparent); opacity:.75; }
+.headpiece .eyedot{ width:8px; height:8px; }
+
+.head{ max-width:46rem; margin:0 auto; animation:rise 1.3s var(--ease-ink) .1s both; }
+.chip{ display:inline-flex; align-items:center; gap:.55rem; font-size:.6875rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+.chip .eyedot{ width:6px; height:6px; }
+.chip .gez{ color:var(--ink); letter-spacing:.02em; }
+.kicker{ margin-top:1.5rem; display:flex; align-items:center; gap:.55rem; font-family:'Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:.6875rem; letter-spacing:.14em; text-transform:uppercase; color:var(--kicker); }
+.kicker .eyedot{ width:5px; height:5px; }
+h1{ margin-top:1rem; font-size:clamp(2.3rem,5.8vw,3.9rem); line-height:1.03; letter-spacing:.005em; text-wrap:balance; }
+.dek{ margin-top:1.4rem; font-size:clamp(1.05rem,2.1vw,1.24rem); line-height:1.62; color:var(--ink-soft); max-width:40rem; }
+.meta{ margin-top:1.7rem; display:flex; gap:1.1rem; flex-wrap:wrap; align-items:baseline;
+  font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.meta .mono{ letter-spacing:.02em; text-transform:none; }
+.meta .by{ color:var(--ink); font-weight:700; text-transform:none; letter-spacing:.02em; }
+.meta .sep{ color:var(--gold-deep); }
+
+figure.hero{ margin:clamp(2.6rem,6vw,4rem) auto 0; max-width:66rem; animation:rise 1.4s var(--ease-ink) .35s both; }
+figure.hero img{ display:block; width:100%; height:auto; }
+.hero figcaption{ margin-top:.9rem; display:flex; justify-content:space-between; gap:1.2rem; font-size:.66rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.hero figcaption .mono{ letter-spacing:.02em; text-transform:none; }
+
+.prose{ margin:clamp(2.8rem,6vw,4rem) auto 0; max-width:44rem; }
+.prose p{ margin-top:1.6em; }
+.prose p:first-child{ margin-top:0; }
+.prose .dropcap:first-letter{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; float:left; font-size:3.3em; line-height:.82; padding:.05em .12em 0 0; color:var(--gold-deep); }
+
+/* pull quote — asymmetric marginalia, frameless */
+.pullquote{ margin:3.4rem 0; padding-left:1.6rem; border-left:1px solid var(--gold-deep); position:relative; }
+.pullquote::before{ content:""; position:absolute; left:-3px; top:-2px; width:5px; height:5px; transform:rotate(45deg); background:var(--gold-deep); }
+.pullquote .t{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:clamp(1.5rem,3.4vw,2.1rem); line-height:1.28; text-wrap:balance; }
+.pullquote .a{ margin-top:1rem; font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.pullquote .a .gez{ letter-spacing:.02em; color:var(--kicker); }
+
+/* ---------- the painting — framed rates panel ---------- */
+.painting{ margin:clamp(3rem,7vw,4.5rem) auto; max-width:46rem; position:relative; animation:inscribe 1.9s var(--ease-ink) .25s both; }
+@keyframes inscribe{ 0%{ clip-path:inset(0 100% 100% 0); } 100%{ clip-path:inset(0 0 0 0); } }
+.painting .mount{ position:relative; padding:9px; background:linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+  box-shadow:0 30px 60px -28px var(--shadow); }
+.painting .mount::after{ content:""; position:absolute; inset:3px; border:1px solid var(--gold-pale); opacity:.5; pointer-events:none; }
+.painting .mat{ background:var(--mat); padding:clamp(16px,3vw,28px); }
+.painting .canvas{ background:var(--panel); color:var(--panel-ink); position:relative; animation:rise 1.5s var(--ease-ink) .95s both; }
+.canvas-head{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.2rem 1.5rem .9rem; }
+.canvas-head .t{ font-family:'Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; }
+.canvas-head .t .gez{ font-family:'Noto Sans Ethiopic'; letter-spacing:.02em; color:var(--panel-gold); }
+.canvas-head .live{ display:flex; align-items:center; gap:.5rem; font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--panel-mut); }
+.canvas .head-rule{ height:1px; margin:0 1.5rem; background:linear-gradient(90deg, var(--panel-gold), transparent); opacity:.45; transform-origin:left; animation:grow 1.4s var(--ease-ink) 1.15s both; }
+@keyframes grow{ from{ transform:scaleX(0);} to{ transform:scaleX(1);} }
+.painting table{ width:100%; border-collapse:collapse; }
+.painting td{ padding:.58rem 1.5rem; font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-variant-numeric:tabular-nums; font-size:.98rem; border-top:1px solid rgba(248,230,184,.12); }
+.painting tr:first-child td{ border-top:none; }
+.painting td:first-child{ color:var(--panel-ink); letter-spacing:.02em; }
+.painting td.cur .gez{ margin-right:.6rem; color:var(--panel-mut); }
+.painting td.delta{ text-align:right; color:var(--panel-ink); }
+.painting td.up{ color:var(--panel-ver); } .painting td.dn{ color:var(--panel-ox); }
+.painting .note{ display:flex; align-items:center; gap:.6rem; padding:1.05rem 1.5rem 1.35rem; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--panel-mut); }
+
+/* floated coffee figure — frameless */
+.coffee{ margin:1.6rem 0 1.6rem 2.2rem; float:right; width:min(17rem,44%); }
+.coffee img{ display:block; width:100%; height:auto; }
+.coffee figcaption{ margin-top:.6rem; font-size:.6rem; }
+
+/* closing hairline */
+.rule{ height:1px; border:0; background:linear-gradient(90deg, transparent, var(--hair), transparent); margin:4.5rem 0 0; }
+
+/* ---------- weave loader — three pigment strands braiding a shared diamond ---------- */
+.loader{ position:relative; width:18px; height:18px; flex:none; }
+.loader span{ position:absolute; inset:0; transform-origin:50% 50%; animation:weaveOrbit 2.4s linear infinite; }
+.loader span::before{ content:""; position:absolute; left:50%; top:50%; width:6px; height:11px; margin:-11px 0 0 -3px;
+  clip-path:polygon(50% 0, 100% 100%, 0 100%); background:linear-gradient(180deg,#7BC9A8 0%, rgba(123,201,168,.1) 100%); }
+.loader span:nth-child(2){ animation-delay:-.8s; }
+.loader span:nth-child(3){ animation-delay:-1.6s; }
+.loader span:nth-child(2)::before{ background:linear-gradient(180deg,#E8C46A 0%, rgba(232,196,106,.1) 100%); }
+.loader span:nth-child(3)::before{ background:linear-gradient(180deg,#E8836F 0%, rgba(232,131,111,.1) 100%); }
+@keyframes weaveOrbit{
+  0%{ transform:rotate(0deg) translate(0,-7px); }
+  25%{ transform:rotate(90deg) translate(0,-7px); }
+  50%{ transform:rotate(180deg) translate(0,-7px); }
+  75%{ transform:rotate(270deg) translate(0,-7px); }
+  100%{ transform:rotate(360deg) translate(0,-7px); }
+}
+.boot .loader{ transform:scale(2.4); }
+.boot .loader span:nth-child(1)::before{ background:linear-gradient(180deg,var(--ver) 0%, rgba(30,138,94,.12) 100%); }
+.boot .loader span:nth-child(2)::before{ background:linear-gradient(180deg,var(--saffron) 0%, rgba(232,163,61,.12) 100%); }
+.boot .loader span:nth-child(3)::before{ background:linear-gradient(180deg,var(--ox) 0%, rgba(166,47,30,.12) 100%); }
+
+@keyframes rise{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
+
+/* boot overlay */
+.boot{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:50; transition:opacity .6s ease, visibility .6s; }
+.boot.hide{ opacity:0; visibility:hidden; }
+.boot-in{ display:flex; align-items:center; gap:.8rem; }
+.boot-word{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; font-size:1.15rem; letter-spacing:.08em; }
+
+/* ---------- footer ---------- */
+footer{ padding:2.8rem 0 3.4rem; }
+.footrow{ margin-top:2rem; display:flex; align-items:center; justify-content:space-between; gap:1.6rem; flex-wrap:wrap; }
+.footbrand{ display:flex; align-items:center; gap:.7rem; }
+.footnote{ font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); max-width:32rem; text-align:right; line-height:1.8; }
+.footnote .mono{ letter-spacing:.02em; text-transform:none; }
+
+@media (max-width:640px){
+  .coffee{ float:none; width:100%; margin:1.6rem 0; }
+  .dateline{ text-align:left; }
+  .right{ align-items:flex-start; }
+}
+@media (prefers-reduced-motion: reduce){
+  .live-dot.pulse, .loader span, .ticker-track, .painting, .painting .canvas, .painting .head-rule, .head, figure.hero{ animation:none; }
+}
+</style>
+</head>
+<body>
+<div class="boot" id="boot" role="status" aria-live="polite">
+  <div class="boot-in">
+    <span class="loader" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span class="boot-word"><span class="l-am gez">ዜና</span><span class="l-en">&nbsp;Zena</span></span>
+  </div>
+</div>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="brandrow">
+    <div class="brand">
+      <span class="eyedot" aria-hidden="true"></span>
+      <span class="wordmark"><span class="gez l-am">ዜና</span><span class="l-en">Zena</span></span>
+    </div>
+    <div class="right">
+      <div class="controls">
+        <button id="themeBtn" class="ctl" type="button">🌙 Dark</button>
+        <button id="langBtn" class="ctl" type="button">አማርኛ</button>
+      </div>
+      <div class="dateline">
+        <span class="l-en">Addis Ababa ፡ አዲስ አበባ</span><span class="l-am">አዲስ አበባ ፡ Addis Ababa</span>
+        <span class="mono"><span class="l-en">Sunday 09 August 2026</span><span class="l-am">እሑድ 3 ነሐሴ 2018 ዓ.ም</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="ticker">
+    <div class="ticker-track">
+      <div class="ticker-in">
+        <span class="label"><span class="loader" aria-hidden="true"><span></span><span></span><span></span></span><span class="l-en">Sample</span><span class="l-am">ናሙና</span></span>
+        <span class="tick">USD/ETB <b>128.40</b> <span class="up">▲ +0.8</span></span>
+        <span class="tick">EUR/ETB <b>139.15</b> <span class="up">▲ +0.5</span></span>
+        <span class="tick">GBP/ETB <b>164.02</b> <span class="dn">▼ −0.3</span></span>
+        <span class="tick">AED/ETB <b>34.96</b> <span class="up">▲ +0.1</span></span>
+        <span class="tick">CNY/ETB <b>17.88</b> <span class="dn">▼ −0.2</span></span>
+        <span class="tick"><span class="l-en">Coffee</span><span class="l-am">ቡና</span> <b>3.42/lb</b> <span class="up">▲ +2.1%</span></span>
+      </div>
+      <div class="ticker-in" aria-hidden="true">
+        <span class="label"><span class="loader" aria-hidden="true"><span></span><span></span><span></span></span><span class="l-en">Sample</span><span class="l-am">ናሙና</span></span>
+        <span class="tick">USD/ETB <b>128.40</b> <span class="up">▲ +0.8</span></span>
+        <span class="tick">EUR/ETB <b>139.15</b> <span class="up">▲ +0.5</span></span>
+        <span class="tick">GBP/ETB <b>164.02</b> <span class="dn">▼ −0.3</span></span>
+        <span class="tick">AED/ETB <b>34.96</b> <span class="up">▲ +0.1</span></span>
+        <span class="tick">CNY/ETB <b>17.88</b> <span class="dn">▼ −0.2</span></span>
+        <span class="tick"><span class="l-en">Coffee</span><span class="l-am">ቡና</span> <b>3.42/lb</b> <span class="up">▲ +2.1%</span></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+<article>
+  <div class="headpiece" aria-hidden="true"><span class="line"></span><span class="eyedot"></span><span class="line"></span></div>
+  <header class="head">
+    <span class="chip"><span class="eyedot" aria-hidden="true"></span><span class="l-en">News</span><span class="l-am gez">ዜና</span></span>
+    <div class="kicker"><span class="eyedot urgent" aria-hidden="true"></span><span class="l-en">Markets · Exchange</span><span class="l-am">ገበያ · ምንዛሪ</span></div>
+    <h1 class="display l-en">The Birr Settles, and Coffee Carries the Weight</h1>
+    <h1 class="display l-am">ብሩ ተረጋጋ፤ ሸክሙን የተሸከመው ቡና ነው</h1>
+    <p class="dek l-en">Two years after Ethiopia freed its currency, the market is finding its footing — and the export economy is doing more of the work than the central bank ever did.</p>
+    <p class="dek l-am">ብሩን ነፃ ካወጡት ከሁለት ዓመት በኋላ ገበያው መረጋጋት እያገኘ ነው — የኤክስፖርት ኢኮኖሚውም ከባንኩ በላይ ተግባር እያከናወነ ነው።</p>
+    <div class="meta">
+      <span class="by"><span class="l-en">Hanna Mengistu</span><span class="l-am">ሐና መንግስቱ</span></span>
+      <span class="sep" aria-hidden="true">፡</span>
+      <span class="l-en">Markets Desk</span><span class="l-am">የገበያ ጠረጴዛ</span>
+      <span class="sep" aria-hidden="true">፡</span>
+      <span class="l-en">9 Aug 2026</span><span class="l-am">3 ነሐሴ 2018</span>
+      <span class="sep" aria-hidden="true">፡</span>
+      <span class="mono"><span class="l-en">6 min read</span><span class="l-am">6 ደቂቃ</span></span>
+    </div>
+  </header>
+
+  <figure class="hero">
+    <img src="@@HERO@@" alt="A street in Addis Ababa, dense with pedestrian life beneath late-afternoon light." width="1400" height="933" fetchpriority="high" decoding="async">
+    <figcaption>
+      <span><span class="l-en">Addis Ababa ፡ the city the market wakes in</span><span class="l-am">አዲስ አበባ ፡ ገበያው የሚነቃበት ከተማ</span></span>
+      <span class="mono"><span class="l-en">Photo ፡ Denis Vermeirre / Wikimedia Commons</span><span class="l-am">ፎቶ ፡ Denis Vermeirre / Wikimedia Commons</span></span>
+    </figcaption>
+  </figure>
+
+  <div class="prose">
+    <p class="dropcap l-en">Two years ago this month, Ethiopia stopped pretending. On 29 July 2024 the central bank let the birr float, and overnight the official rate — for years a fiction defended at gunpoint — was asked to tell the truth. The first months were brutal: the currency lost more than half its value against the dollar before the market found a level, and prices followed it up.</p>
+    <p class="dropcap l-am">ከሁለት ዓመት በፊት ኢትዮጵያ ማስመሰል አቆመች። ጁላይ 29 ቀን 2024 ብሔራዊ ባንክ ብሩን ተንሳፋፊ አደረገ፤ በዚያው ቀን የብሩ ኦፊሴላዊ ተመን — ለዓመታት በግዳጅ የተጠበቀ — እውነቱን እንዲናገር ተጠየቀ። የመጀመሪያዎቹ ወራቶች ከባድ ነበሩ፦ ምንዛሪው ገበያው ደረጃውን እስኪያገኝ ድረስ ከግማሽ በላይ ዋጋውን አጣ፤ ዋጋዎቹም ተከትለው ወጡ።</p>
+
+    <p class="l-en">What pulled the birr back from the edge was not the National Bank. It was the country’s oldest export. Coffee, the crop that bankrolled the empire and the republic after it, has become the quiet anchor of the new exchange rate — dollars from the season’s auctions entering the interbank, exporters discovering that a true price rewards them, and the premium on the parallel market narrowing to a whisper.</p>
+    <p class="l-am">ብሩን ከጥፋት የመለሰው ብሔራዊ ባንክ አልነበረም። የሀገሪቱ ጥንታዊ ምርት ነበር — ቡና። የዘንድሮው የቡና ጨረታ ዶላሮች ወደ ባንኮች ገብተው፣ ነጋዴዎች እውነተኛ ዋጋ እንደሚካፈላቸው ተረዱ፤ የጎን ገበያው ልዩነትም ወደ ሹክሹክታ ተቀነሰ።</p>
+
+    <blockquote class="pullquote">
+      <div class="t l-en">“The market is not the enemy of the birr. It is its best teacher.”</div>
+      <div class="t l-am">“ገበያ የብሩ ጠላት አይደለም። እሱ የብሩ ምርጥ አስተማሪ ነው።”</div>
+      <div class="a"><span class="l-en">— specimen · illustrative</span><span class="l-am gez">— ናሙና</span></div>
+    </blockquote>
+
+    <section class="painting" aria-label="Sample exchange rates">
+      <div class="mount">
+        <div class="mat">
+          <div class="canvas">
+            <div class="canvas-head">
+              <div class="t"><span class="l-en">Exchange · Sample</span><span class="l-am gez">ምንዛሪ · ናሙና</span></div>
+              <div class="live"><span class="loader" aria-hidden="true"><span></span><span></span><span></span></span><span class="eyedot" aria-hidden="true"></span><span class="l-en">Sample ፡ 09:41</span><span class="l-am">ናሙና ፡ 09፡41</span></div>
+            </div>
+            <div class="head-rule" aria-hidden="true"></div>
+            <table>
+              <tr><td class="cur"><span class="gez l-am">ዶላር</span>USD/ETB</td><td class="delta">128.40</td><td class="delta up">+0.8</td></tr>
+              <tr><td class="cur"><span class="gez l-am">ዩሮ</span>EUR/ETB</td><td class="delta">139.15</td><td class="delta up">+0.5</td></tr>
+              <tr><td class="cur"><span class="gez l-am">ፓውንድ</span>GBP/ETB</td><td class="delta">164.02</td><td class="delta dn">−0.3</td></tr>
+              <tr><td class="cur"><span class="gez l-am">ዲርሃም</span>AED/ETB</td><td class="delta">34.96</td><td class="delta up">+0.1</td></tr>
+              <tr><td class="cur"><span class="gez l-am">ዩዋን</span>CNY/ETB</td><td class="delta">17.88</td><td class="delta dn">−0.2</td></tr>
+              <tr><td class="cur"><span class="gez l-am">ቡና</span><span class="l-en">Coffee</span></td><td class="delta">3.42/lb</td><td class="delta up">+2.1%</td></tr>
+            </table>
+            <div class="note">
+              <span class="live-dot" aria-hidden="true"></span>
+              <span><span class="l-en">Figures illustrative — a specimen of the design language, not market data.</span><span class="l-am">አሃዞች ለማሳያ ናቸው — የዲዛይን ቋንቋ ናሙና እንጂ የገበያ መረጃ አይደለም።</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="l-en">There are reasons for caution. Reserves remain thin, inflation has not fully relented, and the programme that underwrites the reforms asks for more discipline than the budget has so far shown. But the direction is the thing to watch now: a currency that trades, an auction that clears, and a farming economy that finally keeps the proceeds of its own harvest.</p>
+    <p class="l-am">ለጥንቃቄ ምክንያቶች አሉ። የውጭ ምንዛሪ ክምችት ውስን ነው፤ የዋጋ ግሽበት ሙሉ በሙሉ አልቀነሰም፤ ለተሃድሶው መሰረት የሆነው ፕሮግራም ደግሞ በጀቱ እስካሁን ካሳየው በላይ ተግሣጽ ይጠይቃል። ነገር ግን አሁን መከታተል ያለበት አቅጣጫው ነው፦ የሚሸጥ ምንዛሪ፣ የሚደረደር ጨረታ፣ የራሱን ምርት ጥቅም የሚያስቀምጥ የግብርና ኢኮኖሚ።</p>
+
+    <p class="l-en">The interbank opens each morning with coffee receipts at its centre. Dealers watch the cup the way they watch the screen — both tell the same story of supply finding its level. The birr’s next chapter will be written less in the central bank’s statements than in the volume of this season’s export.</p>
+    <p class="l-am">የጎላ ገበያው በቡና ደረሰኝ ይከፈታል። ነጋዴዎች ጽዋውን የሚመለከቱት ልክ እንደ ስክሪኑ ነው — ሁለቱም ተመሳሳይ ታሪክ ይናገራሉ፦ አቅርቦት ደረጃውን ያገኛል።</p>
+
+    <figure class="coffee">
+      <img src="@@COFFEE@@" alt="The Ethiopian coffee ceremony — roasted beans, incense, and the jebena at the heart of it." width="1400" height="933" loading="lazy" decoding="async">
+      <figcaption>
+        <span><span class="l-en">Buna ፡ the oldest anchor</span><span class="l-am">ቡና ፡ ጥንታዊው መልህቅ</span></span>
+        <span class="mono"><span class="l-en">Photo ፡ ProtoplasmaKid / CC BY-SA 4.0</span><span class="l-am">ፎቶ ፡ ProtoplasmaKid / CC BY-SA 4.0</span></span>
+      </figcaption>
+    </figure>
+
+    <p class="l-en">At the morning buna ceremony, the cups are poured in a circle, each round lighter than the last, until the grain is spent. The market’s own ceremony is not so different: each auction a little more honest, each price a little closer to the truth the harvest already knew.</p>
+    <p class="l-am">በማለዳው የቡና ሥነ ሥርዓት ላይ ጽዋዎች በክበብ ይቀርባሉ — እያንዳንዱ ዙር ከቀዳሚው የበለጠ ቀለል ያለ። የገበያው ሥነ ሥርዓትም ከዚህ የተለየ አይደለም።</p>
+  </div>
+
+  <hr class="rule">
+</article>
+</main>
+
+<footer>
+  <div class="footrow">
+    <div class="footbrand">
+      <span class="eyedot" aria-hidden="true"></span>
+      <span class="wordmark"><span class="gez l-am">ዜና</span><span class="l-en">Zena</span></span>
+    </div>
+    <div class="footnote">
+      <span class="l-en">A specimen of the Ethiopian Classical Design Language —</span><span class="l-am">የኢትዮጵያ ክላሲካል ዲዛይን ቋንቋ ናሙና —</span>
+      <br>
+      <span class="mono"><span class="l-en">bela bereka ፡ hibur mono ፡ noto</span><span class="l-am">በላ በረካ ፡ ሂቡር ሞኖ ፡ ኖቶ</span></span>
+    </div>
+  </div>
+</footer>
+
+</div>
+<script>
+(function(){
+  var root = document.documentElement;
+  var boot = document.getElementById('boot');
+  if (boot) { setTimeout(function(){ boot.classList.add('hide'); }, 700); }
+  var themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    themeBtn.textContent = next === 'dark' ? '☀ Light' : '🌙 Dark';
+  });
+  var langBtn = document.getElementById('langBtn');
+  langBtn.addEventListener('click', function(){
+    var next = root.getAttribute('data-lang') === 'am' ? 'en' : 'am';
+    root.setAttribute('data-lang', next);
+    root.setAttribute('lang', next);
+    langBtn.textContent = next === 'am' ? 'English' : 'አማርኛ';
+    document.title = next === 'am'
+      ? 'ዜና — ብሩ ተረጋጋ፤ ሸክሙን የተሸከመው ቡና ነው'
+      : 'Zena — The Birr Settles, and Coffee Carries the Weight';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none" preserveAspectRatio="none">
+<rect width="256" height="256" fill="#15090B"/>
+<rect x="4.5" y="4.5" width="247.0" height="247.0" fill="none" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<rect x="8.5" y="8.5" width="239.0" height="239.0" fill="none" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<rect x="71.5" y="71.5" width="113.0" height="113.0" fill="none" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<rect x="75.5" y="75.5" width="105.0" height="105.0" fill="none" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<g transform="translate(0 80)"><path d="M40,1 L63,24 L40,47 L17,24 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M40,10 L54,24 L40,38 L26,24 Z" fill="#573928"/>
+<path d="M40,19 L45,24 L40,29 L35,24 Z" fill="#C9962E"/>
+<g stroke-linecap="butt">
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="8"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#573928" stroke-width="4"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="1"/>
+</g>
+</g>
+<g transform="translate(176 80)"><path d="M40,1 L63,24 L40,47 L17,24 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M40,10 L54,24 L40,38 L26,24 Z" fill="#573928"/>
+<path d="M40,19 L45,24 L40,29 L35,24 Z" fill="#C9962E"/>
+<g stroke-linecap="butt">
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="8"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#573928" stroke-width="4"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="1"/>
+</g>
+</g>
+<g transform="translate(80 0)"><path d="M24,17 L47,40 L24,63 L1,40 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M24,26 L38,40 L24,54 L10,40 Z" fill="#573928"/>
+<path d="M24,35 L29,40 L24,45 L19,40 Z" fill="#C9962E"/>
+<g stroke-linecap="butt">
+<path d="M48,16 L96,64 M96,16 L48,64" stroke="#C9962E" stroke-width="8"/>
+<path d="M48,16 L96,64 M96,16 L48,64" stroke="#573928" stroke-width="4"/>
+<path d="M48,16 L96,64 M96,16 L48,64" stroke="#C9962E" stroke-width="1"/>
+</g>
+</g>
+<g transform="translate(80 176)"><path d="M24,17 L47,40 L24,63 L1,40 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M24,26 L38,40 L24,54 L10,40 Z" fill="#573928"/>
+<path d="M24,35 L29,40 L24,45 L19,40 Z" fill="#C9962E"/>
+<g stroke-linecap="butt">
+<path d="M48,16 L96,64 M96,16 L48,64" stroke="#C9962E" stroke-width="8"/>
+<path d="M48,16 L96,64 M96,16 L48,64" stroke="#573928" stroke-width="4"/>
+<path d="M48,16 L96,64 M96,16 L48,64" stroke="#C9962E" stroke-width="1"/>
+</g>
+</g>
+<path d="M40,20 L60,40 L40,60 L20,40 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M40,28 L52,40 L40,52 L28,40 Z" fill="#573928"/>
+<path d="M40,36 L44,40 L40,44 L36,40 Z" fill="#C9962E"/>
+<path d="M216,20 L236,40 L216,60 L196,40 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M216,28 L228,40 L216,52 L204,40 Z" fill="#573928"/>
+<path d="M216,36 L220,40 L216,44 L212,40 Z" fill="#C9962E"/>
+<path d="M40,196 L60,216 L40,236 L20,216 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M40,204 L52,216 L40,228 L28,216 Z" fill="#573928"/>
+<path d="M40,212 L44,216 L40,220 L36,216 Z" fill="#C9962E"/>
+<path d="M216,196 L236,216 L216,236 L196,216 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M216,204 L228,216 L216,228 L204,216 Z" fill="#573928"/>
+<path d="M216,212 L220,216 L216,220 L212,216 Z" fill="#C9962E"/>
+</svg>

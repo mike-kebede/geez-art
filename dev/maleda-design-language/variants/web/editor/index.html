@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="am" data-theme="light" data-lang="am">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; script-src 'unsafe-inline'; connect-src 'self' https://exchange.et; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'">
+<meta name="description" content="ማለዳ Maleda — an infusion of Ethiopian culture into modern design · a design-language specimen.">
+<meta name="theme-color" content="#FCF9F3">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201000%201000%22%20width%3D%221000%22%20height%3D%221000%22%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22499%22%20fill%3D%22%23451210%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22382.654%22%20fill%3D%22%23E8D19A%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%223.283%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%229.849%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2216.414%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2222.980%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2229.546%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2236.112%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2242.678%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2249.243%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2255.809%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2262.375%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2268.941%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2275.507%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2282.072%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2288.638%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2295.204%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22101.770%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22108.336%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22114.901%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22121.467%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22128.033%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22134.599%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22141.164%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22147.730%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22154.296%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22160.862%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22167.428%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22173.993%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22180.559%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22187.125%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22193.691%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22200.257%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22206.822%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22213.388%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22219.954%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22226.520%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22233.086%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22239.651%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22246.217%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22252.783%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22259.349%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22265.914%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22272.480%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22279.046%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22285.612%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22292.178%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22298.743%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22305.309%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22311.875%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22318.441%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22325.007%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22331.572%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22338.138%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22344.704%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22351.270%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22357.836%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22364.401%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22370.967%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22377.533%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22384.099%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22384.099%22%20fill%3D%22none%22%20stroke%3D%22%23e8d19a%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2221.176%200.000%22%20stroke-dashoffset%3D%2210.588%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22390.664%22%20fill%3D%22none%22%20stroke%3D%22%23c9b585%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2214.727%206.449%22%20stroke-dashoffset%3D%227.364%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22397.230%22%20fill%3D%22none%22%20stroke%3D%22%23e8d19a%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2214.034%207.143%22%20stroke-dashoffset%3D%227.017%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22403.796%22%20fill%3D%22none%22%20stroke%3D%22%23c8b485%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2212.979%208.197%22%20stroke-dashoffset%3D%226.490%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22410.362%22%20fill%3D%22none%22%20stroke%3D%22%23e7d09a%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2210.009%2011.168%22%20stroke-dashoffset%3D%225.004%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22416.928%22%20fill%3D%22none%22%20stroke%3D%22%23c8b485%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%227.597%2013.579%22%20stroke-dashoffset%3D%223.799%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22423.493%22%20fill%3D%22none%22%20stroke%3D%22%23e7d099%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%227.229%2013.948%22%20stroke-dashoffset%3D%223.614%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22430.059%22%20fill%3D%22none%22%20stroke%3D%22%23c8b485%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%226.594%2014.583%22%20stroke-dashoffset%3D%223.297%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22436.625%22%20fill%3D%22none%22%20stroke%3D%22%23e7d099%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%225.754%2015.422%22%20stroke-dashoffset%3D%222.877%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22443.191%22%20fill%3D%22none%22%20stroke%3D%22%23c8b484%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%225.040%2016.136%22%20stroke-dashoffset%3D%222.520%22%2F%3E%20%3Cpath%20d%3D%22M449.93%2C112.56%20L451.47%2C105.74%20L454.36%2C98.79%20L464.20%2C91.20%20L472.38%2C83.99%20L473.30%2C77.35%20L475.27%2C70.65%20L478.08%2C63.93%20L480.51%2C57.24%20L481.26%2C50.63%20L518.74%2C50.63%20L519.49%2C57.24%20L521.92%2C63.93%20L524.73%2C70.65%20L526.70%2C77.35%20L527.62%2C83.99%20L535.80%2C91.20%20L545.64%2C98.79%20L548.53%2C105.74%20L550.07%2C112.56%20L593.27%2C120.63%20L597.17%2C114.84%20L602.38%2C109.40%20L614.30%2C105.88%20L624.52%2C102.10%20L627.78%2C96.25%20L632.04%2C90.71%20L637.09%2C85.46%20L641.77%2C80.10%20L644.85%2C74.21%20L679.81%2C87.75%20L678.12%2C94.18%20L677.97%2C101.29%20L678.16%2C108.58%20L677.57%2C115.53%20L676.04%2C122.06%20L681.05%2C131.74%20L687.49%2C142.37%20L687.67%2C149.90%20L686.65%2C156.81%20L724.02%2C179.94%20L729.75%2C175.95%20L736.56%2C172.76%20L748.95%2C173.78%20L759.85%2C173.96%20L765.01%2C169.67%20L770.97%2C166.05%20L777.58%2C162.97%20L783.89%2C159.67%20L788.89%2C155.29%20L816.59%2C180.54%20L812.69%2C185.92%20L809.98%2C192.50%20L807.53%2C199.37%20L804.47%2C205.64%20L800.68%2C211.17%20L801.86%2C222.01%20L804.02%2C234.25%20L801.47%2C241.33%20L798.02%2C247.41%20L824.51%2C282.48%20L831.29%2C280.83%20L838.80%2C280.31%20L849.98%2C285.74%20L860.09%2C289.84%20L866.44%2C287.71%20L873.31%2C286.48%20L880.59%2C286.01%20L887.66%2C285.20%20L893.90%2C282.92%20L910.61%2C316.48%20L905.03%2C320.09%20L900.13%2C325.24%20L895.36%2C330.76%20L890.24%2C335.51%20L884.71%2C339.29%20L881.90%2C349.83%20L879.49%2C362.02%20L874.55%2C367.70%20L869.14%2C372.12%20L881.17%2C414.39%20L888.10%2C415.30%20L895.29%2C417.54%20L903.75%2C426.64%20L911.69%2C434.11%20L918.38%2C434.42%20L925.23%2C435.76%20L932.19%2C437.94%20L939.08%2C439.74%20L945.72%2C439.88%20L949.18%2C477.20%20L942.67%2C478.55%20L936.24%2C481.59%20L929.80%2C485.01%20L923.31%2C487.59%20L916.79%2C489.12%20L910.36%2C497.93%20L903.71%2C508.43%20L897.05%2C511.94%20L890.41%2C514.11%20L886.35%2C557.87%20L892.48%2C561.22%20L898.38%2C565.90%20L902.99%2C577.44%20L907.69%2C587.28%20L913.82%2C589.99%20L919.73%2C593.71%20L925.43%2C598.26%20L931.19%2C602.42%20L937.34%2C604.95%20L927.08%2C641.00%20L920.53%2C639.91%20L913.43%2C640.42%20L906.19%2C641.28%20L899.21%2C641.34%20L892.57%2C640.41%20L883.40%2C646.30%20L873.40%2C653.69%20L865.92%2C654.57%20L858.95%2C654.19%20L839.36%2C693.53%20L843.87%2C698.87%20L847.68%2C705.36%20L847.80%2C717.79%20L848.63%2C728.66%20L853.37%2C733.40%20L857.53%2C739.00%20L861.20%2C745.30%20L865.08%2C751.27%20L869.90%2C755.85%20L847.31%2C785.76%20L841.59%2C782.38%20L834.79%2C780.28%20L827.72%2C778.48%20L821.19%2C776.01%20L815.34%2C772.75%20L804.65%2C774.92%20L792.67%2C778.20%20L785.38%2C776.32%20L779.01%2C773.44%20L746.53%2C803.05%20L748.81%2C809.66%20L750.01%2C817.09%20L745.64%2C828.72%20L742.49%2C839.16%20L745.20%2C845.29%20L747.05%2C852.02%20L748.20%2C859.22%20L749.65%2C866.19%20L752.50%2C872.19%20L720.63%2C891.92%20L716.52%2C886.70%20L710.93%2C882.30%20L704.99%2C878.06%20L699.80%2C873.40%20L695.52%2C868.24%20L684.77%2C866.41%20L672.41%2C865.14%20L666.29%2C860.75%20L661.39%2C855.77%20L620.41%2C871.65%20L620.14%2C878.63%20L618.58%2C885.99%20L610.30%2C895.26%20L603.59%2C903.85%20L603.91%2C910.55%20L603.20%2C917.49%20L601.67%2C924.62%20L600.51%2C931.64%20L600.99%2C938.27%20L564.15%2C945.16%20L562.20%2C938.80%20L558.58%2C932.68%20L554.58%2C926.58%20L551.42%2C920.36%20L549.29%2C914.00%20L539.93%2C908.41%20L528.86%2C902.76%20L524.74%2C896.46%20L521.97%2C890.05%20L478.03%2C890.05%20L475.26%2C896.46%20L471.14%2C902.76%20L460.07%2C908.41%20L450.71%2C914.00%20L448.58%2C920.36%20L445.42%2C926.58%20L441.42%2C932.68%20L437.80%2C938.80%20L435.85%2C945.16%20L399.01%2C938.27%20L399.49%2C931.64%20L398.33%2C924.62%20L396.80%2C917.49%20L396.09%2C910.55%20L396.41%2C903.85%20L389.70%2C895.26%20L381.42%2C885.99%20L379.86%2C878.63%20L379.59%2C871.65%20L338.61%2C855.77%20L333.71%2C860.75%20L327.59%2C865.14%20L315.23%2C866.41%20L304.48%2C868.24%20L300.20%2C873.40%20L295.01%2C878.06%20L289.07%2C882.30%20L283.48%2C886.70%20L279.37%2C891.92%20L247.50%2C872.19%20L250.35%2C866.19%20L251.80%2C859.22%20L252.95%2C852.02%20L254.80%2C845.29%20L257.51%2C839.16%20L254.36%2C828.72%20L249.99%2C817.09%20L251.19%2C809.66%20L253.47%2C803.05%20L220.99%2C773.44%20L214.62%2C776.32%20L207.33%2C778.20%20L195.35%2C774.92%20L184.66%2C772.75%20L178.81%2C776.01%20L172.28%2C778.48%20L165.21%2C780.28%20L158.41%2C782.38%20L152.69%2C785.76%20L130.10%2C755.85%20L134.92%2C751.27%20L138.80%2C745.30%20L142.47%2C739.00%20L146.63%2C733.40%20L151.37%2C728.66%20L152.20%2C717.79%20L152.32%2C705.36%20L156.13%2C698.87%20L160.64%2C693.53%20L141.05%2C654.19%20L134.08%2C654.57%20L126.60%2C653.69%20L116.60%2C646.30%20L107.43%2C640.41%20L100.79%2C641.34%20L93.81%2C641.28%20L86.57%2C640.42%20L79.47%2C639.91%20L72.92%2C641.00%20L62.66%2C604.95%20L68.81%2C602.42%20L74.57%2C598.26%20L80.27%2C593.71%20L86.18%2C589.99%20L92.31%2C587.28%20L97.01%2C577.44%20L101.62%2C565.90%20L107.52%2C561.22%20L113.65%2C557.87%20L109.59%2C514.11%20L102.95%2C511.94%20L96.29%2C508.43%20L89.64%2C497.93%20L83.21%2C489.12%20L76.69%2C487.59%20L70.20%2C485.01%20L63.76%2C481.59%20L57.33%2C478.55%20L50.82%2C477.20%20L54.28%2C439.88%20L60.92%2C439.74%20L67.81%2C437.94%20L74.77%2C435.76%20L81.62%2C434.42%20L88.31%2C434.11%20L96.25%2C426.64%20L104.71%2C417.54%20L111.90%2C415.30%20L118.83%2C414.39%20L130.86%2C372.12%20L125.45%2C367.70%20L120.51%2C362.02%20L118.10%2C349.83%20L115.29%2C339.29%20L109.76%2C335.51%20L104.64%2C330.76%20L99.87%2C325.24%20L94.97%2C320.09%20L89.39%2C316.48%20L106.10%2C282.92%20L112.34%2C285.20%20L119.41%2C286.01%20L126.69%2C286.48%20L133.56%2C287.71%20L139.91%2C289.84%20L150.02%2C285.74%20L161.20%2C280.31%20L168.71%2C280.83%20L175.49%2C282.48%20L201.98%2C247.41%20L198.53%2C241.33%20L195.98%2C234.25%20L198.14%2C222.01%20L199.32%2C211.17%20L195.53%2C205.64%20L192.47%2C199.37%20L190.02%2C192.50%20L187.31%2C185.92%20L183.41%2C180.54%20L211.11%2C155.29%20L216.11%2C159.67%20L222.42%2C162.97%20L229.03%2C166.05%20L234.99%2C169.67%20L240.15%2C173.96%20L251.05%2C173.78%20L263.44%2C172.76%20L270.25%2C175.95%20L275.98%2C179.94%20L313.35%2C156.81%20L312.33%2C149.90%20L312.51%2C142.37%20L318.95%2C131.74%20L323.96%2C122.06%20L322.43%2C115.53%20L321.84%2C108.58%20L322.03%2C101.29%20L321.88%2C94.18%20L320.19%2C87.75%20L355.15%2C74.21%20L358.23%2C80.10%20L362.91%2C85.46%20L367.96%2C90.71%20L372.22%2C96.25%20L375.48%2C102.10%20L385.70%2C105.88%20L397.62%2C109.40%20L402.83%2C114.84%20L406.73%2C120.63%20Z%22%20fill%3D%22none%22%20stroke%3D%22%23D9A441%22%20stroke-width%3D%228.86%22%20stroke-linejoin%3D%22bevel%22%20stroke-linecap%3D%22butt%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22493%22%20fill%3D%22none%22%20stroke%3D%22%23E8D19A%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22butt%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%222.600%2018.576%22%20stroke-dashoffset%3D%221.300%22%20transform%3D%22rotate%28-90%20500%20500%29%22%2F%3E%20%3C%2Fsvg%3E">
+<meta property="og:title" content="ማለዳ Maleda — በጠለምት ወረዳ ድርቅ፤ ከ3,000 በላይ ነዋሪዎች ተፈናቅለዋል">
+<meta property="og:type" content="article">
+<meta property="og:description" content="በጠለምት ወረዳ በተከሰተ ድርቅ ከ3,000 በላይ ነዋሪዎች መፈናቀላቸው ተነገረ — a specimen of the Ethiopian Classical Design Language.">
+<link rel="preload" as="image" href="assets/hero.webp" imagesrcset="assets/hero-640.webp 640w, assets/hero-960.webp 960w, assets/hero.webp 1400w" imagesizes="(max-width:640px) 100vw, (max-width:960px) 88vw, 80rem" fetchpriority="high">
+<link rel="preload" as="font" href="assets/Bela.woff2" type="font/woff2" crossorigin>
+<link rel="preload" as="font" href="assets/Noto400-ethiopic.woff2" type="font/woff2" crossorigin>
+<link rel="preload" as="font" href="assets/Noto700-ethiopic.woff2" type="font/woff2" crossorigin>
+<title>ማለዳ Maleda — በጠለምት ወረዳ ድርቅ፤ ከ3,000 በላይ ነዋሪዎች ተፈናቅለዋል | Over 3,000 displaced by drought in Telmet</title>
+<style>
+@font-face { font-family:'Bela Bereka'; src:url(assets/Bela.woff2) format('woff2'); font-weight:700; font-style:normal; font-display:swap; }
+
+@font-face{font-family:'Noto Sans Ethiopic';font-style:normal;font-weight:400;font-display:swap;src:url(assets/Noto400-ethiopic.woff2) format('woff2');unicode-range:U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+1E7E0-1E7E6, U+1E7E8-1E7EB, U+1E7ED-1E7EE, U+1E7F0-1E7FE;}
+@font-face{font-family:'Noto Sans Ethiopic';font-style:normal;font-weight:400;font-display:swap;src:url(assets/Noto400-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Noto Sans Ethiopic';font-style:normal;font-weight:700;font-display:swap;src:url(assets/Noto700-ethiopic.woff2) format('woff2');unicode-range:U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+1E7E0-1E7E6, U+1E7E8-1E7EB, U+1E7ED-1E7EE, U+1E7F0-1E7FE;}
+@font-face{font-family:'Noto Sans Ethiopic';font-style:normal;font-weight:700;font-display:swap;src:url(assets/Noto700-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+
+/* =========================================================================
+   ETHIOPIAN CLASSICAL DESIGN LANGUAGE — TOKENS (single source of truth)
+   =========================================================================
+   This file is THE canonical token source. All expressions (Editor ★, Gallery,
+   Terminal, Manuscript) derive their colors/motion from these tokens. If a
+   value changes, it changes here and everywhere else follows.
+
+   Method (specs-color-theory.md): tints/shades blend toward parchment #F5E9D1
+   and ink #15090B — never white/black — so the scale stays chromatic.
+   Hue map (CIELAB): madder 38.7° · ochre 52.4° · saffron 74.6° · gold 80.7°
+   · verdigris 159.3° · indigo 289.1°. The warm wedge 38.7°→91° plus one cool
+   counterpoint and one shadow; the 180–270° zone stays empty — that emptiness
+   is the identity.
+
+   Restraint laws: accents live in the 10%; gold is a scarce signature (≤3%);
+   max two chroma families per viewport; 700-steps only for accent TEXT on
+   parchment, 300-tints only on ink; never saffron+verdigris+madder together
+   (the flag).
+   ========================================================================= */
+
+:root{
+  /* ---- ground · parchment (the gallery walls) ---- */
+  --parchment-100:#FCF9F3;   /* canvas wall            */
+  --parchment-300:#F5E9D1;   /* raised surface / chip  */
+  --parchment-500:#E6D6BC;   /* sunken well            */
+  --parchment-600:#D4C09F;   /* muted on-panel text    */
+
+  /* ---- ink · umber (the paintings + structure) ---- */
+  --ink-900:#15090B;         /* primary ink / panel    */
+  --ink-950:#0D0508;         /* deepest cavity         */
+  --umber-500:#6C523D;       /* secondary text         */
+  --umber-700:#573928;       /* structure, frames      */
+  --umber-800:#3A2016;       /* strong frame           */
+
+  /* ---- gold · the scarce signature ---- */
+  --gold-100:#F0DFBD;        /* halo                   */
+  --gold-300:#E1C488;        /* dark-theme gold        */
+  --gold-500:#C9962E;        /* the gilded signature   */
+  --gold-700:#78571E;        /* gold TEXT on parchment (AA 6.3:1) */
+  --gold-pale:#F8E6B8;       /* on-ink panel text      */
+
+  /* ---- pigments · events & states (10% only) ---- */
+  --ver-700:#1A5039;         /* verdigris TEXT on parchment (AA 8.9:1) */
+  --ver-500:#1E8A5E;         /* verdigris fill / mark  */
+  --ver-onink:#7BC9A8;       /* verdigris on ink       */
+  --ox-700:#651E15;          /* madder TEXT on parchment (AA 11.4:1) */
+  --ox-500:#A62F1E;          /* madder fill / mark     */
+  --ox-onink:#E8836F;        /* madder on ink          */
+  --saffron-500:#E8A33D;     /* caution — trims only   */
+  --saffron-onink:#E8C46A;   /* caution on ink         */
+  --ochre-500:#E46F30;       /* urgent / CTA           */
+  --indigo-500:#181B2D;      /* shadow / depth only    */
+
+  /* ---- motion trio · the sanctioned loading triad (madder·verdigris·saffron)
+     Derived from the pigment tokens — motion/transition only, never a static motif. */
+  --tri-1: var(--ox-500);
+  --tri-2: var(--ver-500);
+  --tri-3: var(--saffron-500);
+
+  /* ---- light theme (default) ---- */
+  --bg:var(--parchment-100);
+  --bg-2:var(--parchment-300);
+  --bg-3:var(--parchment-500);
+  --ink:var(--ink-900);
+  --ink-soft:#45311F;
+  --muted:var(--umber-500);
+  --gold:#E5C193;
+  --gold-deep:var(--gold-500);
+  --hair:rgba(21,9,11,.16);
+  --frame:rgba(21,9,11,.50);   /* component boundary — ≥3:1 (WCAG 1.4.11) */
+  --kicker:var(--ox-500);
+  --ver:var(--ver-700);             /* delta text on parchment — AA-safe */
+  --ox:var(--ox-700);
+  --dot:var(--gold-700);             /* eye-dot on parchment — AA-safe (3:1) */
+  --ease-ink:cubic-bezier(.16,1,.3,1);
+  --ease-thread:linear;
+}
+
+/* ---- dark theme (system preference; toggle overrides) ---- */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15090B;
+    --bg-2:#21130C;
+    --bg-3:#332515;
+    --ink:#F3E9D5;
+    --ink-soft:#E6D6BC;
+    --muted:#B9A27C;
+    --gold:var(--gold-300);
+    --gold-deep:#D9A84A;
+    --hair:rgba(243,233,213,.16);
+    --frame:rgba(243,233,213,.42);   /* component boundary — ≥3:1 (WCAG 1.4.11) */
+    --kicker:#E8836F;
+    --ver:var(--ver-onink);
+    --ox:var(--ox-onink);
+    --dot:var(--gold-300);
+    --tri-1: var(--ox-onink);
+    --tri-2: var(--ver-onink);
+    --tri-3: var(--saffron-onink);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15090B;
+  --bg-2:#21130C;
+  --bg-3:#332515;
+  --ink:#F3E9D5;
+  --ink-soft:#E6D6BC;
+  --muted:#B9A27C;
+  --gold:var(--gold-300);
+  --gold-deep:#D9A84A;
+  --hair:rgba(243,233,213,.16);
+  --frame:rgba(243,233,213,.42);   /* component boundary — ≥3:1 (WCAG 1.4.11) */
+  --kicker:#E8836F;
+  --ver:var(--ver-onink);
+  --ox:var(--ox-onink);
+  --dot:var(--gold-300);
+  --tri-1: var(--ox-onink);
+  --tri-2: var(--ver-onink);
+  --tri-3: var(--saffron-onink);
+}
+
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Noto Sans Ethiopic', system-ui, sans-serif;
+  font-size:17px; line-height:1.75; font-weight:400;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+::selection{ background:var(--gold); color:var(--ink); }
+a{ color:inherit; }
+a:focus-visible{ outline:2px solid var(--kicker); outline-offset:2px; }
+
+.wrap{ max-width:80rem; margin:0 auto; padding:0 clamp(1.1rem,4vw,3rem); }
+.display{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; font-weight:700; }
+.mono{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-weight:400; font-variant-numeric:tabular-nums; }
+.gez{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-size:1.08em; vertical-align:0; }
+.hr{ height:1px; border:0; background:var(--hair); }
+.hr.strong{ height:2px; background:var(--ink); }
+
+/* bilingual copy — only one language renders at a time */
+html[data-lang="am"] .l-en{ display:none; }
+html:not([data-lang="am"]) .l-am{ display:none; }
+.vishidden{ position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.skip{ position:absolute; left:-9999px; top:0; z-index:100; background:var(--bg); color:var(--ink); padding:.7rem 1.1rem; font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+.skip:focus{ left:0; outline:2px solid var(--kicker); outline-offset:-2px; }
+
+/* ---------- masthead ---------- */
+.masthead{ padding:1.3rem 0 .4rem; }
+.nameplate{
+  text-align:center; padding:1.05rem 0 1.2rem;
+  border-top:3px solid var(--ink); border-bottom:1px solid var(--hair);
+}
+.wordmark{
+  font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif;
+  font-weight:700; font-size:clamp(2.1rem,6.5vw,3.4rem);
+  line-height:1; letter-spacing:.01em;
+}
+.wordmark .gez{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-size:1.08em; vertical-align:-.08em; }
+.wordmark .sep{ color:var(--muted); margin:0 .24em; font-size:.58em; vertical-align:.22em; }
+.mastbar{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:1rem; flex-wrap:wrap; border-bottom:1px solid var(--hair);
+  padding:.6rem 0;
+}
+.mastbar .cell{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); line-height:1.7; }
+.mastbar .mono{ display:block; font-size:.7rem; letter-spacing:.02em; text-transform:none; color:var(--muted); }
+.controls{ display:flex; gap:1.2rem; align-items:center; }
+.ctl{
+  font-family:'Noto Sans Ethiopic',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase;
+  background:none; border:0; padding:.1rem 0; color:var(--muted); cursor:pointer; position:relative; min-height:24px; display:inline-flex; align-items:center;
+}
+.ctl:hover{ color:var(--ink); }
+.ctl::after{ content:""; position:absolute; left:0; right:0; bottom:-3px; height:1px; background:var(--kicker); transition:transform .5s var(--ease-ink); transform:scaleX(0); }
+.ctl:hover::after, .ctl:focus-visible::after{ transform:scaleX(1); }
+.ctl:focus-visible{ outline:2px solid var(--kicker); outline-offset:3px; }
+.nav{ display:flex; align-items:center; gap:1.1rem; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+.nav a{ color:var(--muted); text-decoration:none; position:relative; }
+.nav a:hover{ color:var(--ink); }
+.nav a::after{ content:""; position:absolute; left:0; right:0; bottom:-3px; height:1px; background:var(--kicker); transition:transform .5s var(--ease-ink); transform:scaleX(0); }
+.nav a:hover::after, .nav a:focus-visible::after{ transform:scaleX(1); }
+.nav a:focus-visible{ outline:2px solid var(--kicker); outline-offset:3px; }
+.orn-navsep{ display:block; width:12px; height:12px; flex:none; }
+
+/* flowing ticker — a plain tape between hairlines */
+.ticker{ margin-top:.7rem; overflow:hidden; border-top:1px solid var(--hair); border-bottom:1px solid var(--hair); }
+.ticker:focus-visible{ outline:2px solid var(--kicker); outline-offset:2px; }
+.ticker-track{ display:flex; width:max-content; animation:tick 48s linear infinite; }
+.ticker:hover .ticker-track, .ticker:focus-within .ticker-track{ animation-play-state:paused; }
+@keyframes tick{ to{ transform:translateX(-50%); } }
+.ticker-in{ display:flex; align-items:center; gap:2.4rem; padding:.6rem 0; font-size:.8rem; letter-spacing:.02em; white-space:nowrap; }
+.ticker .label{ display:flex; align-items:center; gap:.45rem; flex:none; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.tick{ flex:none; }
+.tick b{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-weight:400; }
+.tick .up{ color:var(--ver); } .tick .dn{ color:var(--ox); }
+
+/* the eye-dot — gold live, pulse loading; no weave here, this page keeps only the dot */
+.eyedot{ width:7px; height:7px; border-radius:50%; background:var(--dot); flex:none; }
+.eyedot.pulse{ animation:pulse 2.2s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.25} }
+.boot .eyedot{ width:9px; height:9px; }
+
+/* ---------- article ---------- */
+article{ padding:clamp(1.8rem,4vw,3rem) 0 1rem; }
+.head{ max-width:60rem; }
+.chip{ display:block; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.chip .gez{ color:var(--ink); letter-spacing:.02em; text-transform:none; }
+.kicker{ margin-top:1.1rem; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--kicker); }
+h1{ margin-top:.8rem; font-size:clamp(2.1rem,5.4vw,3.6rem); line-height:1.16; letter-spacing:.005em; text-wrap:balance; }
+.dek{ margin-top:1rem; font-size:clamp(1.05rem,2.2vw,1.28rem); line-height:1.55; color:var(--ink-soft); max-width:46rem; }
+.meta{
+  margin-top:1.3rem; display:flex; flex-wrap:wrap; align-items:baseline; gap:.5rem 0;
+  font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+  border-top:1px solid var(--hair); border-bottom:1px solid var(--hair); padding:.55rem 0;
+}
+.meta > span{ display:inline-flex; align-items:baseline; }
+.meta > span + span{ border-left:1px solid var(--hair); padding-left:1.1rem; margin-left:1.1rem; }
+.meta .by{ color:var(--ink); }
+.meta .mono{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-weight:400; letter-spacing:.02em; text-transform:none; }
+
+figure{ margin-top:1.7rem; }
+figure img{ display:block; width:100%; height:auto; }
+figcaption{ margin-top:.5rem; display:flex; justify-content:space-between; gap:1rem; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+figcaption .mono{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-weight:400; letter-spacing:.02em; text-transform:none; }
+
+/* strong 12-column grid — main copy with an asymmetric rates rail */
+.cols{ margin-top:1.9rem; display:grid; grid-template-columns:repeat(12,1fr); column-gap:clamp(1.2rem,3vw,2.4rem); }
+.main{ grid-column:span 7; }
+.rates{ grid-column:9 / span 4; align-self:start; position:sticky; top:1.2rem; }
+
+.prose p{ margin-top:1.25em; }
+.prose p:first-child{ margin-top:0; }
+.graf-label{ margin-top:2.4rem; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--kicker); }
+
+/* pull quote — a single rubrication rule, nothing more */
+.pullquote{ margin:2.4rem 0; padding-left:1.2rem; border-left:2px solid var(--kicker); }
+.pullquote .t{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:clamp(1.35rem,3vw,1.9rem); line-height:1.28; text-wrap:balance; }
+.pullquote .a{ margin-top:.7rem; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.pullquote .a .gez{ color:var(--kicker); letter-spacing:.02em; text-transform:none; font-size:1em; }
+
+/* rates — a clean hairline stock table, not a painting-frame */
+.rates{ border:1px solid var(--frame); background:var(--bg); }
+.rates-head{ display:flex; align-items:baseline; justify-content:space-between; gap:1rem; padding:.8rem 1rem .7rem; border-bottom:1px solid var(--hair); }
+.rates-head .t{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+.rates-head .t .gez{ color:var(--muted); letter-spacing:.02em; text-transform:none; font-size:1em; }
+.rates-head .live{ display:flex; align-items:center; gap:.45rem; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.rates table{ width:100%; border-collapse:collapse; }
+.rates thead th{
+  font-family:'Noto Sans Ethiopic',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+  text-align:right; padding:.5rem 1rem; background:var(--bg-2); border-bottom:1px solid var(--frame);
+}
+.rates thead th:first-child{ text-align:left; }
+.rates td{ padding:.5rem 1rem; font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-variant-numeric:tabular-nums; font-size:.92rem; border-top:1px solid var(--frame); }
+.rates td.cur{ text-align:left; letter-spacing:.02em; color:var(--ink); }
+.rates{ min-height:20rem; }
+.rates td.cur .gez{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; margin-right:.4em; color:var(--muted); font-size:.9em; }
+.rates td.rate{ text-align:right; }
+.rates td.delta{ text-align:right; }
+.rates td.up{ color:var(--ver); } .rates td.dn{ color:var(--ox); }
+.rates .note{ display:flex; align-items:center; gap:.6rem; padding:.7rem 1rem .85rem; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--frame); }
+.rates table tr.row, .rates table tr.load, .rates table tr.empty, .rates table tr.error{ display:none; }
+.rates table[data-state="loading"] tr.load{ display:table-row; }
+.rates table[data-state="sample"] tr.row{ display:table-row; }
+.rates table[data-state="empty"] tr.empty{ display:table-row; }
+.rates table[data-state="error"] tr.error{ display:table-row; }
+.rates table tr.load-ribbon{ display:none; }
+.rates table[data-state="loading"] tr.load-ribbon{ display:table-row; }
+.rates tr.load td{ text-align:center; padding:1.3rem 1rem; color:var(--muted); }
+.load-in{ display:inline-flex; align-items:center; gap:.7rem; }
+.load-in .mesob-loader{ width:18px; height:18px; }
+.state-cell{ display:flex; flex-direction:column; align-items:center; gap:.5rem; padding:1.4rem 1rem; text-align:center; color:var(--muted); }
+.state-text{ font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+.state-sub{ font-size:11px; letter-spacing:.1em; }
+.empty-mark{ display:block; width:12px; height:12px; opacity:.8; }
+
+.eyedot.err{ background:var(--ox); }
+.state-retry{ color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
+.states{ border-top:1px solid var(--frame); padding:.55rem 1rem .65rem; }
+.states summary.states-label, .legend summary.states-label{ list-style:none; cursor:pointer; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); min-height:24px; display:flex; align-items:center; gap:.4rem; user-select:none; }
+.states summary.states-label:focus-visible{ outline:2px solid var(--kicker); outline-offset:2px; }
+.states summary::-webkit-details-marker{ display:none; }
+.states[open] .states-in{ display:flex; }
+.legend-list{ list-style:none; margin-top:.4rem; }
+.legend-list li{ display:flex; gap:.5rem; align-items:baseline; font-size:11px; font-weight:400; letter-spacing:.02em; text-transform:none; color:var(--muted); padding:.15rem 0; }
+.legend-list b{ color:var(--ink); }
+.states-in{ display:none; align-items:center; flex-wrap:wrap; gap:.5rem; padding-top:.5rem; }
+.st{ font-family:'Noto Sans Ethiopic',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; background:none; border:0; color:var(--muted); cursor:pointer; padding:.2rem .4rem; min-height:24px; }
+.st:hover{ color:var(--ink); }
+.st:focus-visible{ outline:2px solid var(--kicker); outline-offset:2px; color:var(--ink); }
+.st.on{ color:var(--ink); border-bottom:1px solid var(--kicker); }
+
+/* floated coffee figure */
+.coffee{ margin:1.2rem 0 1.2rem 1.8rem; float:right; width:min(16rem,48%); }
+.coffee figcaption{ margin-top:.4rem; font-size:10px; letter-spacing:.1em; }
+
+/* boot overlay — loading, gold dot + wordmark only */
+.boot{ position:fixed; top:0; left:0; right:0; background:var(--bg); border-bottom:1px solid var(--hair); display:flex; justify-content:center; z-index:50; transition:opacity .5s var(--ease-ink), visibility .5s; pointer-events:none; }
+.boot.hide{ opacity:0; visibility:hidden; }
+.boot-in{ display:flex; align-items:center; gap:.6rem; padding:.5rem 1rem; }
+.boot-word{ font-family:'Bela Bereka','Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:.95rem; letter-spacing:.01em; }
+.boot-word .gez{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-size:1.06em; vertical-align:-.07em; }
+
+/* ---------- footer ---------- */
+footer{ padding:1.6rem 0 3rem; }
+.footrow{ margin-top:1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1.4rem; flex-wrap:wrap; }
+.footbrand .wordmark{ font-size:clamp(1.3rem,3vw,1.6rem); }
+.footnote{ font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); max-width:32rem; text-align:right; line-height:1.8; }
+.footnote .mono{ font-family:'Noto Sans Ethiopic',system-ui,sans-serif; font-weight:400; letter-spacing:.02em; text-transform:none; }
+
+@media (max-width:900px){
+  .cols{ grid-template-columns:1fr; }
+  .main, .rates{ grid-column:auto; }
+  .rates{ position:static; margin-top:1.8rem; }
+}
+@media (max-width:640px){
+  .nameplate{ padding:.85rem 0 1rem; }
+  .mastbar{ flex-direction:column; align-items:flex-start; gap:.35rem; }
+  .controls{ width:100%; justify-content:flex-end; }
+  .coffee{ float:none; width:100%; margin:1.2rem 0; }
+  .rates td, .rates thead th{ padding:.5rem .8rem; }
+  .meta > span + span{ padding-left:.7rem; margin-left:.7rem; }
+}
+@media (prefers-reduced-motion: reduce){
+  .eyedot.pulse{ animation:none; }
+  .ticker-track{ animation:none; }
+  .tri-load{ animation:none; }
+  .ctl::after, .nav a::after, .navbtn::after{ transition:none; }
+}
+
+.views .view[hidden]{ display:none; }
+.navbtn{ background:none; border:0; padding:0; font-family:'Noto Sans Ethiopic',sans-serif; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); cursor:pointer; position:relative; min-height:24px; }
+.navbtn:hover{ color:var(--ink); }
+.navbtn:focus-visible{ outline:2px solid var(--kicker); outline-offset:3px; }
+.navbtn::after{ content:""; position:absolute; left:0; right:0; bottom:-3px; height:1px; background:var(--kicker); transition:transform .5s var(--ease-ink); transform:scaleX(0); }
+.navbtn:hover::after, .navbtn:focus-visible::after{ transform:scaleX(1); }
+.navbtn.on{ color:var(--ink); }
+.navbtn.on::after{ transform:scaleX(1); }
+.board{ width:100%; border-collapse:collapse; margin-top:2rem; }
+.board th{ font-family:'Noto Sans Ethiopic',sans-serif; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); text-align:right; padding:.5rem .8rem; background:var(--bg-2); border-bottom:1px solid var(--frame); }
+.board th:first-child{ text-align:left; }
+.board td{ padding:.55rem .8rem; font-family:'Noto Sans Ethiopic',system-ui,sans-serif; text-align:right; border-top:1px solid var(--frame); font-variant-numeric:tabular-nums; }
+.board td:first-child{ text-align:left; color:var(--ink); font-family:'Noto Sans Ethiopic',sans-serif; font-weight:700; }
+.board td.up{ color:var(--ver); } .board td.dn{ color:var(--ox); }
+.note2{ margin-top:1rem; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.index{ list-style:none; margin-top:2rem; border-top:1px solid var(--frame); }
+.index-item{ display:flex; align-items:baseline; gap:1rem; width:100%; background:none; border:0; border-bottom:1px solid var(--frame); padding:1.1rem 0; text-align:left; cursor:pointer; min-height:24px; }
+.index-item .tag{ font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--kicker); flex:none; width:5.5rem; }
+.index-item .it{ flex:1; font-family:'Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:1.05rem; line-height:1.4; color:var(--ink); }
+.index-item:hover .it{ color:var(--dot); }
+.index-item:focus-visible{ outline:2px solid var(--kicker); outline-offset:2px; }
+.index-item.is-specimen{ cursor:default; opacity:.85; }
+.index-item.is-specimen:hover .it{ color:var(--ink); }
+.index-item .date{ font-size:11px; color:var(--muted); flex:none; }
+
+.specimen-note{ margin-top:1.2rem; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); border-left:2px solid var(--kicker); padding-left:.7rem; }
+
+/* tricolor ribbon — one color cycling to the next, like turning pages:
+   verdigris (green) -> saffron (yellow) -> madder (red), then back. */
+.tri-load{ height:6px; width:100%; background:var(--tri-2); animation:triTurn 2.4s ease-in-out infinite; }
+.tri-load span{ display:none; }
+@keyframes triTurn{
+  0%{ background:var(--tri-2); }
+  33.333%{ background:var(--tri-3); }
+  66.666%{ background:var(--tri-1); }
+  100%{ background:var(--tri-2); }
+}
+
+.tibeb-band{
+  height:24px;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22none%22%20preserveAspectRatio%3D%22none%22%3E%20%3Crect%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22none%22%2F%3E%20%3Cpath%20d%3D%22M0%2C12.5%20H24%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%20stroke-linecap%3D%22butt%22%20shape-rendering%3D%22crispEdges%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%20%3Cpath%20d%3D%22M12%2C5%20L19%2C12%20L12%2C19%20L5%2C12%20Z%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%20stroke-linejoin%3D%22miter%22%2F%3E%20%3Cpath%20d%3D%22M12%2C8%20L16%2C12%20L12%2C16%20L8%2C12%20Z%22%20fill%3D%22%23573928%22%2F%3E%20%3Cpath%20d%3D%22M12%2C10%20L14%2C12%20L12%2C14%20L10%2C12%20Z%22%20fill%3D%22%23C9962E%22%2F%3E%20%3C%2Fsvg%3E");
+  background-repeat:repeat-x;
+  background-size:24px 24px;
+}
+:root[data-theme="dark"] .tibeb-band{ opacity:.9; }
+.mesob-loader{
+  width:28px; height:28px; flex:none;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201000%201000%22%20width%3D%221000%22%20height%3D%221000%22%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22499%22%20fill%3D%22%23451210%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22382.654%22%20fill%3D%22%23E8D19A%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%223.283%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%229.849%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2216.414%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2222.980%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2229.546%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2236.112%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2242.678%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2249.243%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2255.809%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2262.375%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2268.941%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2275.507%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2282.072%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2288.638%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%2295.204%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22101.770%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22108.336%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22114.901%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22121.467%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22128.033%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22134.599%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22141.164%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22147.730%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22154.296%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22160.862%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22167.428%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22173.993%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22180.559%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22187.125%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22193.691%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22200.257%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22206.822%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22213.388%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22219.954%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22226.520%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22233.086%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22239.651%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22246.217%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22252.783%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22259.349%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22265.914%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22272.480%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22279.046%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22285.612%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22292.178%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22298.743%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22305.309%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22311.875%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22318.441%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22325.007%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22331.572%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22338.138%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22344.704%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22351.270%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22357.836%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22364.401%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22370.967%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22377.533%22%20fill%3D%22none%22%20stroke%3D%22%23d5c08e%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22384.099%22%20fill%3D%22none%22%20stroke%3D%22%23efd79f%22%20stroke-width%3D%226.916%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22384.099%22%20fill%3D%22none%22%20stroke%3D%22%23e8d19a%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2221.176%200.000%22%20stroke-dashoffset%3D%2210.588%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22390.664%22%20fill%3D%22none%22%20stroke%3D%22%23c9b585%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2214.727%206.449%22%20stroke-dashoffset%3D%227.364%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22397.230%22%20fill%3D%22none%22%20stroke%3D%22%23e8d19a%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2214.034%207.143%22%20stroke-dashoffset%3D%227.017%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22403.796%22%20fill%3D%22none%22%20stroke%3D%22%23c8b485%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2212.979%208.197%22%20stroke-dashoffset%3D%226.490%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22410.362%22%20fill%3D%22none%22%20stroke%3D%22%23e7d09a%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%2210.009%2011.168%22%20stroke-dashoffset%3D%225.004%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22416.928%22%20fill%3D%22none%22%20stroke%3D%22%23c8b485%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%227.597%2013.579%22%20stroke-dashoffset%3D%223.799%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22423.493%22%20fill%3D%22none%22%20stroke%3D%22%23e7d099%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%227.229%2013.948%22%20stroke-dashoffset%3D%223.614%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22430.059%22%20fill%3D%22none%22%20stroke%3D%22%23c8b485%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%226.594%2014.583%22%20stroke-dashoffset%3D%223.297%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22436.625%22%20fill%3D%22none%22%20stroke%3D%22%23e7d099%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%225.754%2015.422%22%20stroke-dashoffset%3D%222.877%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22443.191%22%20fill%3D%22none%22%20stroke%3D%22%23c8b484%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%225.040%2016.136%22%20stroke-dashoffset%3D%222.520%22%2F%3E%20%3Cpath%20d%3D%22M449.93%2C112.56%20L451.47%2C105.74%20L454.36%2C98.79%20L464.20%2C91.20%20L472.38%2C83.99%20L473.30%2C77.35%20L475.27%2C70.65%20L478.08%2C63.93%20L480.51%2C57.24%20L481.26%2C50.63%20L518.74%2C50.63%20L519.49%2C57.24%20L521.92%2C63.93%20L524.73%2C70.65%20L526.70%2C77.35%20L527.62%2C83.99%20L535.80%2C91.20%20L545.64%2C98.79%20L548.53%2C105.74%20L550.07%2C112.56%20L593.27%2C120.63%20L597.17%2C114.84%20L602.38%2C109.40%20L614.30%2C105.88%20L624.52%2C102.10%20L627.78%2C96.25%20L632.04%2C90.71%20L637.09%2C85.46%20L641.77%2C80.10%20L644.85%2C74.21%20L679.81%2C87.75%20L678.12%2C94.18%20L677.97%2C101.29%20L678.16%2C108.58%20L677.57%2C115.53%20L676.04%2C122.06%20L681.05%2C131.74%20L687.49%2C142.37%20L687.67%2C149.90%20L686.65%2C156.81%20L724.02%2C179.94%20L729.75%2C175.95%20L736.56%2C172.76%20L748.95%2C173.78%20L759.85%2C173.96%20L765.01%2C169.67%20L770.97%2C166.05%20L777.58%2C162.97%20L783.89%2C159.67%20L788.89%2C155.29%20L816.59%2C180.54%20L812.69%2C185.92%20L809.98%2C192.50%20L807.53%2C199.37%20L804.47%2C205.64%20L800.68%2C211.17%20L801.86%2C222.01%20L804.02%2C234.25%20L801.47%2C241.33%20L798.02%2C247.41%20L824.51%2C282.48%20L831.29%2C280.83%20L838.80%2C280.31%20L849.98%2C285.74%20L860.09%2C289.84%20L866.44%2C287.71%20L873.31%2C286.48%20L880.59%2C286.01%20L887.66%2C285.20%20L893.90%2C282.92%20L910.61%2C316.48%20L905.03%2C320.09%20L900.13%2C325.24%20L895.36%2C330.76%20L890.24%2C335.51%20L884.71%2C339.29%20L881.90%2C349.83%20L879.49%2C362.02%20L874.55%2C367.70%20L869.14%2C372.12%20L881.17%2C414.39%20L888.10%2C415.30%20L895.29%2C417.54%20L903.75%2C426.64%20L911.69%2C434.11%20L918.38%2C434.42%20L925.23%2C435.76%20L932.19%2C437.94%20L939.08%2C439.74%20L945.72%2C439.88%20L949.18%2C477.20%20L942.67%2C478.55%20L936.24%2C481.59%20L929.80%2C485.01%20L923.31%2C487.59%20L916.79%2C489.12%20L910.36%2C497.93%20L903.71%2C508.43%20L897.05%2C511.94%20L890.41%2C514.11%20L886.35%2C557.87%20L892.48%2C561.22%20L898.38%2C565.90%20L902.99%2C577.44%20L907.69%2C587.28%20L913.82%2C589.99%20L919.73%2C593.71%20L925.43%2C598.26%20L931.19%2C602.42%20L937.34%2C604.95%20L927.08%2C641.00%20L920.53%2C639.91%20L913.43%2C640.42%20L906.19%2C641.28%20L899.21%2C641.34%20L892.57%2C640.41%20L883.40%2C646.30%20L873.40%2C653.69%20L865.92%2C654.57%20L858.95%2C654.19%20L839.36%2C693.53%20L843.87%2C698.87%20L847.68%2C705.36%20L847.80%2C717.79%20L848.63%2C728.66%20L853.37%2C733.40%20L857.53%2C739.00%20L861.20%2C745.30%20L865.08%2C751.27%20L869.90%2C755.85%20L847.31%2C785.76%20L841.59%2C782.38%20L834.79%2C780.28%20L827.72%2C778.48%20L821.19%2C776.01%20L815.34%2C772.75%20L804.65%2C774.92%20L792.67%2C778.20%20L785.38%2C776.32%20L779.01%2C773.44%20L746.53%2C803.05%20L748.81%2C809.66%20L750.01%2C817.09%20L745.64%2C828.72%20L742.49%2C839.16%20L745.20%2C845.29%20L747.05%2C852.02%20L748.20%2C859.22%20L749.65%2C866.19%20L752.50%2C872.19%20L720.63%2C891.92%20L716.52%2C886.70%20L710.93%2C882.30%20L704.99%2C878.06%20L699.80%2C873.40%20L695.52%2C868.24%20L684.77%2C866.41%20L672.41%2C865.14%20L666.29%2C860.75%20L661.39%2C855.77%20L620.41%2C871.65%20L620.14%2C878.63%20L618.58%2C885.99%20L610.30%2C895.26%20L603.59%2C903.85%20L603.91%2C910.55%20L603.20%2C917.49%20L601.67%2C924.62%20L600.51%2C931.64%20L600.99%2C938.27%20L564.15%2C945.16%20L562.20%2C938.80%20L558.58%2C932.68%20L554.58%2C926.58%20L551.42%2C920.36%20L549.29%2C914.00%20L539.93%2C908.41%20L528.86%2C902.76%20L524.74%2C896.46%20L521.97%2C890.05%20L478.03%2C890.05%20L475.26%2C896.46%20L471.14%2C902.76%20L460.07%2C908.41%20L450.71%2C914.00%20L448.58%2C920.36%20L445.42%2C926.58%20L441.42%2C932.68%20L437.80%2C938.80%20L435.85%2C945.16%20L399.01%2C938.27%20L399.49%2C931.64%20L398.33%2C924.62%20L396.80%2C917.49%20L396.09%2C910.55%20L396.41%2C903.85%20L389.70%2C895.26%20L381.42%2C885.99%20L379.86%2C878.63%20L379.59%2C871.65%20L338.61%2C855.77%20L333.71%2C860.75%20L327.59%2C865.14%20L315.23%2C866.41%20L304.48%2C868.24%20L300.20%2C873.40%20L295.01%2C878.06%20L289.07%2C882.30%20L283.48%2C886.70%20L279.37%2C891.92%20L247.50%2C872.19%20L250.35%2C866.19%20L251.80%2C859.22%20L252.95%2C852.02%20L254.80%2C845.29%20L257.51%2C839.16%20L254.36%2C828.72%20L249.99%2C817.09%20L251.19%2C809.66%20L253.47%2C803.05%20L220.99%2C773.44%20L214.62%2C776.32%20L207.33%2C778.20%20L195.35%2C774.92%20L184.66%2C772.75%20L178.81%2C776.01%20L172.28%2C778.48%20L165.21%2C780.28%20L158.41%2C782.38%20L152.69%2C785.76%20L130.10%2C755.85%20L134.92%2C751.27%20L138.80%2C745.30%20L142.47%2C739.00%20L146.63%2C733.40%20L151.37%2C728.66%20L152.20%2C717.79%20L152.32%2C705.36%20L156.13%2C698.87%20L160.64%2C693.53%20L141.05%2C654.19%20L134.08%2C654.57%20L126.60%2C653.69%20L116.60%2C646.30%20L107.43%2C640.41%20L100.79%2C641.34%20L93.81%2C641.28%20L86.57%2C640.42%20L79.47%2C639.91%20L72.92%2C641.00%20L62.66%2C604.95%20L68.81%2C602.42%20L74.57%2C598.26%20L80.27%2C593.71%20L86.18%2C589.99%20L92.31%2C587.28%20L97.01%2C577.44%20L101.62%2C565.90%20L107.52%2C561.22%20L113.65%2C557.87%20L109.59%2C514.11%20L102.95%2C511.94%20L96.29%2C508.43%20L89.64%2C497.93%20L83.21%2C489.12%20L76.69%2C487.59%20L70.20%2C485.01%20L63.76%2C481.59%20L57.33%2C478.55%20L50.82%2C477.20%20L54.28%2C439.88%20L60.92%2C439.74%20L67.81%2C437.94%20L74.77%2C435.76%20L81.62%2C434.42%20L88.31%2C434.11%20L96.25%2C426.64%20L104.71%2C417.54%20L111.90%2C415.30%20L118.83%2C414.39%20L130.86%2C372.12%20L125.45%2C367.70%20L120.51%2C362.02%20L118.10%2C349.83%20L115.29%2C339.29%20L109.76%2C335.51%20L104.64%2C330.76%20L99.87%2C325.24%20L94.97%2C320.09%20L89.39%2C316.48%20L106.10%2C282.92%20L112.34%2C285.20%20L119.41%2C286.01%20L126.69%2C286.48%20L133.56%2C287.71%20L139.91%2C289.84%20L150.02%2C285.74%20L161.20%2C280.31%20L168.71%2C280.83%20L175.49%2C282.48%20L201.98%2C247.41%20L198.53%2C241.33%20L195.98%2C234.25%20L198.14%2C222.01%20L199.32%2C211.17%20L195.53%2C205.64%20L192.47%2C199.37%20L190.02%2C192.50%20L187.31%2C185.92%20L183.41%2C180.54%20L211.11%2C155.29%20L216.11%2C159.67%20L222.42%2C162.97%20L229.03%2C166.05%20L234.99%2C169.67%20L240.15%2C173.96%20L251.05%2C173.78%20L263.44%2C172.76%20L270.25%2C175.95%20L275.98%2C179.94%20L313.35%2C156.81%20L312.33%2C149.90%20L312.51%2C142.37%20L318.95%2C131.74%20L323.96%2C122.06%20L322.43%2C115.53%20L321.84%2C108.58%20L322.03%2C101.29%20L321.88%2C94.18%20L320.19%2C87.75%20L355.15%2C74.21%20L358.23%2C80.10%20L362.91%2C85.46%20L367.96%2C90.71%20L372.22%2C96.25%20L375.48%2C102.10%20L385.70%2C105.88%20L397.62%2C109.40%20L402.83%2C114.84%20L406.73%2C120.63%20Z%22%20fill%3D%22none%22%20stroke%3D%22%23D9A441%22%20stroke-width%3D%228.86%22%20stroke-linejoin%3D%22bevel%22%20stroke-linecap%3D%22butt%22%2F%3E%20%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22493%22%20fill%3D%22none%22%20stroke%3D%22%23E8D19A%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22butt%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%222.600%2018.576%22%20stroke-dashoffset%3D%221.300%22%20transform%3D%22rotate%28-90%20500%20500%29%22%2F%3E%20%3C%2Fsvg%3E");
+  background-size:contain; background-repeat:no-repeat; background-position:center;
+  animation:mesobSpin 2.4s linear infinite;
+}
+@keyframes mesobSpin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .mesob-loader{ animation:none; } }
+.tri-load{ display:none; }
+.section-divider{
+  height:30px;
+  margin:1.6rem 0 1.2rem;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2096%2080%22%20width%3D%2296%22%20height%3D%2280%22%20fill%3D%22none%22%20preserveAspectRatio%3D%22none%22%3E%20%3Crect%20width%3D%2296%22%20height%3D%2280%22%20fill%3D%22none%22%2F%3E%20%3Cpath%20d%3D%22M0%2C4.5%20H96%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%20stroke-linecap%3D%22butt%22%20shape-rendering%3D%22crispEdges%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%20%3Cpath%20d%3D%22M0%2C8.5%20H96%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%20stroke-linecap%3D%22butt%22%20shape-rendering%3D%22crispEdges%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%20%3Cpath%20d%3D%22M0%2C71.5%20H96%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%20stroke-linecap%3D%22butt%22%20shape-rendering%3D%22crispEdges%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%20%3Cpath%20d%3D%22M0%2C75.5%20H96%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%20stroke-linecap%3D%22butt%22%20shape-rendering%3D%22crispEdges%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%20%3Cpath%20d%3D%22M24%2C17%20L47%2C40%20L24%2C63%20L1%2C40%20Z%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%20stroke-linejoin%3D%22miter%22%2F%3E%20%3Cpath%20d%3D%22M24%2C26%20L38%2C40%20L24%2C54%20L10%2C40%20Z%22%20fill%3D%22%23573928%22%2F%3E%20%3Cpath%20d%3D%22M24%2C35%20L29%2C40%20L24%2C45%20L19%2C40%20Z%22%20fill%3D%22%23C9962E%22%2F%3E%20%3Cg%20stroke-linecap%3D%22butt%22%3E%20%3Cpath%20d%3D%22M48%2C16%20L96%2C64%20M96%2C16%20L48%2C64%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%228%22%2F%3E%20%3Cpath%20d%3D%22M48%2C16%20L96%2C64%20M96%2C16%20L48%2C64%22%20stroke%3D%22%23573928%22%20stroke-width%3D%224%22%2F%3E%20%3Cpath%20d%3D%22M48%2C16%20L96%2C64%20M96%2C16%20L48%2C64%22%20stroke%3D%22%23C9962E%22%20stroke-width%3D%221%22%2F%3E%20%3C%2Fg%3E%20%3C%2Fsvg%3E");
+  background-repeat:repeat-x;
+  background-size:36px 30px;
+}
+:root[data-theme="dark"] .section-divider{ opacity:.85; }
+</style>
+<noscript><style>.boot{display:none}
+.views .view[hidden]{ display:none; }
+.navbtn{ background:none; border:0; padding:0; font-family:'Noto Sans Ethiopic',sans-serif; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); cursor:pointer; position:relative; min-height:24px; }
+.navbtn:hover{ color:var(--ink); }
+.navbtn:focus-visible{ outline:2px solid var(--kicker); outline-offset:3px; }
+.navbtn::after{ content:""; position:absolute; left:0; right:0; bottom:-3px; height:1px; background:var(--kicker); transition:transform .5s var(--ease-ink); transform:scaleX(0); }
+.navbtn:hover::after, .navbtn:focus-visible::after{ transform:scaleX(1); }
+.navbtn.on{ color:var(--ink); }
+.navbtn.on::after{ transform:scaleX(1); }
+.board{ width:100%; border-collapse:collapse; margin-top:2rem; }
+.board th{ font-family:'Noto Sans Ethiopic',sans-serif; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); text-align:right; padding:.5rem .8rem; background:var(--bg-2); border-bottom:1px solid var(--frame); }
+.board th:first-child{ text-align:left; }
+.board td{ padding:.55rem .8rem; font-family:'Noto Sans Ethiopic',system-ui,sans-serif; text-align:right; border-top:1px solid var(--frame); font-variant-numeric:tabular-nums; }
+.board td:first-child{ text-align:left; color:var(--ink); font-family:'Noto Sans Ethiopic',sans-serif; font-weight:700; }
+.board td.up{ color:var(--ver); } .board td.dn{ color:var(--ox); }
+.note2{ margin-top:1rem; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.index{ list-style:none; margin-top:2rem; border-top:1px solid var(--frame); }
+.index-item{ display:flex; align-items:baseline; gap:1rem; width:100%; background:none; border:0; border-bottom:1px solid var(--frame); padding:1.1rem 0; text-align:left; cursor:pointer; min-height:24px; }
+.index-item .tag{ font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--kicker); flex:none; width:5.5rem; }
+.index-item .it{ flex:1; font-family:'Noto Sans Ethiopic',sans-serif; font-weight:700; font-size:1.05rem; line-height:1.4; color:var(--ink); }
+.index-item:hover .it{ color:var(--dot); }
+.index-item:focus-visible{ outline:2px solid var(--kicker); outline-offset:2px; }
+.index-item.is-specimen{ cursor:default; opacity:.85; }
+.index-item.is-specimen:hover .it{ color:var(--ink); }
+.index-item .date{ font-size:11px; color:var(--muted); flex:none; }
+
+.specimen-note{ margin-top:1.2rem; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); border-left:2px solid var(--kicker); padding-left:.7rem; }
+
+</style></noscript>
+</head>
+<body>
+<a class="skip" href="#main"><span class="l-en">Skip to content</span><span class="l-am">ወደ ይዘት ዘልለው</span></a>
+<div class="boot" id="boot">
+  <div class="boot-in">
+    <span class="boot-word"><span class="l-am">ማለዳ</span><span class="l-en">&nbsp;Maleda</span></span>
+  </div>
+  <div class="mesob-loader" aria-hidden="true"></div>
+</div>
+<div class="wrap">
+
+<header class="masthead" id="top">
+  <div class="nameplate">
+    <span class="wordmark"><span class="l-en">Maleda</span><span class="l-am">ማለዳ</span></span>
+  </div>
+  <div class="mastbar">
+    <div class="cell">
+      <span class="l-en">Addis Ababa</span><span class="l-am">አዲስ አበባ</span>
+      <span class="mono"><span class="l-en">Sunday, Aug. 9, 2026</span><span class="l-am">እሑድ 3 ነሐሴ 2018 ዓ.ም</span></span>
+    </div>
+    <div class="cell">
+      <nav class="nav" aria-label="Sections">
+        <button type="button" class="navbtn on" data-view="article" aria-pressed="true"><span class="l-en">Home</span><span class="l-am">መነሻ</span></button>
+        <svg class="orn-navsep" viewBox="0 0 12 12" width="12" height="12" role="presentation" aria-hidden="true">
+  <path d="M6 0.5 L11.5 6 L6 11.5 L0.5 6 Z" fill="none" stroke="#C9962E" stroke-width="1"/>
+  <path d="M6 3 L9 6 L6 9 L3 6 Z" fill="#573928"/>
+  <path d="M6 4.6 L7.4 6 L6 7.4 L4.6 6 Z" fill="#C9962E"/>
+</svg>
+        <button type="button" class="navbtn" data-view="rates" aria-pressed="false"><span class="l-en">Rates</span><span class="l-am">ምንዛሪ</span></button>
+        <svg class="orn-navsep" viewBox="0 0 12 12" width="12" height="12" role="presentation" aria-hidden="true">
+  <path d="M6 0.5 L11.5 6 L6 11.5 L0.5 6 Z" fill="none" stroke="#C9962E" stroke-width="1"/>
+  <path d="M6 3 L9 6 L6 9 L3 6 Z" fill="#573928"/>
+  <path d="M6 4.6 L7.4 6 L6 7.4 L4.6 6 Z" fill="#C9962E"/>
+</svg>
+        <button type="button" class="navbtn" data-view="news" aria-pressed="false"><span class="l-en">News</span><span class="l-am">ዜና</span></button>
+      </nav>
+    </div>
+    <div class="cell">
+      <div class="controls">
+        <button id="themeBtn" class="ctl" type="button">🌙 Dark</button>
+        <button id="langBtn" class="ctl" type="button">English</button>
+<span id="langLive" class="vishidden" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+  <div class="ticker" tabindex="0" aria-label="Rates ticker">
+    <div class="ticker-track">
+      <div class="ticker-in">
+        <span class="label"><span class="eyedot" aria-hidden="true"></span><span class="l-en">Sample</span><span class="l-am">ናሙና</span></span>
+        <span class="tick" lang="en">USD/ETB <b>128.40</b> <span class="up">+0.8</span></span>
+        <span class="tick" lang="en">EUR/ETB <b>139.15</b> <span class="up">+0.5</span></span>
+        <span class="tick" lang="en">GBP/ETB <b>164.02</b> <span class="dn">−0.3</span></span>
+        <span class="tick" lang="en">AED/ETB <b>34.96</b> <span class="up">+0.1</span></span>
+        <span class="tick" lang="en">CNY/ETB <b>17.88</b> <span class="dn">−0.2</span></span>
+        <span class="tick"><span class="l-en">Coffee</span><span class="l-am">ቡና</span> <b lang="en">3.42/lb</b> <span class="up" lang="en">+2.1%</span></span>
+      </div>
+      <div class="ticker-in" aria-hidden="true">
+        <span class="label"><span class="eyedot" aria-hidden="true"></span><span class="l-en">Sample</span><span class="l-am">ናሙና</span></span>
+        <span class="tick" lang="en">USD/ETB <b>128.40</b> <span class="up">+0.8</span></span>
+        <span class="tick" lang="en">EUR/ETB <b>139.15</b> <span class="up">+0.5</span></span>
+        <span class="tick" lang="en">GBP/ETB <b>164.02</b> <span class="dn">−0.3</span></span>
+        <span class="tick" lang="en">AED/ETB <b>34.96</b> <span class="up">+0.1</span></span>
+        <span class="tick" lang="en">CNY/ETB <b>17.88</b> <span class="dn">−0.2</span></span>
+        <span class="tick"><span class="l-en">Coffee</span><span class="l-am">ቡና</span> <b lang="en">3.42/lb</b> <span class="up" lang="en">+2.1%</span></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<div class="views" id="views">
+<section class="view" id="view-article">
+<article id="news">
+  <header class="head">
+    <span class="chip"><span class="l-en">News</span><span class="l-am gez">ዜና</span></span>
+    <div class="kicker"><span class="l-en">Society</span><span class="l-am">ማኅበራዊ</span></div>
+    <h1 class="display l-en">Over 3,000 Displaced by Drought in Telmet, Officials Say</h1>
+    <h1 class="display l-am">በጠለምት ወረዳ በተከሰተ ድርቅ ከ3,000 በላይ ነዋሪዎች መፈናቀላቸው ተነገረ</h1>
+    <p class="dek l-en">Drought across 10 kebeles in Telmet district, North Gondar, has driven 3,386 residents to neighboring districts, the district announced.</p>
+    <p class="dek l-am">በአማራ ክልል ሰሜን ጎንደር ዞን ጠለምት ወረዳ በሚገኙ አሥር ቀበሌዎች በተከሰተ ድርቅ 3,386 ነዋሪዎች ወደ አጎራባች ወረዳዎች መፈናቀላቸውን የጠለምት ወረዳ አስታወቀ፡፡</p>
+    <div class="meta">
+      <span class="by"><span class="l-en">Abebe Fikre</span><span class="l-am">አበበ ፍቅር</span></span>
+      <span class="l-en">Society</span><span class="l-am">ማኅበራዊ</span>
+      <span class="l-en">Aug. 9, 2026</span><span class="l-am">3 ነሐሴ 2018</span>
+      <span class="mono"><span class="l-en">1 min read</span><span class="l-am">1 ደቂቃ</span></span>
+    </div>
+    <p class="specimen-note"><span class="l-en">A design-language specimen — the drought report is drawn from a published <span lang="am">ሪፖርተር</span> (The Reporter) report; the analysis is specimen copy written by the Maleda design desk.</span><span class="l-am">የዲዛይን ቋንቋ ናሙና — የድርቁ ዘገባ ከታተመ የሪፖርተር ዘገባ የተወሰደ ነው፤ ትንታኔው በማለዳ ዲዛይን ጠረጴዛ የተጻፈ ናሙና ነው።</span></p>
+  </header>
+
+  <figure>
+    <img src="assets/hero.webp" srcset="assets/hero-640.webp 640w, assets/hero-960.webp 960w, assets/hero.webp 1400w" sizes="(max-width:640px) 100vw, (max-width:960px) 88vw, 80rem" alt="A street in Addis Ababa, dense with pedestrian life beneath late-afternoon light." data-alt-en="A street in Addis Ababa, dense with pedestrian life beneath late-afternoon light." data-alt-am="በአዲስ አበባ ከተማ ውስጥ የእግረኞች ሕይወት የበዛበት ጎዳና፤ ከሰዓት በኋላ ብርሃን ስር።" width="1400" height="933" fetchpriority="high" decoding="async">
+    <figcaption>
+      <span><span class="l-en">Addis Ababa — the city the market wakes in</span><span class="l-am">አዲስ አበባ — ገበያው የሚነቃበት ከተማ</span></span>
+      <span class="mono"><span class="l-en">Photo: Denis Vermeirre / Wikimedia Commons</span><span class="l-am">ፎቶ፥ Denis Vermeirre / Wikimedia Commons</span></span>
+    </figcaption>
+  </figure>
+
+  <div class="cols">
+    <div class="main">
+      <div class="prose">
+        <p class="l-en">10 of Telmet district's 24 kebeles have had no rain since the month of Miyazya, 2018 EC. Some 3,386 residents have left their homes and 14,089 head of livestock have died, Ato Adane Eshete, head of the district communications office, told The Reporter.</p>
+        <p class="l-am">በጠለምት ወረዳ ከሚገኙ 24 ቀበሌዎች ውስጥ ከሚያዝያ ወር 2018 ዓ.ም. ጀምሮ በአሥሩ ዝናብ አልመጣም። 3,386 ነዋሪዎች ቀዬአቸውን ለቀው ተሰደዋል፤ 14,089 የቁም እንስሳትም ሞተዋል። ይህን የገለጹት የጠለምት ወረዳ ኮሙዩኒኬሽን ጽሕፈት ቤት ኃላፊ አቶ አዳነ እሸቴ ለሪፖርተር ተናግረዋል።</p>
+
+        <p class="l-en">The kebeles of Erin, Betel, Besqia, Meraw Bela, Meraw Gebriel, Agata, Dereba, Kerawa, Negade Meshegeria and Ataba have so far received no rain, while six others have had only low rainfall since Hamle 19, 2018 EC, Ato Adane explained.</p>
+        <p class="l-am">እርን፣ በተል፣ በስቅያ፣ መረው ብላ፣ መረው ገብርኤል፣ አገጣ፣ ደረባ፣ ከረዋ፣ ነጋዴ መሻገሪያና አተባ የተባሉ ቀበሌዎች እስካሁን ምንም ዝናብ ያላገኙ ሲሆኑ፣ ሌሎች ስድስት ቀበሌዎች ከሐምሌ 19 ቀን 2018 ዓ.ም. ጀምሮ ዝቅተኛ የዝናብ መጠን እያገኙ መሆናቸውን አቶ አዳነ አስረድተዋል፡፡</p>
+
+        <div class="pullquote" role="note">
+          <div class="t l-en">3,386 residents have left their homes; 14,089 head of livestock have died.</div>
+          <div class="t l-am">3,386 ነዋሪዎች ቀዬአቸውን ለቀው መሰደዳቸውንና 14,089 የቁም እንስሳት መሞታቸውን ዘግቧል።</div>
+          <div class="a"><span class="l-en">— reported by the Telmet district communications office, via The Reporter</span><span class="l-am gez">— የጠለምት ወረዳ ኮሙዩኒኬሽን ጽሕፈት ቤት ያሳወቀው የሪፖርተር ዘገባ</span></div>
+        </div>
+
+        <div class="graf-label"><span class="l-en">Analysis · Maleda design desk</span><span class="l-am">ትንታኔ · የማለዳ ዲዛይን ጠረጴዛ</span></div>
+        <p class="l-en">There are reasons for caution. Reserves remain thin, inflation has not fully relented, and the program that underwrites the reforms asks for more discipline than the budget has so far shown. But the direction is the thing to watch now: a currency that trades, an auction that clears, and a harvest that finally finds its price.</p>
+        <p class="l-am">ለጥንቃቄ ምክንያቶች አሉ። የውጭ ምንዛሪ ክምችት ውስን ነው፤ የዋጋ ግሽበት ሙሉ በሙሉ አልቀነሰም፤ ለተሃድሶው መሠረት የሆነው ፕሮግራም ደግሞ በጀቱ እስካሁን ካሳየው በላይ ተግሣጽ ይጠይቃል። ነገር ግን አሁን መከታተል ያለበት አቅጣጫው ነው፦ የሚነገድ ምንዛሪ፣ የሚደረደር ጨረታ፣ ዋጋውን የሚያገኝ ምርት።</p>
+
+        <p class="l-en">The interbank opens each morning with coffee receipts at its center. Dealers watch the cup the way they watch the screen — both tell the same story of supply finding its level. The birr’s next chapter will be written less in the central bank’s statements than in the volume of this season’s export.</p>
+        <p class="l-am">የኢንተርባንክ ገበያ በየማለዳው የሚከፈተው የቡና ገቢን መሠረት አድርጎ ነው። ነጋዴዎች ጽዋውን የሚመለከቱት ልክ እንደ ስክሪኑ ነው — ሁለቱም ተመሳሳይ ታሪክ ይናገራሉ፦ አቅርቦት ደረጃውን ያገኛል።</p>
+
+        <figure class="coffee">
+          <img src="assets/coffee.webp" alt="The Ethiopian coffee ceremony — roasted beans, incense, and the jebena at the heart of it." data-alt-en="The Ethiopian coffee ceremony — roasted beans, incense, and the jebena at the heart of it." data-alt-am="የኢትዮጵያ የቡና ሥነ ሥርዓት — የተጠበሰ ቡና፣ ዕጣንና ጀበናው።" width="512" height="341" loading="lazy" decoding="async">
+          <figcaption>
+            <span><span class="l-en">Buna — the oldest anchor</span><span class="l-am">ቡና — ጥንታዊው መልህቅ</span></span>
+            <span class="mono"><span class="l-en">Photo: ProtoplasmaKid / CC BY-SA 4.0</span><span class="l-am">ፎቶ፥ ProtoplasmaKid / CC BY-SA 4.0</span></span>
+          </figcaption>
+        </figure>
+
+        <p class="l-en">At the morning buna ceremony, the cups are poured in a circle, each round lighter than the last, until the grain is spent. The market’s own ceremony is not so different: each auction a little more honest, each price a little closer to the truth the harvest already knew.</p>
+        <p class="l-am">በማለዳው የቡና ሥነ ሥርዓት ላይ ጽዋዎች በክበብ ይቀርባሉ — እያንዳንዱ ዙር ከቀዳሚው የበለጠ ቀለል ያለ። የገበያው ሥነ ሥርዓትም ከዚህ የተለየ አይደለም፦ እያንዳንዱ ጨረታ ከበፊቱ የበለጠ ሐቀኛ ነው፤ እያንዳንዱ ዋጋም አዝመራው የሚያውቀውን እውነት እየተጠጋ ነው።</p>
+      </div>
+    </div>
+
+    <aside class="rates" id="rates" aria-label="Sample exchange rates">
+      <div class="rates-head">
+        <div class="t"><span class="l-en">Exchange · Sample</span><span class="l-am gez">ምንዛሪ · ናሙና</span></div>
+        <div class="live"><span class="eyedot" aria-hidden="true"></span><span class="l-en">Sample</span><span class="l-am">ናሙና</span></div>
+      </div>
+      <table data-state="loading">
+        <thead>
+          <tr>
+            <th scope="col"><span class="l-en">Pair</span><span class="l-am">ጥንድ</span></th>
+            <th scope="col"><span class="l-en">Rate</span><span class="l-am">ተመን</span></th>
+            <th scope="col"><span class="l-en">Δ</span><span class="l-am">ለውጥ</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="load"><td colspan="3"><span class="load-in"><span class="mesob-loader" aria-hidden="true"></span><span class="l-en">Loading…</span><span class="l-am">እየተጫነ ነው…</span></span></td></tr>
+          <tr class="empty"><td colspan="3"><div class="state-cell"><svg class="empty-mark" viewBox="0 0 12 12" width="12" height="12" role="presentation" aria-hidden="true"><path d="M6 0.5 L11.5 6 L6 11.5 L0.5 6 Z" fill="none" stroke="#C9962E" stroke-width="1"/><path d="M6 3 L9 6 L6 9 L3 6 Z" fill="#573928"/><path d="M6 4.6 L7.4 6 L6 7.4 L4.6 6 Z" fill="#FCF9F3"/></svg><span class="state-text"><span class="l-en">No data yet</span><span class="l-am">ምንም መረጃ የለም</span></span><span class="state-sub mono"><span class="l-en">Sample snapshot</span><span class="l-am">የናሙና ቅጽበታዊ</span></span></div></td></tr>
+          <tr class="error"><td colspan="3"><div class="state-cell"><svg class="empty-mark" viewBox="0 0 12 12" width="12" height="12" role="presentation" aria-hidden="true"><path d="M6 0.5 L11.5 6 L6 11.5 L0.5 6 Z" fill="none" stroke="#C9962E" stroke-width="1"/><path d="M6 3 L9 6 L6 9 L3 6 Z" fill="#573928"/><rect x="4.6" y="4.6" width="2.8" height="2.8" fill="#15090B"/></svg><span class="state-text"><span class="l-en">Feed interrupted</span><span class="l-am">መረጃው ተቋርጧል</span></span><a href="#rates" class="state-retry mono"><span class="l-en">Retry</span><span class="l-am">ደግሞ ሞክር</span></a></div></td></tr>
+          <tr class="row"><td class="cur"><span class="gez l-am">ዶላር</span><span lang="en">USD/ETB</span></td><td class="rate">128.40</td><td class="delta up">+0.8</td></tr>
+          <tr class="row"><td class="cur"><span class="gez l-am">ዩሮ</span><span lang="en">EUR/ETB</span></td><td class="rate">139.15</td><td class="delta up">+0.5</td></tr>
+          <tr class="row"><td class="cur"><span class="gez l-am">ፓውንድ</span><span lang="en">GBP/ETB</span></td><td class="rate">164.02</td><td class="delta dn">−0.3</td></tr>
+          <tr class="row"><td class="cur"><span class="gez l-am">ዲርሃም</span><span lang="en">AED/ETB</span></td><td class="rate">34.96</td><td class="delta up">+0.1</td></tr>
+          <tr class="row"><td class="cur"><span class="gez l-am">ዩዋን</span><span lang="en">CNY/ETB</span></td><td class="rate">17.88</td><td class="delta dn">−0.2</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <span class="eyedot" aria-hidden="true"></span>
+        <span><span class="l-en">Sample data — a design-language specimen, not content.</span><span class="l-am">የናሙና መረጃ — የዲዛይን ቋንቋ ናሙና እንጂ ቀጥታ የገበያ መረጃ አይደለም።</span></span>
+      </div>
+      <details class="legend">
+        <summary class="states-label"><span class="l-en">Legend</span><span class="l-am">ማብራሪያ</span></summary>
+        <ul class="legend-list">
+          <li><span class="eyedot" aria-hidden="true"></span><span class="l-en"><b>Sample</b> — illustrative figures, not content</span><span class="l-am"><b>ናሙና</b> — ለማሳያ የሆኑ ቁጥሮች እንጂ ቀጥታ የገበያ መረጃ አይደለም</span></li>
+          <li><svg class="empty-mark" viewBox="0 0 12 12" width="12" height="12" role="presentation" aria-hidden="true"><path d="M6 0.5 L11.5 6 L6 11.5 L0.5 6 Z" fill="none" stroke="#C9962E" stroke-width="1"/><path d="M6 3 L9 6 L6 9 L3 6 Z" fill="#573928"/><rect x="4.6" y="4.6" width="2.8" height="2.8" fill="#15090B"/></svg><span class="l-en"><b>Red dot</b> — the feed is interrupted</span><span class="l-am"><b>ቀዩ ነጥብ</b> — መረጃው ተቋርጧል</span></li>
+          <li><span class="l-en"><b>Live</b> — figures fetched from exchange.et, with the as-of time</span><span class="l-am"><b>ቀጥታ</b> — ከ exchange.et የተገኙ ቁጥሮች፤ ከነሰዓቱ</span></li>
+        </ul>
+      </details>
+      <details class="states">
+        <summary class="states-label"><span class="l-en">Demo</span><span class="l-am">ማሳያ</span></summary>
+        <div class="states-in" role="group" aria-label="Demo states">
+          <button type="button" class="st on" data-st="sample" aria-pressed="true"><span class="l-en">Sample</span><span class="l-am">ናሙና</span></button>
+          <button type="button" class="st" data-st="loading" aria-pressed="false"><span class="l-en">Loading</span><span class="l-am">መጫን</span></button>
+          <button type="button" class="st" data-st="empty" aria-pressed="false"><span class="l-en">Empty</span><span class="l-am">ባዶ</span></button>
+          <button type="button" class="st" data-st="error" aria-pressed="false"><span class="l-en">Error</span><span class="l-am">ስህተት</span></button>
+        </div>
+      </details>
+    </aside>
+  </div>
+
+</article>
+</section>
+<section class="view" id="view-rates" hidden>
+  <div class="head">
+    <span class="chip"><span class="l-en">Rates</span><span class="l-am gez">ምንዛሪ</span></span>
+    <h1 class="display"><span class="l-en">Bank exchange rates</span><span class="l-am">የባንክ ምንዛሪ ተመኖች</span></h1>
+    <p class="dek"><span class="l-en">Bank buy/sell — live via exchange.et when available; sample otherwise.</span><span class="l-am">የባንኮች ግዢ/ሽያጭ ተመኖች — በ exchange.et ሲገኝ ቀጥታ፤ ካልሆነ ናሙና።</span></p>
+  </div>
+  <table class="board">
+    <thead><tr>
+      <th scope="col"><span class="l-en">Pair</span><span class="l-am">ጥንድ</span></th>
+      <th scope="col"><span class="l-en">Bank</span><span class="l-am">ባንክ</span></th>
+      <th scope="col"><span class="l-en">Buy</span><span class="l-am">ግዢ</span></th>
+      <th scope="col"><span class="l-en">Sell</span><span class="l-am">ሽያጭ</span></th>
+      <th scope="col"><span class="l-en">Δ</span><span class="l-am">ለውጥ</span></th>
+      <th scope="col"><span class="l-en">As of</span><span class="l-am">ሰዓት</span></th>
+    </tr></thead>
+    <tbody id="live-rates-body">
+      <tr><td lang="en">USD/ETB</td><td lang="en">CBE</td><td class="mono" lang="en">128.40</td><td class="mono" lang="en">129.10</td><td class="up" lang="en">+0.8</td><td class="mono" lang="en">—</td></tr>
+      <tr><td lang="en">USD/ETB</td><td lang="en">Awash</td><td class="mono" lang="en">128.30</td><td class="mono" lang="en">129.05</td><td class="up" lang="en">+0.6</td><td class="mono" lang="en">—</td></tr>
+      <tr><td lang="en">EUR/ETB</td><td lang="en">CBE</td><td class="mono" lang="en">139.15</td><td class="mono" lang="en">140.02</td><td class="up" lang="en">+0.5</td><td class="mono" lang="en">—</td></tr>
+      <tr><td lang="en">GBP/ETB</td><td lang="en">Dashen</td><td class="mono" lang="en">164.02</td><td class="mono" lang="en">165.10</td><td class="dn" lang="en">−0.3</td><td class="mono" lang="en">—</td></tr>
+      <tr><td lang="en">AED/ETB</td><td lang="en">Awash</td><td class="mono" lang="en">34.96</td><td class="mono" lang="en">35.18</td><td class="up" lang="en">+0.1</td><td class="mono" lang="en">—</td></tr>
+      <tr><td lang="en">CNY/ETB</td><td lang="en">CBE</td><td class="mono" lang="en">17.88</td><td class="mono" lang="en">17.99</td><td class="dn" lang="en">−0.2</td><td class="mono" lang="en">—</td></tr>
+    </tbody>
+  </table>
+  <p class="note2 mono" id="rates-note" role="status" aria-live="polite"><span class="l-en">Sample snapshot — no live feed</span><span class="l-am">የናሙና ቅጽበታዊ — ቀጥታ ምንጭ የለም</span></p>
+</section>
+<section class="view" id="view-news" hidden>
+  <div class="head">
+    <span class="chip"><span class="l-en">News</span><span class="l-am gez">ዜና</span></span>
+    <h1 class="display"><span class="l-en">Latest stories</span><span class="l-am">የቅርብ ዜናዎች</span></h1>
+    <p class="specimen-note"><span class="l-en">Sample index — the featured story above is the one rendered; the rest are specimen headlines.</span><span class="l-am">የናሙና ማውጫ — የተመረጠው ዘገባ ብቻ ነው የሚታየው፤ የተቀሩት የናሙና አርዕስቶች ናቸው።</span></p>
+  </div>
+  <ul class="index">
+    <li><button type="button" class="index-item" data-open="article"><span class="tag"><span class="l-en">Society</span><span class="l-am">ማኅበራዊ</span></span><span class="it"><span class="l-en">Over 3,000 Displaced by Drought in Telmet, Officials Say</span><span class="l-am">በጠለምት ወረዳ በተከሰተ ድርቅ ከ3,000 በላይ ነዋሪዎች መፈናቀላቸው ተነገረ</span></span><span class="date mono"><span class="l-en">Aug 9</span><span class="l-am">ነሐሴ 3</span></span></button></li>
+    <li class="index-item is-specimen"><span class="tag"><span class="l-en">Business</span><span class="l-am">ንግድ</span></span><span class="it"><span class="l-en">Seven East African nations saw external debt rise, including Ethiopia</span><span class="l-am">ኢትዮጵያን ጨምሮ ሰባት የምሥራቅ አፍሪካ አገሮች የውጭ ዕዳ መጨመሩ ተነገረ</span></span><span class="date mono"><span class="l-en">Aug 9</span><span class="l-am">ነሐሴ 3</span></span></li>
+    <li class="index-item is-specimen"><span class="tag"><span class="l-en">Politics</span><span class="l-am">ፖለቲካ</span></span><span class="it"><span class="l-en">Re-run polls ordered in 11 regions after vote-board findings</span><span class="l-am">ምርጫ ቦርድ ጉልህ የሕግ ጥሰት መፈጸሙን ባረጋገጠባቸው 11 የምርጫ ክልሎች ድጋሚ ምርጫ ይደረጋል አለ</span></span><span class="date mono"><span class="l-en">Aug 5</span><span class="l-am">ሐምሌ 29</span></span></li>
+    <li class="index-item is-specimen"><span class="tag"><span class="l-en">Business</span><span class="l-am">ንግድ</span></span><span class="it"><span class="l-en">Global Bank violations draw National Bank action</span><span class="l-am">በግሎባል ባንክ ተፈጸሙ የተባሉ ጉልህ ጥሰቶችና የብሔራዊ ባንክ ዕርምጃዎች</span></span><span class="date mono"><span class="l-en">Aug 5</span><span class="l-am">ሐምሌ 29</span></span></li>
+  </ul>
+</section>
+</div>
+</main>
+
+<footer>
+  <div class="footrow">
+    <div class="footbrand">
+      <span class="wordmark"><span class="l-en">Maleda</span><span class="l-am">ማለዳ</span></span>
+    </div>
+    <div class="footnote">
+      <span class="l-en">A specimen of the Ethiopian Classical Design Language — owned by Keydama Software</span><span class="l-am">የኢትዮጵያ ክላሲካል ዲዛይን ቋንቋ ናሙና — ባለቤት፡ ኬይዳማ ሶፍትዌር</span>
+      <br>
+      <span class="mono"><span class="l-en">bela bereka · hibur mono · noto</span><span class="l-am">በላ በረካ · ሂቡር ሞኖ · ኖቶ</span></span>
+    </div>
+  </div>
+  <div class="tibeb-band" role="presentation" aria-hidden="true"></div>
+</footer>
+
+</div>
+<script>
+(function(){
+  var root = document.documentElement;
+  var boot = document.getElementById('boot');
+  var _done = false;
+  var ready = function(){ if (_done) return; _done = true; if (boot) boot.classList.add('hide'); var rt = document.querySelector('.rates table'); if (rt) rt.setAttribute('data-state','sample'); };
+  try { if (document.fonts && document.fonts.check && document.fonts.check('700 16px "Bela Bereka"')) ready(); } catch(e){}
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(ready); }
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(ready, 250); });
+  setTimeout(ready, 700);
+
+  /* ---------- language / aria / alt ---------- */
+  var ARIA = {
+    nav:    { en: 'Sections',               am: 'ክፍሎች' },
+    rates:  { en: 'Sample exchange rates',  am: 'የናሙና ምንዛሪ ተመኖች' },
+    states: { en: 'Demo states',            am: 'የማሳያ ሁኔታዎች' }
+  };
+  function syncCtlLabels(lang){
+    var themeBtn = document.getElementById('themeBtn');
+    if (themeBtn){
+      var dark = root.getAttribute('data-theme') === 'dark';
+      themeBtn.textContent = dark
+        ? (lang === 'am' ? '☀ ብርሃን' : '☀ Light')
+        : (lang === 'am' ? '🌙 ጨለማ' : '🌙 Dark');
+      themeBtn.setAttribute('aria-label', dark ? (lang === 'am' ? 'ወደ ብርሃን ቀይር' : 'Switch to light theme') : (lang === 'am' ? 'ወደ ጨለማ ቀይር' : 'Switch to dark theme'));
+    }
+    var langBtn = document.getElementById('langBtn');
+    if (langBtn){ langBtn.textContent = lang === 'am' ? 'English' : 'አማርኛ'; langBtn.setAttribute('aria-label', lang === 'am' ? 'Switch to English' : 'ወደ አማርኛ ቀይር'); }
+  }
+  function applyLang(lang){
+    var nav = document.querySelector('nav.nav');   if (nav)   nav.setAttribute('aria-label', ARIA.nav[lang]);
+    var rates = document.getElementById('rates');  if (rates) rates.setAttribute('aria-label', ARIA.rates[lang]);
+    var states = document.querySelector('.states-in'); if (states) states.setAttribute('aria-label', ARIA.states[lang]);
+    var imgs = document.querySelectorAll('img[data-alt-en]');
+    for (var i = 0; i < imgs.length; i++) imgs[i].setAttribute('alt', imgs[i].getAttribute(lang === 'am' ? 'data-alt-am' : 'data-alt-en'));
+    syncCtlLabels(lang);
+  }
+  var langBtn = document.getElementById('langBtn');
+  if (langBtn){
+    langBtn.addEventListener('click', function(){
+      var next = root.getAttribute('data-lang') === 'am' ? 'en' : 'am';
+      root.setAttribute('data-lang', next);
+      root.setAttribute('lang', next);
+      try { localStorage.setItem('maleda-lang', next); } catch(e){}
+      document.title = next === 'am'
+        ? 'ማለዳ Maleda — በጠለምት ወረዳ ድርቅ፤ ከ3,000 በላይ ነዋሪዎች ተፈናቅለዋል'
+        : 'Maleda — Over 3,000 Displaced by Drought in Telmet';
+      var lv = document.getElementById('langLive'); if (lv) lv.textContent = next === 'am' ? 'ቋንቋ፡ አማርኛ' : 'Language: English';
+      applyLang(next);
+    });
+  }
+  var themeBtn = document.getElementById('themeBtn');
+  if (themeBtn){
+    themeBtn.addEventListener('click', function(){
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('maleda-theme', next); } catch(e){}
+      syncCtlLabels(root.getAttribute('data-lang') === 'am' ? 'am' : 'en');
+    });
+  }
+  var savedLang = null; try { savedLang = localStorage.getItem('maleda-lang'); } catch(e){}
+  if (savedLang) { root.setAttribute('data-lang', savedLang); root.setAttribute('lang', savedLang); }
+  var savedTheme = null; try { savedTheme = localStorage.getItem('maleda-theme'); } catch(e){}
+  if (savedTheme) { root.setAttribute('data-theme', savedTheme); }
+  else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { root.setAttribute('data-theme', 'dark'); }
+  applyLang(root.getAttribute('data-lang') === 'am' ? 'am' : 'en');
+
+  /* ---------- demo-state buttons (specimen tooling) ---------- */
+  var ratesTbl = document.querySelector('.rates table');
+  var stBtns = document.querySelectorAll('.states .st');
+  if (ratesTbl) { stBtns.forEach(function(b){
+    b.addEventListener('click', function(){
+      ratesTbl.setAttribute('data-state', b.getAttribute('data-st'));
+      stBtns.forEach(function(x){ var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+    });
+  }); }
+
+  /* ---------- three-view navigation: pushState + Back + scroll reset ---------- */
+  var navBtns = document.querySelectorAll('.navbtn');
+  var views = document.querySelectorAll('.view');
+  function showView(v, push){
+    if (v === 'rates') loadLive();
+    navBtns.forEach(function(b){ var on = b.getAttribute('data-view') === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+    views.forEach(function(s){ s.hidden = s.id !== 'view-' + v; });
+    window.scrollTo(0, 0);
+    var head = document.querySelector('#view-' + v + ' h1');
+    if (head) { head.setAttribute('tabindex', '-1'); try { head.focus({preventScroll:true}); } catch(e){ head.focus(); } }
+    try {
+      if (push) { if (location.hash !== '#' + v) history.pushState({v: v}, '', '#' + v); }
+      else if (location.hash !== '#' + v) { history.replaceState({v: v}, '', '#' + v); }
+    } catch(e){}
+  }
+  function hashView(){ return (location.hash || '').replace('#', ''); }
+  var _hv = hashView();
+  if (_hv === 'rates' || _hv === 'news') showView(_hv, false);
+  window.addEventListener('hashchange', function(){ var h = hashView(); if (h === 'article' || h === 'rates' || h === 'news') showView(h, false); });
+  window.addEventListener('popstate', function(){ var h = hashView(); if (h === 'article' || h === 'rates' || h === 'news') showView(h, false); else showView('article', false); });
+  navBtns.forEach(function(b){ b.addEventListener('click', function(){ showView(b.getAttribute('data-view'), true); }); });
+  document.querySelectorAll('.index-item[data-open]').forEach(function(it){ it.addEventListener('click', function(){ showView('article', true); }); });
+
+  /* ---------- live rates — public exchange.et proxy, sample fallback ----------
+     XSS-safe: no innerHTML with feed data; every API field rendered via textContent.
+     Integrity: JSON shape validated; fetch bounded by AbortController; 60s refresh. */
+  var liveUrl = 'https://exchange.et/api/rates';
+  var liveBody = document.getElementById('live-rates-body');
+  var ratesNote = document.getElementById('rates-note');
+  function notePair(en, am){
+    if (!ratesNote) return;
+    ratesNote.textContent = '';
+    var a = document.createElement('span'); a.className = 'l-en'; a.textContent = en;
+    var b = document.createElement('span'); b.className = 'l-am'; b.textContent = am;
+    ratesNote.appendChild(a); ratesNote.appendChild(b);
+  }
+  function rowCell(tr, txt, cls){
+    var td = document.createElement('td');
+    if (cls) td.className = cls;
+    td.lang = 'en';
+    td.textContent = String(txt == null ? '' : txt);
+    tr.appendChild(td);
+  }
+  function pad2(x){ return (x < 10 ? '0' : '') + x; }
+  var EC_MONTHS = ['መስከረም','ጥቅምት','ሕዳር','ታህሳስ','ጥር','የካቲት','መጋቢት','ሚያዝያ','ግንቦት','ሰኔ','ሐምሌ','ነሐሴ','ጳጉሜ'];
+  function ecDate(utcMs){
+    var jdn = Math.floor(utcMs / 86400000) + 2440588;
+    var r = jdn - 1724221;                 // 0-indexed days since 1 Meskerem 1 EC
+    var n = Math.floor(r / 1461);          // completed 4-year cycles
+    var dd = r % 1461;                     // day-in-cycle
+    var year = n * 4 + 1;
+    if (dd < 365) { /* year 1 */ }
+    else if (dd < 730) { year += 1; dd -= 365; }
+    else if (dd < 1096) { year += 2; dd -= 730; }
+    else { year += 3; dd -= 1096; }
+    var mon, dy;
+    if (dd < 360) { mon = Math.floor(dd / 30); dy = (dd % 30) + 1; }
+    else { mon = 12; dy = dd - 360 + 1; }
+    return dy + ' ' + EC_MONTHS[mon] + ' ' + year + ' ዓ.ም';
+  }
+  function settleRail(){
+    if (ratesTbl && ratesTbl.getAttribute('data-state') === 'loading') ratesTbl.setAttribute('data-state', 'sample');
+  }
+  function renderLive(d){
+    var GLOSS = { 'USD':'ዶላር', 'EUR':'ዩሮ', 'GBP':'ፓውንድ', 'AED':'ዲርሃም', 'CNY':'ዩዋን' };
+    function pairCell(tr, pair){
+      var td = document.createElement('td');
+      var gloss = GLOSS[String(pair).split('/')[0]];
+      if (gloss){
+        var g = document.createElement('span'); g.className = 'l-am'; g.textContent = gloss + ' ';
+        td.appendChild(g);
+      }
+      var c = document.createElement('span'); c.lang = 'en'; c.textContent = pair;
+      td.appendChild(c);
+      tr.appendChild(td);
+    }
+    if (!liveBody) return;
+    if (!d || typeof d !== 'object' || !Array.isArray(d.allRates)) { settleRail(); return; }
+    var rows = d.allRates.slice(0, 14);
+    if (!rows.length) { settleRail(); return; }
+    liveBody.textContent = '';
+    var n = 0, newest = 0;
+    var PAIR = /^[A-Z]{3}\/[A-Z]{3}$/;
+    rows.forEach(function(r){
+      if (!r || typeof r !== 'object') return;
+      var pair = String(r.pair || '');
+      if (!PAIR.test(pair)) return;                                   /* pair-format integrity */
+      var buy = Number(r.buyRate), sell = Number(r.sellRate);
+      var buyS = isFinite(buy) ? buy : NaN, sellS = isFinite(sell) ? sell : NaN;
+      if (!isNaN(buyS) && !isNaN(sellS) && (buyS <= 0 || sellS <= 0 || buyS > sellS)) return; /* inverted/absurd spread */
+      var tr = document.createElement('tr');
+      pairCell(tr, pair);
+      rowCell(tr, r.bankName);
+      rowCell(tr, isNaN(buyS) ? '—' : buyS.toFixed(2), 'mono');
+      rowCell(tr, isNaN(sellS) ? '—' : sellS.toFixed(2), 'mono');
+      rowCell(tr, '—', 'mono');
+      var cap = Date.parse(r.capturedAt);
+      var cellAs = '—';
+      if (isFinite(cap)){ var cdd = new Date(cap + 3 * 3600 * 1000); cellAs = pad2(cdd.getUTCHours()) + ':' + pad2(cdd.getUTCMinutes()); }
+      rowCell(tr, cellAs, 'mono');
+      liveBody.appendChild(tr); n++;
+    });
+    settleRail();
+    rows.forEach(function(r){ var tt = Date.parse(r && r.capturedAt); if (isFinite(tt) && tt > newest) newest = tt; });
+    if (n){
+      var en = 'Live — via exchange.et · ' + n + ' pairs';
+      var am = 'ቀጥታ — በ exchange.et · ' + n + ' ጥንዶች';
+      if (newest){
+        var dd = new Date(newest + 3 * 3600 * 1000);           /* feed UTC -> EAT */
+        var p2 = function(x){ return (x < 10 ? '0' : '') + x; };
+        var asof = dd.toISOString().slice(0, 10) + ' ' + p2(dd.getUTCHours()) + ':' + p2(dd.getUTCMinutes()) + ' EAT';
+        var asofAm = ecDate(newest + 3 * 3600 * 1000) + ' ' + p2(dd.getUTCHours()) + ':' + p2(dd.getUTCMinutes());
+        var age = Math.round((Date.now() - newest) / 60000);
+        var word = age > 30 ? 'Stale' : 'Live';
+        en = word + ' — via exchange.et · ' + n + ' pairs · ' + asof;
+        am = (age > 30 ? 'የቆየ' : 'ቀጥታ') + ' — በ exchange.et · ' + n + ' ጥንዶች · ' + asofAm;
+      }
+      notePair(en, am);
+    }
+  }
+  function loadLive(){
+    if (!liveBody) return;
+    var ctrl = null; try { ctrl = new AbortController(); } catch(e){}
+    var to = setTimeout(function(){ try { if (ctrl) ctrl.abort(); } catch(e){} }, 8000);
+    try {
+      fetch(liveUrl, ctrl ? { signal: ctrl.signal } : {}).then(function(r){
+        if (!r.ok) throw new Error('http ' + r.status);
+        return r.json();
+      }).then(function(d){ clearTimeout(to); renderLive(d); }).catch(function(){
+        clearTimeout(to); settleRail();
+        notePair('Feed unavailable — sample shown', 'ቀጥታ ምንጭ አይገኝም — ናሙና ታይቷል');
+      });
+    } catch(e){ clearTimeout(to); }
+  }
+  document.querySelectorAll('.state-retry').forEach(function(r){
+    r.addEventListener('click', function(ev){
+      ev.preventDefault();
+      if (ratesTbl) ratesTbl.setAttribute('data-state', 'loading');
+      showView('rates', true);
+      loadLive();
+    });
+  });
+})();
+</script>
+</body>
+</html>

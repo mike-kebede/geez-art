@@ -5,8 +5,7 @@
 /// <reference types="vite/client" />
 
 import '@fontsource-variable/noto-sans-ethiopic';
-import '@fontsource-variable/inter';
-import { loadEthiopicFont, buildRamp, getAllGlyphs, rampFromGlyphs, COMMON_AMHARIC, type GlyphInfo, type RampPreset } from './fonts';
+import { loadEthiopicFont, loadBelaFont, buildRamp, getAllGlyphs, rampFromGlyphs, COMMON_AMHARIC, type GlyphInfo, type RampPreset } from './fonts';
 import ethiopicWoffUrl from '@fontsource-variable/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-wght-normal.woff2';
 import { renderMosaic, invalidateSource, warmColorAtlas, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone, isHeic, isVideoFile } from './input';
@@ -95,7 +94,18 @@ function shareLink(): string {
  *  caught, no scattered class toggles. */
 function watchStatusIdle(): void {
   const status = $('status');
-  const sync = () => status.classList.toggle('is-idle', status.textContent === t('ready'));
+  const eyedot = document.getElementById('eyedot');
+  // The busy set drives the eye-dot pulse: while the app is doing visible work
+  // (font/ramp load, decode, render, export) the gaze pulses; Ready and flashes
+  // hold it gold.
+  const busySet = new Set<string>([
+    t('statusLoading'), t('preparing'), t('rendering'), t('reading'), t('loadingVideo'),
+    t('makingGif'), t('recording'), t('preparingShare'),
+  ]);
+  const sync = () => {
+    status.classList.toggle('is-idle', status.textContent === t('ready'));
+    if (eyedot) eyedot.classList.toggle('pulse', status.textContent !== null && busySet.has(status.textContent));
+  };
   sync();
   const mo = new MutationObserver(sync);
   mo.observe(status, { childList: true, characterData: true, subtree: true });
@@ -1001,6 +1011,30 @@ async function init(): Promise<void> {
     applyLang();
   });
   applyLang(); // render data-i18n for the initial language
+
+  // Maleda themes: light parchment default; dark umber via OS preference or the
+  // topbar toggle. Persisted in localStorage['geez-art.theme'] ('light'|'dark'|unset→system).
+  const themeIcon = () => {
+    const dark =
+      document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.textContent = dark ? '☀' : '☾'; // shows the theme you'd switch TO
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', dark ? '#15090B' : '#FCF9F3');
+  };
+  let storedTheme: string | null = null;
+  try { storedTheme = localStorage.getItem('geez-art.theme'); } catch { /* private mode */ }
+  if (storedTheme === 'light' || storedTheme === 'dark') document.documentElement.setAttribute('data-theme', storedTheme);
+  themeIcon();
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('geez-art.theme', next); } catch { /* private mode */ }
+    themeIcon();
+  });
+
   watchStatusIdle(); // hide the idle 'Ready'; show only real messages
   // F5: Amharic-first visitors see a localized boot status (the HTML default is
   // English and would otherwise show for the whole font+ramp window).
@@ -1023,7 +1057,10 @@ async function init(): Promise<void> {
   // L20/F24: the analytics disclosure is appended by applyLang() (called below),
   // so it survives language toggles — not appended here.
   try {
-    await loadEthiopicFont();
+    // Maleda: the weave loader (three manuscript pigments) marks the boot.
+    const loader = document.getElementById('weaveLoader');
+    if (loader) loader.hidden = false;
+    await Promise.all([loadEthiopicFont(), loadBelaFont().catch(() => undefined)]);
     status.textContent = t('preparing');
     ramp = await buildRamp('common');
     allGlyphs = await getAllGlyphs();
@@ -1032,6 +1069,7 @@ async function init(): Promise<void> {
       (window as unknown as { __commonSet?: number[] }).__commonSet = Array.from(COMMON_AMHARIC);
     }
     status.textContent = t('ready');
+    if (loader) loader.hidden = true;
     // M4: repaint anything the user dropped while the ramp was still loading.
     if (source) render();
     // A3: warm the 64-level color atlas at idle so the FIRST drop (colorize is

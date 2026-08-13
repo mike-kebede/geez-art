@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 96" width="80" height="96" fill="none" preserveAspectRatio="none">
+<rect width="80" height="96" fill="#15090B"/>
+<path d="M4.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M8.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M71.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M75.5,0 V96" stroke="#C9962E" stroke-width="1" stroke-linecap="butt" shape-rendering="crispEdges" vector-effect="non-scaling-stroke"/>
+<path d="M40,1 L63,24 L40,47 L17,24 Z" stroke="#C9962E" stroke-width="1" stroke-linejoin="miter"/>
+<path d="M40,10 L54,24 L40,38 L26,24 Z" fill="#573928"/>
+<path d="M40,19 L45,24 L40,29 L35,24 Z" fill="#C9962E"/>
+<g stroke-linecap="butt">
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="8"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#573928" stroke-width="4"/>
+<path d="M16,48 L64,96 M64,48 L16,96" stroke="#C9962E" stroke-width="1"/>
+</g>
+</svg>

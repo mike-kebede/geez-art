@@ -23,6 +23,13 @@ export interface GlyphInfo {
 const MEASURE_PX = 64;
 const S = MEASURE_PX;
 
+/** Load Bela Bereka (the Amharic DISPLAY voice) for the ግዕዝ wordmark and the
+ *  empty-state ፊደል hero. Separate from the measurement font — the mosaic glyphs
+ *  must stay Noto Sans Ethiopic (the density ramp is measured against it). */
+export function loadBelaFont(): Promise<unknown> {
+  return document.fonts.load('700 64px "Bela Bereka"', 'ግዕዝፊደል');
+}
+
 let fontReady: Promise<void> | null = null;
 
 export function loadEthiopicFont(): Promise<void> {

@@ -2,9 +2,10 @@
  * Ethiopian classical-art design data.
  *
  * Pure data module: these palettes power both the app UI skin and the mosaic
- * color presets. Flat, saturated, warm — drawn from church murals and
- * manuscript illumination (parchment grounds, deep Ethiopian reds, ochre
- * golds, muted teals). No DOM, no dependencies.
+ * color presets. Now drawn from the MALEDA design-language tokens
+ * (dev/maleda-design-language/tokens.css) — parchment grounds, umber ink,
+ * madder red, the illumination gold, verdigris. The default "Parchment"
+ * preset is the canonical Maleda painting palette. No DOM, no dependencies.
  */
 
 export interface ArtPalette {
@@ -21,38 +22,38 @@ export const PALETTES: ArtPalette[] = [
   {
     id: 'mono',
     name: 'Mono',
-    paper: '#ffffff',
-    ink: '#111111',
-    accent: '#5a5a5a',
+    paper: '#FCF9F3', // parchment-100
+    ink: '#15090B',   // umber ink
+    accent: '#6C523D',
     gold: '#8f8f8f',
     teal: '#3a3a3a',
   },
   {
     id: 'manuscript',
     name: 'Parchment',
-    paper: '#f3ecdd',
-    ink: '#2a1a12',
-    accent: '#8a2b1d',
-    gold: '#b98a2f',
-    teal: '#1f5c58',
+    paper: '#F5E9D1', // parchment-300
+    ink: '#15090B',   // umber
+    accent: '#A62F1E', // madder
+    gold: '#C9962E',   // the illumination gold
+    teal: '#1E8A5E',   // verdigris
   },
   {
     id: 'icon',
     name: 'Icon',
-    paper: '#e8dcc0',
-    ink: '#241510',
-    accent: '#a3271d',
-    gold: '#c9a13a',
-    teal: '#21655f',
+    paper: '#E6D6BC', // parchment-500
+    ink: '#15090B',
+    accent: '#A62F1E',
+    gold: '#C9962E',
+    teal: '#1E8A5E',
   },
   {
     id: 'church',
     name: 'Church mural',
-    paper: '#efe6d2',
-    ink: '#24150f',
-    accent: '#7a1f14',
-    gold: '#cfab55',
-    teal: '#1d5a52',
+    paper: '#F5E9D1', // parchment-300
+    ink: '#15090B',
+    accent: '#A62F1E',
+    gold: '#C9962E',
+    teal: '#1E8A5E',
   },
 ];
 

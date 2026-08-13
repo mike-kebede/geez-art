@@ -1,33 +1,126 @@
 /* geez·art — "The app is the canvas."
-   Modern, app-like, minimal chrome: a near-neutral light page where the live
-   fidel mosaic is the only source of color and drama. One accent (brick) for
-   the primary action, gold as a micro-detail, the giant ፊደል empty-state as
-   the drop target. Ethiopian classical identity lives in the script itself. */
+   Skinned with the Maleda Ethiopian Classical Design Language
+   (dev/maleda-design-language/tokens.css is the canonical token source):
+   parchment gallery walls, the mosaic hung as a gilded painting (gold mount +
+   parchment mat), umber-black panels for data, scarce gold, madder the action
+   color, a tibeb-spine footer, and the eye-dot status gaze. Light parchment
+   default, dark umber theme follows the OS or the toggle. */
 
 :root {
-  --canvas: #f6f4f0;        /* near-neutral page */
-  --surface: #ffffff;       /* panels */
-  --ink: #1c1917;           /* near-black text */
-  --mist: #5a554e;          /* muted */
-  --accent: #a62b16;        /* THE one accent — brick */
-  --accent-deep: #8a2110;
-  --gold: #d9a441;          /* micro-detail: fidel, focus */
-  --line: #e0dacd;
-  --hairline: #8f8270;      /* F-6: ~3:1 non-text boundary contrast (#a89c8a measured 2.7:1) */
-  --shadow: 0 18px 50px -26px rgba(28, 25, 23, 0.35);
+  /* ---- Maleda token source (tokens.css) — canonical ---- */
+  --parchment-100: #FCF9F3;   /* canvas wall */
+  --parchment-300: #F5E9D1;   /* raised surface / chip */
+  --parchment-500: #E6D6BC;   /* sunken well */
+  --parchment-600: #D4C09F;   /* muted on-panel text */
+  --ink-900: #15090B;         /* primary ink / painting panel */
+  --ink-950: #0D0508;         /* deepest cavity */
+  --umber-500: #6C523D;       /* secondary text */
+  --umber-700: #573928;       /* structure, frames */
+  --umber-800: #3A2016;       /* strong frame */
+  --gold-100: #F0DFBD;        /* halo */
+  --gold-300: #E1C488;        /* dark-theme gold */
+  --gold-500: #C9962E;        /* the gilded signature */
+  --gold-700: #78571E;        /* gold TEXT on parchment (AA 6.3:1) */
+  --gold-pale: #F8E6B8;       /* on-ink panel text */
+  --ver-700: #1A5039;         /* verdigris TEXT on parchment (AA 8.9:1) */
+  --ver-500: #1E8A5E;         /* verdigris fill / mark */
+  --ver-onink: #7BC9A8;       /* verdigris on ink */
+  --ox-700: #651E15;          /* madder TEXT on parchment (AA 11.4:1) */
+  --ox-500: #A62F1E;          /* madder fill / mark */
+  --ox-onink: #E8836F;        /* madder on ink */
+  --saffron-500: #E8A33D;     /* caution — trims only */
+  --saffron-onink: #E8C46A;   /* caution on ink */
+  --ochre-500: #E46F30;       /* urgent / CTA */
+  --indigo-500: #181B2D;      /* shadow / depth only */
+  --tri-1: var(--ox-500);     /* weave-loader triad */
+  --tri-2: var(--ver-500);
+  --tri-3: var(--saffron-500);
+
+  /* ---- app semantic mapping (light theme) ---- */
+  --canvas: var(--parchment-100);   /* page wall */
+  --surface: var(--parchment-300);  /* raised panels / buttons */
+  --surface-2: #FFFDF8;             /* the controls panel (warm solid) */
+  --ink: var(--ink-900);            /* umber text */
+  --mist: var(--umber-500);         /* muted text */
+  --accent: var(--ox-500);          /* madder — the action FILL (matches the brick identity) */
+  --accent-deep: var(--ox-700);
+  --accent-text: var(--ox-700);     /* madder as TEXT on parchment (AA) */
+  --gold: var(--gold-500);          /* scarce signature */
+  --gold-text: var(--gold-700);     /* gold as TEXT on parchment (AA) */
+  --line: rgba(21, 9, 11, 0.16);    /* hair */
+  --hairline: rgba(21, 9, 11, 0.50); /* component boundary — ≥3:1 (WCAG 1.4.11) */
+  --on-accent: #FFF8EC;             /* text on a madder fill */
+  --dot: var(--gold-700);           /* eye-dot on parchment — AA (3:1) */
+  --mat: var(--parchment-100);      /* the painting's inner mat */
+  --shadow: 0 18px 50px -26px rgba(21, 9, 11, 0.35);
 }
 
-.fidel { font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif; }
+/* ---- dark theme (system preference; the toggle overrides) ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: var(--ink-900);
+    --surface: #21130C;
+    --surface-2: #21130C;
+    --ink: #F3E9D5;
+    --mist: #B9A27C;
+    --accent: var(--ox-500);
+    --accent-deep: #C96A57;
+    --accent-text: var(--ox-onink);
+    --gold: var(--gold-300);
+    --gold-text: var(--gold-300);
+    --line: rgba(243, 233, 213, 0.16);
+    --hairline: rgba(243, 233, 213, 0.42);
+    --on-accent: #FFF8EC;
+    --dot: var(--gold-300);
+    --mat: var(--ink-950);
+    --shadow: 0 18px 50px -26px rgba(0, 0, 0, 0.6);
+    --tri-1: var(--ox-onink);
+    --tri-2: var(--ver-onink);
+    --tri-3: var(--saffron-onink);
+  }
+}
+:root[data-theme="dark"] {
+  --canvas: var(--ink-900);
+  --surface: #21130C;
+  --surface-2: #21130C;
+  --ink: #F3E9D5;
+  --mist: #B9A27C;
+  --accent: var(--ox-500);
+  --accent-deep: #C96A57;
+  --accent-text: var(--ox-onink);
+  --gold: var(--gold-300);
+  --gold-text: var(--gold-300);
+  --line: rgba(243, 233, 213, 0.16);
+  --hairline: rgba(243, 233, 213, 0.42);
+  --on-accent: #FFF8EC;
+  --dot: var(--gold-300);
+  --mat: var(--ink-950);
+  --shadow: 0 18px 50px -26px rgba(0, 0, 0, 0.6);
+  --tri-1: var(--ox-onink);
+  --tri-2: var(--ver-onink);
+  --tri-3: var(--saffron-onink);
+}
+
+/* Bela Bereka — the Amharic display voice (OFL, Ge'ez-only). Shipped beside the
+   app; only the DISPLAY fidel uses it, never the mosaic glyphs (the density ramp
+   is measured against Noto Sans Ethiopic). */
+@font-face {
+  font-family: 'Bela Bereka';
+  src: url('/fonts/BelaBereka-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+.fidel { font-family: 'Bela Bereka', 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif; }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 
 body {
   background: var(--canvas);
   color: var(--ink);
-  /* F9: Noto Ethiopic in the chrome stack — Inter has no Ethiopic glyphs, and
-     macOS/iOS ship no system Ethiopic font, so Amharic-mode chrome would tofu
-     on Apple without it. Inter still wins for Latin. */
-  font-family: 'Inter Variable', 'Inter', 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
+  /* Maleda type: Noto Sans Ethiopic is the body/UI voice for BOTH scripts
+     (its latin subset covers Latin text; Inter is dropped). */
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
   line-height: 1.55;
   min-height: 100vh;
   display: flex;
@@ -77,19 +170,27 @@ body {
 }
 .wordmark { margin: 0; }
 .wm-latin {
-  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--ink);
 }
-.status {
+/* the Amharic display wordmark — Bela Bereka is the display voice for fidel */
+.wm-fidel { font-family: 'Bela Bereka', 'Noto Sans Ethiopic Variable', serif; color: var(--accent-text); }
+.status-wrap {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.status {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap; /* F-9: no topbar wrap on narrow phones */
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, 'Noto Sans Ethiopic Variable', monospace;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', monospace;
   font-size: 12px;
   color: var(--mist);
 }
@@ -97,6 +198,35 @@ body {
    role=status live region in the a11y tree — visibility:hidden pruned it, so
    flash() messages written while idle weren't reliably announced. */
 #status.is-idle { opacity: 0; }
+
+/* the eye-dot — the gaze of the product: gold when live, pulse while busy.
+   One quiet moment, never multiplied. */
+.eye-dot {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: var(--dot);
+  border-radius: 1px;
+  flex: none;
+  transition: background 0.3s ease;
+}
+.eye-dot.pulse { animation: eyePulse 2.2s ease-in-out infinite; }
+@keyframes eyePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* the weave loader — the three manuscript pigments as a weaving triad,
+   used ONLY while the fonts/ramp load (motion, never a static motif). */
+.weave-loader { display: inline-flex; gap: 3px; align-items: center; vertical-align: middle; }
+.weave-loader[hidden] { display: none; }
+.weave-loader span {
+  width: 7px;
+  height: 7px;
+  background: var(--tri-1);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  animation: weaveSpin 1.4s ease-in-out infinite;
+}
+.weave-loader span:nth-child(2) { background: var(--tri-2); animation-delay: 0.15s; }
+.weave-loader span:nth-child(3) { background: var(--tri-3); animation-delay: 0.3s; }
+@keyframes weaveSpin { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } }
 .lang-toggle {
   font-family: inherit;
   font-size: 12px;
@@ -136,30 +266,49 @@ body {
   width: 96%;
   aspect-ratio: 4 / 3;
   transform: translate(-50%, -52%);
-  background: radial-gradient(closest-side, rgba(217, 164, 65, 0.2), rgba(217, 164, 65, 0.06) 55%, transparent 78%);
+  /* Maleda restraint: gold is scarce — the halo is now a faint hairline glow,
+     not a bright aureole. */
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--gold) 9%, transparent), color-mix(in srgb, var(--gold) 3%, transparent) 55%, transparent 78%);
   border-radius: 50%;
   filter: blur(10px);
   pointer-events: none;
   z-index: 0;
 }
 
+/* The gilded painting: .frame is the gold MOUNT (thin gold gradient border),
+   .frame-inner is the parchment MAT, and the mosaic canvas is the painting. */
 .frame {
   position: relative;
   z-index: 1;
   --paper: #f6eeda;
-  --ink: #2a1a12;
+  --ink: #15090B;
   --accent: #a62b16;
   --gold: #d9a441;
   --teal: #1e5a55;
-  background: var(--paper);
-  border-radius: 20px;
-  padding: 16px;
-  /* L44: the frame's accent ring follows the palette (was a hardcoded brick). */
-  box-shadow: var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 22px;
+  padding: 9px; /* the mount width */
+  /* the gold mount — gradient + inner hairline, per the gallery `.mount` */
+  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep, #C9962E) 100%);
+  box-shadow: var(--shadow);
   animation: frameIn 0.6s ease-out both;
   transition: box-shadow 0.3s ease;
 }
-.showcase:hover .frame { box-shadow: 0 26px 60px -28px rgba(28, 25, 23, 0.45), inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent); }
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--gold-pale);
+  opacity: 0.5;
+  pointer-events: none;
+  border-radius: 18px;
+}
+.frame-inner {
+  position: relative;
+  background: var(--mat); /* parchment mat behind the painting */
+  border-radius: 14px;
+  padding: 4px;
+}
+.showcase:hover .frame { box-shadow: 0 26px 60px -28px rgba(21, 9, 11, 0.45); }
 @keyframes frameIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
@@ -186,7 +335,7 @@ body {
   display: flex;
   align-items: center;
   gap: 2px;
-  background: #1c1917; /* L24: solid ink pill (was translucent frosted glass) */
+  background: var(--ink-900); /* solid umber pill */
   border-radius: 999px;
   padding: 3px;
 }
@@ -205,7 +354,7 @@ body {
 .zoom-controls button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .zoom-val {
   color: #fff;
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, 'Noto Sans Ethiopic Variable', monospace;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', monospace;
   font-size: 11px;
   min-width: 40px;
   text-align: center;
@@ -226,13 +375,14 @@ body {
   border-radius: 12px;
   transition: background 0.15s;
 }
-.empty-state:hover { background: rgba(217, 164, 65, 0.06); }
+.empty-state:hover { background: color-mix(in srgb, var(--gold) 6%, transparent); }
 .empty-fidel {
-  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif;
+  /* Bela Bereka — the Amharic display voice — for the hero drop-target fidel. */
+  font-family: 'Bela Bereka', 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif;
   font-size: 110px;
   font-weight: 700;
   line-height: 1;
-  color: #a67a22; /* F29: on #f6f4f0 this is 3.6:1 — clears the 3:1 non-text floor (was 2.84:1) */
+  color: var(--gold-text); /* on parchment this is 6.3:1 — clears the 3:1 non-text floor */
   opacity: 0.9;
   animation: fidelSettle 0.7s ease-out both;
 }
@@ -242,7 +392,7 @@ body {
 }
 .empty-state h2 {
   margin: 0;
-  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -264,7 +414,7 @@ body {
   margin-top: 16px;
 }
 .stat {
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, 'Noto Sans Ethiopic Variable', monospace;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', monospace;
   font-size: 12px;
   color: var(--mist);
   letter-spacing: 0.02em;
@@ -280,7 +430,7 @@ body {
 }
 .source-chip.visible { display: inline-flex; }
 .chip-label {
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, 'Noto Sans Ethiopic Variable', monospace;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -297,7 +447,7 @@ body {
 .share-hint {
   font-size: 13px;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-text);
   text-align: center;
   margin-top: 14px;
 }
@@ -321,7 +471,7 @@ body {
 
 /* ---------- controls — floating glass panel ---------- */
 .controls {
-  background: #fffdf8; /* L24: solid warm surface — frosted glass read as template residue vs the mural chrome */
+  background: var(--surface-2); /* solid warm surface */
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 8px 22px 26px;
@@ -335,7 +485,7 @@ body {
 .group + .group { border-top: 1px solid var(--line); }
 .group h2 {
   margin: 0 0 14px;
-  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -361,7 +511,7 @@ details#advanced > summary {
   gap: 12px;
   margin: 0;
   padding: 14px 0 12px;
-  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -369,18 +519,18 @@ details#advanced > summary {
   color: var(--mist);
 }
 details#advanced > summary::-webkit-details-marker { display: none; }
-details#advanced > summary:hover { color: var(--accent); }
-details#advanced[open] > summary { color: var(--accent); }
+details#advanced > summary:hover { color: var(--accent-text); }
+details#advanced[open] > summary { color: var(--accent-text); }
 details#advanced > summary::after {
   content: '+';
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, 'Noto Sans Ethiopic Variable', monospace;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', monospace;
   font-size: 15px;
   font-weight: 400;
   line-height: 1;
   color: var(--mist);
   transition: transform 0.18s ease;
 }
-details#advanced[open] > summary::after { transform: rotate(45deg); color: var(--accent); }
+details#advanced[open] > summary::after { transform: rotate(45deg); color: var(--accent-text); }
 
 .attribution {
   margin: 0 0 4px;
@@ -403,15 +553,16 @@ button {
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s, color 0.15s, border-color 0.15s;
 }
 button:hover {
-  border-color: var(--gold);
-  color: var(--accent);
+  /* Maleda restraint: gold is scarce — hover reads madder, not gold. */
+  border-color: var(--accent);
+  color: var(--accent-text);
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px -14px rgba(28, 25, 23, 0.35);
+  box-shadow: 0 10px 22px -14px rgba(21, 9, 11, 0.35);
 }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff7ec; font-weight: 700; }
-button.primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff7ec; box-shadow: 0 12px 26px -14px rgba(166, 43, 22, 0.55); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
+button.primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); color: var(--on-accent); box-shadow: 0 12px 26px -14px rgba(166, 47, 30, 0.55); }
 button.ghost { background: transparent; border-color: transparent; color: var(--mist); }
-button.ghost:hover { background: rgba(217, 164, 65, 0.12); border-color: transparent; color: var(--accent); transform: none; box-shadow: none; }
+button.ghost:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: transparent; color: var(--accent-text); transform: none; box-shadow: none; }
 button.share { width: 100%; font-weight: 700; font-size: 15px; }
 .share-top { min-height: 48px; /* F15 */ padding: 7px 18px; font-size: 13px; font-weight: 700; }
 .share-top:disabled { opacity: 0.4; cursor: default; box-shadow: none; transform: none; }
@@ -422,16 +573,16 @@ button.share { width: 100%; font-weight: 700; font-size: 15px; }
   100% { box-shadow: 0 0 0 12px rgba(166, 43, 22, 0); }
 }
 #clearBtn { background: transparent; border-color: transparent; color: var(--mist); }
-#clearBtn:hover { background: rgba(217, 164, 65, 0.12); border-color: transparent; color: var(--accent); transform: none; box-shadow: none; }
+#clearBtn:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: transparent; color: var(--accent-text); transform: none; box-shadow: none; }
 .mix-btn {
   width: 100%;
   margin: 0 0 12px;
   font-weight: 700;
   background: transparent;
   border: 1px solid var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
-.mix-btn:hover { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent); }
+.mix-btn:hover { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent-text); }
 
 /* dropzone — a clean pill (the empty state is the big CTA) */
 .dropzone {
@@ -454,7 +605,7 @@ button.share { width: 100%; font-weight: 700; font-size: 15px; }
 .slider .val {
   color: var(--mist);
   float: right;
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, 'Noto Sans Ethiopic Variable', monospace;
+  font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', monospace;
   font-size: 12px;
   margin-top: 2px;
 }
@@ -462,7 +613,7 @@ input[type='range'] {
   width: 100%;
   height: 22px;
   margin: 6px 0 0;
-  accent-color: var(--accent);
+  accent-color: var(--accent-text);
   background: transparent;
   cursor: pointer;
 }
@@ -480,7 +631,7 @@ input[type='range'] {
 select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
 .checks { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0; }
 .row-inline { display: flex; align-items: center; gap: 9px; font-size: 14px; color: var(--ink); cursor: pointer; padding: 8px 6px; /* F-8: ≥48px hit area */ }
-.row-inline input { accent-color: var(--accent); width: 17px; height: 17px; }
+.row-inline input { accent-color: var(--accent-text); width: 17px; height: 17px; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 /* Two per row (not four squeezed in a 330px panel) so labels like
    "Download video" / "Download GIF" wrap instead of overflowing. */
@@ -494,7 +645,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
 .picker-actions button { min-height: 48px; /* F15 */ padding: 4px 10px; font-size: 12px; }
 .picker .hint { margin: 8px 0 10px; }
 .hint { color: var(--mist); font-size: 12px; margin: 0; }
-.picker .hint .plus { color: var(--accent); font-weight: 700; }
+.picker .hint .plus { color: var(--accent-text); font-weight: 700; }
 .ramp-preview {
   display: flex;
   flex-wrap: wrap;
@@ -530,8 +681,8 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
   border: 1px solid var(--hairline);
   border-radius: 10px;
 }
-.fam-tile.on { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent); }
-.fam-tile.partial { border-color: var(--accent); color: var(--accent); }
+.fam-tile.on { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent-text); }
+.fam-tile.partial { border-color: var(--accent); color: var(--accent-text); }
 .fam-tile.off { color: var(--mist); background: transparent; opacity: 1; border-color: var(--hairline); }
 .fam-expand {
   min-height: 48px; /* F15 */
@@ -542,7 +693,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
   background: transparent;
   border-color: transparent;
 }
-.fam-expand:hover { color: var(--accent); background: rgba(166, 43, 22, 0.08); box-shadow: none; transform: none; }
+.fam-expand:hover { color: var(--accent-text); background: rgba(166, 43, 22, 0.08); box-shadow: none; transform: none; }
 .fam-detail {
   grid-column: 1 / -1;
   display: flex;
@@ -563,7 +714,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
   background: var(--surface);
   color: var(--ink);
 }
-.fam-detail .letter.selected { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent); }
+.fam-detail .letter.selected { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent-text); }
 .fam-detail .letter:not(.selected) { color: var(--mist); opacity: 1; }
 .fam-detail .letter:hover { opacity: 1; transform: scale(1.05); }
 
@@ -573,10 +724,35 @@ footer {
   padding: 22px 28px 30px;
   color: var(--mist);
   font-size: 12.5px;
+  border-top: 1px solid var(--line);
 }
-footer .fidel { color: var(--accent); font-weight: 700; }
+/* the tibeb spine — one quiet woven recurrence in the footer, never repeated */
+.tibeb-spine {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto 14px;
+  opacity: 0.9;
+}
+/* theme toggle — icon-only pill, mirrors the lang toggle */
+.theme-toggle {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
+  min-height: 48px;
+  flex: 0 0 auto;
+  padding: 4px 12px;
+  margin-right: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.theme-toggle:hover { color: var(--accent-text); }
+footer .fidel { color: var(--accent-text); font-weight: 700; }
 .privacy-note { margin-top: 12px; max-width: 62ch; }
-.privacy-note summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.privacy-note summary { cursor: pointer; color: var(--accent-text); font-weight: 600; }
 .privacy-note p { margin: 6px 0 0; }
 
 /* ---------- shared entrance ---------- */
@@ -592,10 +768,10 @@ footer .fidel { color: var(--accent); font-weight: 700; }
     /* M5: the status line is the ONLY feedback channel — give it a full-width row
        so flash messages are never crushed to '…' on 360-390px phones. */
     .topbar { flex-wrap: wrap; row-gap: 6px; }
-    .status { order: 3; flex-basis: 100%; margin-left: 0; text-align: center; }
+    .status-wrap { order: 3; flex-basis: 100%; margin-left: 0; justify-content: center; }
   }
   .stage { padding: 8px 18px 18px; gap: 22px; }
-  .status { margin-left: 0; }
+  .status-wrap { margin-left: 0; }
   .frame { padding: 10px; }
   .controls { padding: 4px 18px 22px; position: static; }
   .empty-state { min-height: 280px; padding: 40px 22px; }
@@ -605,14 +781,14 @@ footer .fidel { color: var(--accent); font-weight: 700; }
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .frame, .halo, .empty-fidel, .share-top.pulse { animation: none; }
+  .frame, .halo, .empty-fidel, .share-top.pulse, .eye-dot.pulse, .weave-loader span { animation: none; }
   * { transition: none !important; }
 }
 
 /* ---------- samples gallery (samples.html) ---------- */
 .band { padding: 24px 28px 16px; }
-.band h1 { margin: 0; font-size: 22px; font-family: 'Inter Variable', 'Inter', system-ui, sans-serif; }
-.band h1 .fidel { color: var(--accent); }
+.band h1 { margin: 0; font-size: 22px; font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif; }
+.band h1 .fidel { color: var(--accent-text); }
 .samples {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -621,7 +797,7 @@ footer .fidel { color: var(--accent); font-weight: 700; }
 }
 figure { margin: 0; background: var(--surface); border: 1px solid var(--line); padding: 10px; border-radius: 14px; }
 figure canvas { width: 100%; height: auto; }
-figcaption { font-size: 12px; color: var(--mist); padding-top: 8px; text-align: center; font-family: ui-monospace, 'SFMono-Regular', Menlo, 'Noto Sans Ethiopic Variable', monospace; }
+figcaption { font-size: 12px; color: var(--mist); padding-top: 8px; text-align: center; font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', monospace; }
 .panel { background: var(--surface); border: 1px solid var(--line); padding: 12px 18px; border-radius: 14px; margin: 0 28px 18px; }
-.panel h2 { margin: 0 0 8px; font-size: 14px; color: var(--accent); font-family: 'Inter Variable', 'Inter', system-ui, sans-serif; }
+.panel h2 { margin: 0 0 8px; font-size: 14px; color: var(--accent-text); font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif; }
 #rampstrip { display: block; width: 100%; height: auto; background: #fff; border-radius: 8px; }

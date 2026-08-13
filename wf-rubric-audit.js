@@ -174,6 +174,19 @@ code confirms them):
   actual rec.mimeType. F29 empty-fidel gold #a67a22 (3.6:1). F36 summary display
   duplicate removed. DEFERRED: F26 font-subset imports (low value), F30
   title/description Amharic (needs native review — same block as F20-F22).
+- Round 3.25 (user request): FULL MALEDA DESIGN-LANGUAGE RESTYLE
+  (dev/maleda-design-language/ — tokens.css is canonical). Parchment gallery
+  walls + umber ink; the mosaic is now hung as a GILDED PAINTING (gold mount +
+  parchment mat on .frame/.frame-inner); tibeb-spine footer; eye-dot status gaze
+  (gold ready / pulse busy); weave loader during boot; dark umber theme with a
+  topbar toggle (persisted); Inter dropped — Noto Sans Ethiopic is the UI voice
+  for both scripts; Bela Bereka added for Amharic DISPLAY fidel (ግዕዝ wordmark,
+  empty-state ፊደል); mosaic glyphs stay Noto Sans Ethiopic (ramp measured there);
+  mosaic presets re-tuned to Maleda hexes (default = parchment-300/umber/madder/
+  gold/verdigris); share-band + og-image + icons use Maleda gold #C9962E and
+  umber #15090B; the ፊ favicon is UNCHANGED. Restraint: gold pulled back to ≤3%
+  (button hovers now madder). 2 new e2e tests (theme toggle persist, eye-dot
+  pulse + tibeb).
 - Round 3.23 (user request): default Detail slider lowered to 100 (was 170; coarse
   default too). The flat-area variety hash now rotates a per-render seed (RenderOpts
   .seed) so a uniform region's letter mix is FRESH every still render instead of

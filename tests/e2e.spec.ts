@@ -1515,6 +1515,34 @@ test('language + palette persist across reloads (M7)', async ({ page }) => {
   expect(await page.inputValue('#palette')).toBe('church');
 });
 
+test('Maleda theme toggle switches light/dark and persists (Maleda)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  // Clear any persisted theme so the test starts from system.
+  await page.evaluate(() => { try { localStorage.removeItem('geez-art.theme'); } catch {} });
+  expect(await page.getAttribute('html', 'data-theme')).toBeNull(); // system default
+  await page.click('#themeToggle');
+  expect(await page.getAttribute('html', 'data-theme')).toBe('dark');
+  const darkBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(darkBg).toBe('rgb(21, 9, 11)'); // --ink-900 umber
+  await page.reload();
+  await waitReady(page);
+  expect(await page.getAttribute('html', 'data-theme')).toBe('dark'); // persisted
+});
+
+test('Maleda eye-dot pulses during a busy state and the tibeb spine is present (Maleda)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await expect(page.locator('#eyedot')).toBeVisible();
+  // The tibeb spine is the footer's one quiet woven recurrence.
+  await expect(page.locator('.tibeb-spine')).toBeVisible();
+  // Stall the photo decode so the 'reading' status (→ eye-dot pulse) is held
+  // deterministically long enough to observe.
+  await page.evaluate(() => { (window as unknown as { __stallPhotoDecode?: boolean }).__stallPhotoDecode = true; });
+  await page.setInputFiles('#file', SAMPLE);
+  await page.waitForFunction(() => (document.getElementById('eyedot'))?.classList.contains('pulse'), { timeout: 15000 });
+});
+
 test('use none blanks the mosaic instead of leaving a stale image (L31)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);

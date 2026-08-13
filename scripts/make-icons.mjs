@@ -23,15 +23,15 @@ const pngs = await page.evaluate(async (sizes) => {
     c.width = size;
     c.height = size;
     const x = c.getContext('2d');
-    x.fillStyle = '#a62b16'; // brick ground
+    x.fillStyle = '#A62F1E'; // madder ground (Maleda ox-500)
     x.fillRect(0, 0, size, size);
     const r = size * 0.38;
-    x.strokeStyle = 'rgba(217, 164, 65, 0.55)'; // gold halo ring
+    x.strokeStyle = 'rgba(201, 150, 46, 0.6)'; // gold halo ring (Maleda gold-500)
     x.lineWidth = Math.max(2, size * 0.02);
     x.beginPath();
     x.arc(size / 2, size / 2, r, 0, Math.PI * 2);
     x.stroke();
-    x.fillStyle = '#f6f4f0'; // ivory fidel
+    x.fillStyle = '#FCF9F3'; // parchment fidel
     x.font = `700 ${size * 0.62}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",serif`;
     x.textAlign = 'center';
     x.textBaseline = 'middle';

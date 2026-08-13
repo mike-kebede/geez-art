@@ -1,0 +1,119 @@
+/* =========================================================================
+   ETHIOPIAN CLASSICAL DESIGN LANGUAGE — TOKENS (single source of truth)
+   =========================================================================
+   This file is THE canonical token source. All expressions (Editor ★, Gallery,
+   Terminal, Manuscript) derive their colors/motion from these tokens. If a
+   value changes, it changes here and everywhere else follows.
+
+   Method (specs-color-theory.md): tints/shades blend toward parchment #F5E9D1
+   and ink #15090B — never white/black — so the scale stays chromatic.
+   Hue map (CIELAB): madder 38.7° · ochre 52.4° · saffron 74.6° · gold 80.7°
+   · verdigris 159.3° · indigo 289.1°. The warm wedge 38.7°→91° plus one cool
+   counterpoint and one shadow; the 180–270° zone stays empty — that emptiness
+   is the identity.
+
+   Restraint laws: accents live in the 10%; gold is a scarce signature (≤3%);
+   max two chroma families per viewport; 700-steps only for accent TEXT on
+   parchment, 300-tints only on ink; never saffron+verdigris+madder together
+   (the flag).
+   ========================================================================= */
+
+:root{
+  /* ---- ground · parchment (the gallery walls) ---- */
+  --parchment-100:#FCF9F3;   /* canvas wall            */
+  --parchment-300:#F5E9D1;   /* raised surface / chip  */
+  --parchment-500:#E6D6BC;   /* sunken well            */
+  --parchment-600:#D4C09F;   /* muted on-panel text    */
+
+  /* ---- ink · umber (the paintings + structure) ---- */
+  --ink-900:#15090B;         /* primary ink / panel    */
+  --ink-950:#0D0508;         /* deepest cavity         */
+  --umber-500:#6C523D;       /* secondary text         */
+  --umber-700:#573928;       /* structure, frames      */
+  --umber-800:#3A2016;       /* strong frame           */
+
+  /* ---- gold · the scarce signature ---- */
+  --gold-100:#F0DFBD;        /* halo                   */
+  --gold-300:#E1C488;        /* dark-theme gold        */
+  --gold-500:#C9962E;        /* the gilded signature   */
+  --gold-700:#78571E;        /* gold TEXT on parchment (AA 6.3:1) */
+  --gold-pale:#F8E6B8;       /* on-ink panel text      */
+
+  /* ---- pigments · events & states (10% only) ---- */
+  --ver-700:#1A5039;         /* verdigris TEXT on parchment (AA 8.9:1) */
+  --ver-500:#1E8A5E;         /* verdigris fill / mark  */
+  --ver-onink:#7BC9A8;       /* verdigris on ink       */
+  --ox-700:#651E15;          /* madder TEXT on parchment (AA 11.4:1) */
+  --ox-500:#A62F1E;          /* madder fill / mark     */
+  --ox-onink:#E8836F;        /* madder on ink          */
+  --saffron-500:#E8A33D;     /* caution — trims only   */
+  --saffron-onink:#E8C46A;   /* caution on ink         */
+  --ochre-500:#E46F30;       /* urgent / CTA           */
+  --indigo-500:#181B2D;      /* shadow / depth only    */
+
+  /* ---- motion trio · the sanctioned loading triad (madder·verdigris·saffron)
+     Derived from the pigment tokens — motion/transition only, never a static motif. */
+  --tri-1: var(--ox-500);
+  --tri-2: var(--ver-500);
+  --tri-3: var(--saffron-500);
+
+  /* ---- light theme (default) ---- */
+  --bg:var(--parchment-100);
+  --bg-2:var(--parchment-300);
+  --bg-3:var(--parchment-500);
+  --ink:var(--ink-900);
+  --ink-soft:#45311F;
+  --muted:var(--umber-500);
+  --gold:#E5C193;
+  --gold-deep:var(--gold-500);
+  --hair:rgba(21,9,11,.16);
+  --frame:rgba(21,9,11,.50);   /* component boundary — ≥3:1 (WCAG 1.4.11) */
+  --kicker:var(--ox-500);
+  --ver:var(--ver-700);             /* delta text on parchment — AA-safe */
+  --ox:var(--ox-700);
+  --dot:var(--gold-700);             /* eye-dot on parchment — AA-safe (3:1) */
+  --ease-ink:cubic-bezier(.16,1,.3,1);
+  --ease-thread:linear;
+}
+
+/* ---- dark theme (system preference; toggle overrides) ---- */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15090B;
+    --bg-2:#21130C;
+    --bg-3:#332515;
+    --ink:#F3E9D5;
+    --ink-soft:#E6D6BC;
+    --muted:#B9A27C;
+    --gold:var(--gold-300);
+    --gold-deep:#D9A84A;
+    --hair:rgba(243,233,213,.16);
+    --frame:rgba(243,233,213,.42);   /* component boundary — ≥3:1 (WCAG 1.4.11) */
+    --kicker:#E8836F;
+    --ver:var(--ver-onink);
+    --ox:var(--ox-onink);
+    --dot:var(--gold-300);
+    --tri-1: var(--ox-onink);
+    --tri-2: var(--ver-onink);
+    --tri-3: var(--saffron-onink);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15090B;
+  --bg-2:#21130C;
+  --bg-3:#332515;
+  --ink:#F3E9D5;
+  --ink-soft:#E6D6BC;
+  --muted:#B9A27C;
+  --gold:var(--gold-300);
+  --gold-deep:#D9A84A;
+  --hair:rgba(243,233,213,.16);
+  --frame:rgba(243,233,213,.42);   /* component boundary — ≥3:1 (WCAG 1.4.11) */
+  --kicker:#E8836F;
+  --ver:var(--ver-onink);
+  --ox:var(--ox-onink);
+  --dot:var(--gold-300);
+  --tri-1: var(--ox-onink);
+  --tri-2: var(--ver-onink);
+  --tri-3: var(--saffron-onink);
+}

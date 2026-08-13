@@ -70,10 +70,10 @@ const outB64 = await page2.evaluate(async (mosaicB64) => {
   // Deep-ink ground: the card reads as bold at feed size even though the
   // mosaic is inherently letters-on-paper. The bright mosaic panel pops
   // against it (F6).
-  x.fillStyle = '#15110d';
+  x.fillStyle = '#15090B';
   x.fillRect(0, 0, 1200, 630);
   // gold hairline top
-  x.fillStyle = '#d9a441';
+  x.fillStyle = '#C9962E';
   x.fillRect(0, 0, 1200, 4);
   // the mosaic fills the card
   const img = new Image();
@@ -84,19 +84,19 @@ const outB64 = await page2.evaluate(async (mosaicB64) => {
   x.drawImage(img, (1200 - w) / 2, 8, w, h);
   // brand band
   const bandY = 600;
-  x.fillStyle = '#15110d';
+  x.fillStyle = '#15090B';
   x.fillRect(0, bandY, 1200, 30);
-  x.fillStyle = '#d9a441';
+  x.fillStyle = '#C9962E';
   x.fillRect(0, bandY, 1200, 2);
   x.textBaseline = 'middle';
-  x.fillStyle = '#d9a441';
+  x.fillStyle = '#C9962E';
   x.font = '700 18px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",serif';
   x.textAlign = 'left';
   x.fillText('ግዕዝ', 24, bandY + 15);
-  x.fillStyle = '#f1e9d9';
+  x.fillStyle = '#F3E9D5';
   x.font = '600 16px "Inter Variable","Inter",sans-serif';
   x.fillText('geez·art', 90, bandY + 15);
-  x.fillStyle = '#d9a441';
+  x.fillStyle = '#C9962E';
   x.font = '14px ui-monospace,Menlo,monospace';
   x.textAlign = 'right';
   x.fillText('geez-art.mike-kebede.workers.dev', 1176, bandY + 15);

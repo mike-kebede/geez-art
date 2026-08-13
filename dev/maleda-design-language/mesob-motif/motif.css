@@ -1,0 +1,183 @@
+/* Mesob motif — drop this file into any site.
+ *
+ * Colors:  --star-light  --star-dark  --star-gold
+ * Size:    --star-size   (medallion)   --star-repeat (wallpaper)
+ *
+ * <div class="mesob"></div>
+ * <div class="mesob mesob--sm"></div>
+ * <section class="mesob-wallpaper">...</section>
+ */
+
+:root {
+  --star-light: #E8D19A;
+  --star-dark: #451210;
+  --star-gold: #D9A441;
+  --star-size: 12rem;
+  --star-repeat: 7.5rem;
+  --star-coil: 0.22;
+  --star-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201000%201000%22%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22382.654%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22384.099%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%2221.176%200.000%22%20stroke-dashoffset%3D%2210.588%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22390.664%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%2214.727%206.449%22%20stroke-dashoffset%3D%227.364%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22397.230%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%2214.034%207.143%22%20stroke-dashoffset%3D%227.017%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22403.796%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%2212.979%208.197%22%20stroke-dashoffset%3D%226.490%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22410.362%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%2210.009%2011.168%22%20stroke-dashoffset%3D%225.004%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22416.928%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%227.597%2013.579%22%20stroke-dashoffset%3D%223.799%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22423.493%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%227.229%2013.948%22%20stroke-dashoffset%3D%223.614%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22430.059%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%226.594%2014.583%22%20stroke-dashoffset%3D%223.297%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22436.625%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%225.754%2015.422%22%20stroke-dashoffset%3D%222.877%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22443.191%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.016%22%20stroke-linecap%3D%22butt%22%20transform%3D%22rotate%28-90.000%20500%20500%29%22%20%20pathLength%3D%22360%22%20stroke-dasharray%3D%225.040%2016.136%22%20stroke-dashoffset%3D%222.520%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%22500%22%20r%3D%22493%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22butt%22%20pathLength%3D%22360%22%20stroke-dasharray%3D%222.600%2018.576%22%20stroke-dashoffset%3D%221.300%22%20transform%3D%22rotate%28-90%20500%20500%29%22%2F%3E%3C%2Fsvg%3E");
+  --star-crown: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201000%201000%22%3E%3Cpath%20d%3D%22M449.93%2C112.56%20L451.47%2C105.74%20L454.36%2C98.79%20L464.20%2C91.20%20L472.38%2C83.99%20L473.30%2C77.35%20L475.27%2C70.65%20L478.08%2C63.93%20L480.51%2C57.24%20L481.26%2C50.63%20L518.74%2C50.63%20L519.49%2C57.24%20L521.92%2C63.93%20L524.73%2C70.65%20L526.70%2C77.35%20L527.62%2C83.99%20L535.80%2C91.20%20L545.64%2C98.79%20L548.53%2C105.74%20L550.07%2C112.56%20L593.27%2C120.63%20L597.17%2C114.84%20L602.38%2C109.40%20L614.30%2C105.88%20L624.52%2C102.10%20L627.78%2C96.25%20L632.04%2C90.71%20L637.09%2C85.46%20L641.77%2C80.10%20L644.85%2C74.21%20L679.81%2C87.75%20L678.12%2C94.18%20L677.97%2C101.29%20L678.16%2C108.58%20L677.57%2C115.53%20L676.04%2C122.06%20L681.05%2C131.74%20L687.49%2C142.37%20L687.67%2C149.90%20L686.65%2C156.81%20L724.02%2C179.94%20L729.75%2C175.95%20L736.56%2C172.76%20L748.95%2C173.78%20L759.85%2C173.96%20L765.01%2C169.67%20L770.97%2C166.05%20L777.58%2C162.97%20L783.89%2C159.67%20L788.89%2C155.29%20L816.59%2C180.54%20L812.69%2C185.92%20L809.98%2C192.50%20L807.53%2C199.37%20L804.47%2C205.64%20L800.68%2C211.17%20L801.86%2C222.01%20L804.02%2C234.25%20L801.47%2C241.33%20L798.02%2C247.41%20L824.51%2C282.48%20L831.29%2C280.83%20L838.80%2C280.31%20L849.98%2C285.74%20L860.09%2C289.84%20L866.44%2C287.71%20L873.31%2C286.48%20L880.59%2C286.01%20L887.66%2C285.20%20L893.90%2C282.92%20L910.61%2C316.48%20L905.03%2C320.09%20L900.13%2C325.24%20L895.36%2C330.76%20L890.24%2C335.51%20L884.71%2C339.29%20L881.90%2C349.83%20L879.49%2C362.02%20L874.55%2C367.70%20L869.14%2C372.12%20L881.17%2C414.39%20L888.10%2C415.30%20L895.29%2C417.54%20L903.75%2C426.64%20L911.69%2C434.11%20L918.38%2C434.42%20L925.23%2C435.76%20L932.19%2C437.94%20L939.08%2C439.74%20L945.72%2C439.88%20L949.18%2C477.20%20L942.67%2C478.55%20L936.24%2C481.59%20L929.80%2C485.01%20L923.31%2C487.59%20L916.79%2C489.12%20L910.36%2C497.93%20L903.71%2C508.43%20L897.05%2C511.94%20L890.41%2C514.11%20L886.35%2C557.87%20L892.48%2C561.22%20L898.38%2C565.90%20L902.99%2C577.44%20L907.69%2C587.28%20L913.82%2C589.99%20L919.73%2C593.71%20L925.43%2C598.26%20L931.19%2C602.42%20L937.34%2C604.95%20L927.08%2C641.00%20L920.53%2C639.91%20L913.43%2C640.42%20L906.19%2C641.28%20L899.21%2C641.34%20L892.57%2C640.41%20L883.40%2C646.30%20L873.40%2C653.69%20L865.92%2C654.57%20L858.95%2C654.19%20L839.36%2C693.53%20L843.87%2C698.87%20L847.68%2C705.36%20L847.80%2C717.79%20L848.63%2C728.66%20L853.37%2C733.40%20L857.53%2C739.00%20L861.20%2C745.30%20L865.08%2C751.27%20L869.90%2C755.85%20L847.31%2C785.76%20L841.59%2C782.38%20L834.79%2C780.28%20L827.72%2C778.48%20L821.19%2C776.01%20L815.34%2C772.75%20L804.65%2C774.92%20L792.67%2C778.20%20L785.38%2C776.32%20L779.01%2C773.44%20L746.53%2C803.05%20L748.81%2C809.66%20L750.01%2C817.09%20L745.64%2C828.72%20L742.49%2C839.16%20L745.20%2C845.29%20L747.05%2C852.02%20L748.20%2C859.22%20L749.65%2C866.19%20L752.50%2C872.19%20L720.63%2C891.92%20L716.52%2C886.70%20L710.93%2C882.30%20L704.99%2C878.06%20L699.80%2C873.40%20L695.52%2C868.24%20L684.77%2C866.41%20L672.41%2C865.14%20L666.29%2C860.75%20L661.39%2C855.77%20L620.41%2C871.65%20L620.14%2C878.63%20L618.58%2C885.99%20L610.30%2C895.26%20L603.59%2C903.85%20L603.91%2C910.55%20L603.20%2C917.49%20L601.67%2C924.62%20L600.51%2C931.64%20L600.99%2C938.27%20L564.15%2C945.16%20L562.20%2C938.80%20L558.58%2C932.68%20L554.58%2C926.58%20L551.42%2C920.36%20L549.29%2C914.00%20L539.93%2C908.41%20L528.86%2C902.76%20L524.74%2C896.46%20L521.97%2C890.05%20L478.03%2C890.05%20L475.26%2C896.46%20L471.14%2C902.76%20L460.07%2C908.41%20L450.71%2C914.00%20L448.58%2C920.36%20L445.42%2C926.58%20L441.42%2C932.68%20L437.80%2C938.80%20L435.85%2C945.16%20L399.01%2C938.27%20L399.49%2C931.64%20L398.33%2C924.62%20L396.80%2C917.49%20L396.09%2C910.55%20L396.41%2C903.85%20L389.70%2C895.26%20L381.42%2C885.99%20L379.86%2C878.63%20L379.59%2C871.65%20L338.61%2C855.77%20L333.71%2C860.75%20L327.59%2C865.14%20L315.23%2C866.41%20L304.48%2C868.24%20L300.20%2C873.40%20L295.01%2C878.06%20L289.07%2C882.30%20L283.48%2C886.70%20L279.37%2C891.92%20L247.50%2C872.19%20L250.35%2C866.19%20L251.80%2C859.22%20L252.95%2C852.02%20L254.80%2C845.29%20L257.51%2C839.16%20L254.36%2C828.72%20L249.99%2C817.09%20L251.19%2C809.66%20L253.47%2C803.05%20L220.99%2C773.44%20L214.62%2C776.32%20L207.33%2C778.20%20L195.35%2C774.92%20L184.66%2C772.75%20L178.81%2C776.01%20L172.28%2C778.48%20L165.21%2C780.28%20L158.41%2C782.38%20L152.69%2C785.76%20L130.10%2C755.85%20L134.92%2C751.27%20L138.80%2C745.30%20L142.47%2C739.00%20L146.63%2C733.40%20L151.37%2C728.66%20L152.20%2C717.79%20L152.32%2C705.36%20L156.13%2C698.87%20L160.64%2C693.53%20L141.05%2C654.19%20L134.08%2C654.57%20L126.60%2C653.69%20L116.60%2C646.30%20L107.43%2C640.41%20L100.79%2C641.34%20L93.81%2C641.28%20L86.57%2C640.42%20L79.47%2C639.91%20L72.92%2C641.00%20L62.66%2C604.95%20L68.81%2C602.42%20L74.57%2C598.26%20L80.27%2C593.71%20L86.18%2C589.99%20L92.31%2C587.28%20L97.01%2C577.44%20L101.62%2C565.90%20L107.52%2C561.22%20L113.65%2C557.87%20L109.59%2C514.11%20L102.95%2C511.94%20L96.29%2C508.43%20L89.64%2C497.93%20L83.21%2C489.12%20L76.69%2C487.59%20L70.20%2C485.01%20L63.76%2C481.59%20L57.33%2C478.55%20L50.82%2C477.20%20L54.28%2C439.88%20L60.92%2C439.74%20L67.81%2C437.94%20L74.77%2C435.76%20L81.62%2C434.42%20L88.31%2C434.11%20L96.25%2C426.64%20L104.71%2C417.54%20L111.90%2C415.30%20L118.83%2C414.39%20L130.86%2C372.12%20L125.45%2C367.70%20L120.51%2C362.02%20L118.10%2C349.83%20L115.29%2C339.29%20L109.76%2C335.51%20L104.64%2C330.76%20L99.87%2C325.24%20L94.97%2C320.09%20L89.39%2C316.48%20L106.10%2C282.92%20L112.34%2C285.20%20L119.41%2C286.01%20L126.69%2C286.48%20L133.56%2C287.71%20L139.91%2C289.84%20L150.02%2C285.74%20L161.20%2C280.31%20L168.71%2C280.83%20L175.49%2C282.48%20L201.98%2C247.41%20L198.53%2C241.33%20L195.98%2C234.25%20L198.14%2C222.01%20L199.32%2C211.17%20L195.53%2C205.64%20L192.47%2C199.37%20L190.02%2C192.50%20L187.31%2C185.92%20L183.41%2C180.54%20L211.11%2C155.29%20L216.11%2C159.67%20L222.42%2C162.97%20L229.03%2C166.05%20L234.99%2C169.67%20L240.15%2C173.96%20L251.05%2C173.78%20L263.44%2C172.76%20L270.25%2C175.95%20L275.98%2C179.94%20L313.35%2C156.81%20L312.33%2C149.90%20L312.51%2C142.37%20L318.95%2C131.74%20L323.96%2C122.06%20L322.43%2C115.53%20L321.84%2C108.58%20L322.03%2C101.29%20L321.88%2C94.18%20L320.19%2C87.75%20L355.15%2C74.21%20L358.23%2C80.10%20L362.91%2C85.46%20L367.96%2C90.71%20L372.22%2C96.25%20L375.48%2C102.10%20L385.70%2C105.88%20L397.62%2C109.40%20L402.83%2C114.84%20L406.73%2C120.63%20Z%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%228.86%22%20stroke-linejoin%3D%22bevel%22%20stroke-linecap%3D%22butt%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.mesob {
+  display: inline-block;
+  width: var(--star-size);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background-color: var(--star-dark);
+  background-image: repeating-radial-gradient(
+    circle at 50% 50%,
+    rgb(0 0 0 / var(--star-coil)) 0 0.45%,
+    rgb(255 255 255 / 0.07) 0.55% 0.85%,
+    transparent 0.95% 1.35%
+  );
+  background-blend-mode: multiply;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--star-dark) 70%, #000);
+}
+
+.mesob::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--star-gold);
+  background-image: repeating-radial-gradient(
+    circle at 50% 50%,
+    rgb(0 0 0 / var(--star-coil)) 0 0.45%,
+    rgb(255 255 255 / 0.07) 0.55% 0.85%,
+    transparent 0.95% 1.35%
+  );
+  background-blend-mode: multiply;
+  -webkit-mask: var(--star-crown) center / contain no-repeat;
+  mask: var(--star-crown) center / contain no-repeat;
+}
+
+.mesob::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-color: var(--star-light);
+  background-image: repeating-radial-gradient(
+    circle at 50% 50%,
+    rgb(0 0 0 / var(--star-coil)) 0 0.45%,
+    rgb(255 255 255 / 0.07) 0.55% 0.85%,
+    transparent 0.95% 1.35%
+  );
+  background-blend-mode: multiply;
+  -webkit-mask: var(--star-mask) center / contain no-repeat;
+  mask: var(--star-mask) center / contain no-repeat;
+}
+
+.mesob--sm { --star-size: 2.75rem; --star-coil: 0.12; }
+.mesob--md { --star-size: 6.5rem; }
+.mesob--lg { --star-size: 18rem; --star-coil: 0.26; }
+.mesob--xl { --star-size: 28rem; --star-coil: 0.28; }
+
+.mesob--invert {
+  background-color: var(--star-light);
+}
+.mesob--invert::after {
+  background-color: var(--star-dark);
+}
+
+.mesob--quiet {
+  opacity: 0.16;
+}
+
+.mesob-wallpaper {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--star-dark);
+}
+.mesob-wallpaper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--star-gold);
+  -webkit-mask-image: var(--star-crown);
+  -webkit-mask-size: var(--star-repeat) var(--star-repeat);
+  -webkit-mask-repeat: repeat;
+  mask-image: var(--star-crown);
+  mask-size: var(--star-repeat) var(--star-repeat);
+  mask-repeat: repeat;
+}
+.mesob-wallpaper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: var(--star-light);
+  -webkit-mask-image: var(--star-mask);
+  -webkit-mask-size: var(--star-repeat) var(--star-repeat);
+  -webkit-mask-repeat: repeat;
+  mask-image: var(--star-mask);
+  mask-size: var(--star-repeat) var(--star-repeat);
+  mask-repeat: repeat;
+}
+
+/* Pure CSS fallback — no mask, 17-fold. */
+.mesob--css {
+  --_p: var(--star-light);
+  --_q: var(--star-dark);
+  --_g: var(--star-gold);
+  background:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgb(0 0 0 / var(--star-coil)) 0 0.45%,
+      rgb(255 255 255 / 0.06) 0.55% 0.85%,
+      transparent 0.95% 1.35%
+    ),
+    radial-gradient(circle at 50% 50%, transparent 0 90%, var(--_q) 90.2%),
+    radial-gradient(circle at 50% 50%, var(--_p) 0 78%, transparent 78.2%),
+    conic-gradient(
+      from -4.20deg,
+      var(--_p) 0.000deg 8.400deg,
+      var(--_q) 8.400deg 21.176deg,
+      var(--_p) 21.176deg 29.576deg,
+      var(--_q) 29.576deg 42.353deg,
+      var(--_p) 42.353deg 50.753deg,
+      var(--_q) 50.753deg 63.529deg,
+      var(--_p) 63.529deg 71.929deg,
+      var(--_q) 71.929deg 84.706deg,
+      var(--_p) 84.706deg 93.106deg,
+      var(--_q) 93.106deg 105.882deg,
+      var(--_p) 105.882deg 114.282deg,
+      var(--_q) 114.282deg 127.059deg,
+      var(--_p) 127.059deg 135.459deg,
+      var(--_q) 135.459deg 148.235deg,
+      var(--_p) 148.235deg 156.635deg,
+      var(--_q) 156.635deg 169.412deg,
+      var(--_p) 169.412deg 177.812deg,
+      var(--_q) 177.812deg 190.588deg,
+      var(--_p) 190.588deg 198.988deg,
+      var(--_q) 198.988deg 211.765deg,
+      var(--_p) 211.765deg 220.165deg,
+      var(--_q) 220.165deg 232.941deg,
+      var(--_p) 232.941deg 241.341deg,
+      var(--_q) 241.341deg 254.118deg,
+      var(--_p) 254.118deg 262.518deg,
+      var(--_q) 262.518deg 275.294deg,
+      var(--_p) 275.294deg 283.694deg,
+      var(--_q) 283.694deg 296.471deg,
+      var(--_p) 296.471deg 304.871deg,
+      var(--_q) 304.871deg 317.647deg,
+      var(--_p) 317.647deg 326.047deg,
+      var(--_q) 326.047deg 338.824deg,
+      var(--_p) 338.824deg 347.224deg,
+      var(--_q) 347.224deg 360.000deg
+    );
+}
+.mesob--css::before,
+.mesob--css::after {
+  display: none;
+}

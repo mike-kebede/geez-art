@@ -1,0 +1,74 @@
+/* Geometric tibeb band — 1px crisp rails, integer grid.
+ * .pattern-marker      vertical band
+ * .pattern-spine       vertical spine
+ * .pattern-rule        horizontal band
+ * .pattern-rule-spine  horizontal spine
+ * .pattern-frame       4-sided border
+ */
+
+:root {
+  --pattern-ink: #15090B;
+  --pattern-gold: #C9962E;
+  --pattern-umber: #573928;
+  --pattern-strip: url("pattern-slim.svg");
+  --pattern-strip-h: url("pattern-slim-h.svg");
+  --pattern-spine: url("pattern-spine.svg");
+  --pattern-spine-h: url("pattern-spine-h.svg");
+  --pattern-full: url("pattern-full.svg");
+  --pattern-frame: url("pattern-frame.svg");
+  --pattern-w: 40px;
+  --pattern-spine-w: 24px;
+}
+
+.pattern-marker {
+  width: var(--pattern-w);
+  min-height: 7rem;
+  background: var(--pattern-ink) var(--pattern-strip) 0 0 / 100% auto repeat-y;
+  flex: 0 0 var(--pattern-w);
+}
+
+.pattern-spine {
+  width: var(--pattern-spine-w);
+  min-height: 7rem;
+  background: var(--pattern-ink) var(--pattern-spine) 0 0 / 100% auto repeat-y;
+  flex: 0 0 var(--pattern-spine-w);
+}
+
+.pattern-full {
+  width: calc(var(--pattern-w) * 2.5);
+  min-height: 7rem;
+  background: var(--pattern-ink) var(--pattern-full) 0 0 / 100% auto repeat-y;
+  flex: 0 0 calc(var(--pattern-w) * 2.5);
+}
+
+.pattern-rule,
+hr.pattern-rule {
+  display: block;
+  height: var(--pattern-w);
+  width: 100%;
+  border: 0;
+  margin: 1.25rem 0;
+  background: var(--pattern-ink) var(--pattern-strip-h) 0 0 / calc(var(--pattern-w) * 1.2) 100% repeat-x;
+}
+
+.pattern-rule-spine,
+hr.pattern-rule-spine {
+  display: block;
+  height: var(--pattern-spine-w);
+  width: 100%;
+  border: 0;
+  margin: 1.25rem 0;
+  background: var(--pattern-ink) var(--pattern-spine-h) 0 0 / var(--pattern-spine-w) 100% repeat-x;
+}
+
+.pattern-frame {
+  border: var(--pattern-w) solid var(--pattern-ink);
+  border-image-source: var(--pattern-frame);
+  border-image-slice: 80;
+  border-image-repeat: repeat;
+  border-image-width: var(--pattern-w);
+  background-color: var(--pattern-ink);
+}
+
+.pattern-frame--sm { --pattern-w: 32px; }
+.pattern-frame--lg { --pattern-w: 80px; }

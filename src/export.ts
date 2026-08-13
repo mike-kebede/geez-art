@@ -7,8 +7,8 @@ import { MAX_SOURCE_EDGE } from './limits';
 
 const DEFAULT_FILENAME = 'geez-art.png';
 
-/** Brand-band colors for shared images — dark band with gold accents, matching the chrome. */
-const BRAND = { band: '#15110d', gold: '#d9a441', text: '#f1e9d9' };
+/** Brand-band colors for shared images — umber band with Maleda gold accents. */
+const BRAND = { band: '#15090B', gold: '#C9962E', text: '#F3E9D5' };
 
 /** Promise wrapper around canvas.toBlob("image/png"). Rejects if the blob is null. */
 export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {

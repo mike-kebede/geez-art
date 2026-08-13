@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+<circle cx="500" cy="500" r="382.654" fill="#fff"/>
+<circle cx="500" cy="500" r="384.099" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="21.176 0.000" stroke-dashoffset="10.588"/>
+<circle cx="500" cy="500" r="390.664" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="14.727 6.449" stroke-dashoffset="7.364"/>
+<circle cx="500" cy="500" r="397.230" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="14.034 7.143" stroke-dashoffset="7.017"/>
+<circle cx="500" cy="500" r="403.796" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="12.979 8.197" stroke-dashoffset="6.490"/>
+<circle cx="500" cy="500" r="410.362" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="10.009 11.168" stroke-dashoffset="5.004"/>
+<circle cx="500" cy="500" r="416.928" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="7.597 13.579" stroke-dashoffset="3.799"/>
+<circle cx="500" cy="500" r="423.493" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="7.229 13.948" stroke-dashoffset="3.614"/>
+<circle cx="500" cy="500" r="430.059" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="6.594 14.583" stroke-dashoffset="3.297"/>
+<circle cx="500" cy="500" r="436.625" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="5.754 15.422" stroke-dashoffset="2.877"/>
+<circle cx="500" cy="500" r="443.191" fill="none" stroke="#fff" stroke-width="7.016" stroke-linecap="butt" transform="rotate(-90.000 500 500)"  pathLength="360" stroke-dasharray="5.040 16.136" stroke-dashoffset="2.520"/>
+<circle cx="500" cy="500" r="493" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="butt" pathLength="360" stroke-dasharray="2.600 18.576" stroke-dashoffset="1.300" transform="rotate(-90 500 500)"/>
+</svg>
