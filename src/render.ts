@@ -330,32 +330,49 @@ function rampKey(ramp: GlyphInfo[]): string {
 function ensureAtlas(ramp: GlyphInfo[], cellPx: number, ink: string, paper: string): { atlas: HTMLCanvasElement; tileW: number } {
   const key = `${rampKey(ramp)}:${cellPx}:${ink}:${paper}`; // M1: ramp identity, not length
   if (atlasCache && atlasCache.key === key) return atlasCache;
-  const tileW = Math.ceil(cellPx * 1.2);
-  const tileH = Math.ceil(cellPx * 1.4);
+  const tileW = Math.ceil(cellPx * 1.3);
+  const tileH = Math.ceil(cellPx * 1.5);
   const atlas = document.createElement('canvas');
   atlas.width = ramp.length * tileW;
   atlas.height = tileH;
   const ctx = atlas.getContext('2d')!;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, atlas.width, atlas.height);
-  ctx.font = `${GLYPH_WEIGHT} ${cellPx}px ${FONT}`;
+  ctx.font = `${GLYPH_WEIGHT} ${Math.round(cellPx * GLYPH_SCALE)}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = ink;
   for (let i = 0; i < ramp.length; i++) {
-    ctx.fillText(ramp[i].ch, i * tileW + tileW / 2, tileH / 2 + cellPx * 0.06);
+    ctx.fillText(ramp[i].ch, i * tileW + tileW / 2, tileH / 2 + cellPx * 0.02);
   }
   atlasCache = { key, atlas, tileW };
   return atlasCache;
 }
 
-// Small LRU of recent color atlases — video scenes shift their quantized
-// A4: the colorized atlas is now a FIXED 64-level index (2 bits/channel), built
-// once per (ramp, paper, ink) — video frames that shift their quantized palette
-// just get a new cheap cell→level lookup instead of a ~16k-fillText rebuild.
-let colorAtlasCache: { key: string; atlas: HTMLCanvasElement; tileW: number; tileH: number } | null = null;
+// A4: the colorized atlas is a FIXED 64-level index (2 bits/channel), built once
+// per (ramp, paper, ink). M1: it's now a real small LRU (4 slots) so the idle
+// warm can pre-build every palette's atlas and a palette switch hits the cache
+// instead of paying a synchronous ~16k-fillText rebuild (~0.5-1s on low-end).
+interface ColorAtlas {
+  atlas: HTMLCanvasElement;
+  tileW: number;
+  tileH: number;
+}
+const colorAtlasCache = new Map<string, ColorAtlas>();
+const COLOR_ATLAS_MAX = 4;
 
 const COLOR_REF_CELL = 16;
+
+/**
+ * M5: the ramp is measured at font-size = box (64px in a 64px cell, ratio 1.0),
+ * but the atlas used to draw the glyph at font-size = cellPx inside a
+ * 1.4x-cellPx tile — which the blit then compresses to the cell, so the rendered
+ * glyph was ~0.71x its measured relative size and ink stayed ~1/3 of each cell.
+ * Drawing at ~1.4x cellPx restores the measurement geometry: the densest glyph
+ * now covers most of the cell and the default mosaic no longer reads
+ * parchment-pale.
+ */
+const GLYPH_SCALE = 1.4;
 
 /**
  * The colorized equivalent of ensureAtlas. The atlas has one row per possible
@@ -369,9 +386,10 @@ function colorAtlasFor(
   ink: string,
 ): { atlas: HTMLCanvasElement; tileW: number; tileH: number } {
   const key = `${rampKey(ramp)}:${paper}:${ink}`; // M1: ramp identity, not length
-  if (colorAtlasCache && colorAtlasCache.key === key) return colorAtlasCache;
-  const tileW = Math.ceil(COLOR_REF_CELL * 1.2);
-  const tileH = Math.ceil(COLOR_REF_CELL * 1.4);
+  const hit = colorAtlasCache.get(key);
+  if (hit) return hit;
+  const tileW = Math.ceil(COLOR_REF_CELL * 1.3);
+  const tileH = Math.ceil(COLOR_REF_CELL * 1.5);
   const LEVELS = 64;
   const atlas = document.createElement('canvas');
   atlas.width = ramp.length * tileW;
@@ -379,7 +397,7 @@ function colorAtlasFor(
   const ctx = atlas.getContext('2d')!;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, atlas.width, atlas.height);
-  ctx.font = `${GLYPH_WEIGHT} ${COLOR_REF_CELL}px ${FONT}`;
+  ctx.font = `${GLYPH_WEIGHT} ${Math.round(COLOR_REF_CELL * GLYPH_SCALE)}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   for (let level = 0; level < LEVELS; level++) {
@@ -388,11 +406,15 @@ function colorAtlasFor(
     const b = (level & 3) * 64;
     ctx.fillStyle = `rgb(${r},${g},${b})`;
     for (let k = 0; k < ramp.length; k++) {
-      ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, level * tileH + tileH / 2 + COLOR_REF_CELL * 0.06);
+      ctx.fillText(ramp[k].ch, k * tileW + tileW / 2, level * tileH + tileH / 2 + COLOR_REF_CELL * 0.02);
     }
   }
-  colorAtlasCache = { key, atlas, tileW, tileH };
-  return colorAtlasCache;
+  colorAtlasCache.set(key, { atlas, tileW, tileH });
+  if (colorAtlasCache.size > COLOR_ATLAS_MAX) {
+    const oldest = colorAtlasCache.keys().next().value;
+    if (oldest !== undefined) colorAtlasCache.delete(oldest);
+  }
+  return { atlas, tileW, tileH };
 }
 
 /** Quantized color level for one RGB channel (0..3). */

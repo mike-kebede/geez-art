@@ -188,7 +188,7 @@ export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
     exampleBtn: 'ምሳሌ ይሞክሩ',
     groupExport: 'ያስወጡ',
     dlPng: 'PNG ያውርዱ',
-    copyLink: 'አገናኝ ቅዳ',
+    copyLink: 'አገናኝ ይቅዱ', // L16: polite register, matches copyText ይቅዱ
     advancedSummary: 'የላቀ',
     groupAdjust: 'ያስተካክሉ',
     sliderDetail: 'ዝርዝር',
@@ -236,7 +236,7 @@ export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
     palette_mono: 'ሞኖ',
     palette_manuscript: 'ብራና',
     palette_icon: 'አዶ',
-    palette_church: 'የቤተክርስቲያን የግድግዳ ሰዕል',
+    palette_church: 'የቤተክርስቲያን የግድግዳ ሥዕል',
     // dynamic (t()) — pending native review
     statPrefix: 'ምስልዎ —',
     setupError: 'የማዋቀር ስህተት፡',
@@ -244,7 +244,7 @@ export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
     reading: 'ፎቶዎን በማንበብ ላይ…',
     loadingVideo: 'ቪዲዮ በመጫን ላይ…',
     analyticsDisclosure: 'ይህ ጣቢያ ማንነት አልባ ስታቲስቲክስ ይጠቀማል፣ በጣቢያው ባለቤት የተነቃ።',
-    privacyBodyAnalytics: 'ፎቶዎ ሁልጊዜ በመሣሪያዎ ላይ ይሰራል እንጂ አይሰቀልም። ይህ ጣቢያ በባለቤቱ የነቃ የጉብኝት ስታቲስቲክስ (የአይፒ አድራሻን ጨምሮ) ይጠቀማል። ፎቶዎ አይተላለፍም። ለወላጆች፡ ከጊዝ-አርት ራሱ መለያም ኩኪም የለም። ፎቶ ላይ እውነተኛ ሰው ካለ፣ ከማጋራትዎ በፊት ይጠይቁ።',
+    privacyBodyAnalytics: 'ፎቶዎ ሁልጊዜ በመሣሪያዎ ላይ ይሰራል እንጂ አይሰቀልም። ይህ ጣቢያ በባለቤቱ የነቃ የጉብኝት ስታቲስቲክስ (የአይፒ አድራሻን ጨምሮ) ይጠቀማል። ፎቶዎ አይተላለፍም። ለወላጆች፡ ከጊዝ-አርት ራሱ መለያም ኩኪም የለም። የስታቲስቲክስ አቅራቢው የራሱ መለያ ሊያስቀምጥ ይችላል። ፎቶ ላይ እውነተኛ ሰው ካለ፣ ከማጋራትዎ በፊት ይጠይቁ።',
     ready: 'ዝግጁ',
     rendering: 'እየተሰራ ነው…',
     preparing: 'ፊደላትን በማዘጋጀት ላይ…',
@@ -255,7 +255,7 @@ export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
     copied: 'ተቀድቷል',
     copyFailed: 'መቅዳት አልተቻለም — እንደገና ይሞክሩ።',
     shared: 'ተጋርቷል — ሞዛይኩ ብቻ፣ ዋናው ምስልዎ አይደለም፣ ምንም አልተሰቀለም',
-    saved: 'ተቀምጧል — ሞዛይኩ ብቻ ተጋርቷል፤ ፎቶዎ መሰሪያዎን አይለቅም', // ሣ→ሰ
+    saved: 'ተቀምጧል — ሞዛይኩ ብቻ ተጋርቷል፤ ፎቶዎ መሣሪያዎን አይለቅም', // L17: standardize መሣሪያ
     shareCancelled: 'ማጋራት ተሰርዟል — ምንም አልተላከም።',
     recording: 'ጥቂት ሰከንዶችን በመቅረጽ ላይ…',
     videoSaved: 'ቪዲዮ ተቀምጧል',
@@ -282,7 +282,7 @@ export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
     pickIndividual: 'ነጠላ ፊደላት ይምረጡ',
     letterName: 'ፊደል U+',
     familyPartial: 'ቤተሰብ በከፊል ተመርጧል — ሁሉንም ለመቀየር ይንኩ',
-    zoomPanAria: 'የተስፋፋ ሰዕል — ለማንቀሳቀስ የቀስት ቁልፎችን ይጠቀሙ', // ሥ→ሰ // M7: መሳፈር = to board/ride — wrong verb root
+    zoomPanAria: 'የተስፋፋ ሥዕል — ለማንቀሳቀስ የቀስት ቁልፎችን ይጠቀሙ', // M7: መሳፈር = to board/ride — wrong verb root // L17: standardize ሥዕል
     noLettersAria: 'የኢትዮጵያ ፊደላት ሞዛይክ — ምንም ፊደል አልተመረጠም',
     showcaseAria: 'የሞዛይክ ቅድመ-እይታ',
     controlsAria: 'መቆጣጠሪያዎች',

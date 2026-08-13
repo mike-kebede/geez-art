@@ -143,6 +143,11 @@ export async function recordCanvas(
   fps = 12,
   audio: MediaStream | null = null,
 ): Promise<RecordResult> {
+  // M2 e2e seam: force the recorder to fail so the failure flash + button
+  // re-enable path is exercised (mirrors __forceNoVideoCapture).
+  if (import.meta.env.DEV && (window as unknown as { __forceRecorderFail?: boolean }).__forceRecorderFail) {
+    return { blob: null, ext: 'mp4' };
+  }
   // #2: stop ONLY the video tracks this function creates — the audio track is
   // the caller's SHARED MediaStreamDestination; stopping it kills every later export.
   let videoTracks: MediaStreamTrack[] = [];
@@ -196,12 +201,19 @@ export async function recordCanvas(
  * the file stays shareable on WhatsApp/Telegram/Instagram.
  */
 export async function recordGIF(canvas: HTMLCanvasElement, seconds = 3, fps = 8): Promise<Uint8Array | null> {
+  // M2 e2e seam: force the GIF encode to fail so gifFailed + re-enable is tested.
+  if (import.meta.env.DEV && (window as unknown as { __forceRecorderFail?: boolean }).__forceRecorderFail) {
+    return null;
+  }
   try {
     // gifenc is click-gated, so import it only when GIF export is actually used
     // — keeps its weight out of the eager main bundle (L35).
     const { GIFEncoder, quantize, applyPalette } = await import('gifenc');
     const gif = GIFEncoder();
-    // Cap the LONG edge at 480px (width-only let tall portraits through at 480×852).
+    // L28: 128 colors instead of 256 — imperceptible on a letter mosaic, but
+    // LZW compresses better (the denser bold glyphs pushed a 256-color GIF past
+    // the 2.5MB budget on metered data). Cap the LONG edge at 480px (width-only
+    // let tall portraits through at 480×852).
     const scale = Math.min(1, 480 / Math.max(1, canvas.width, canvas.height));
     const w = Math.max(1, Math.round(canvas.width * scale));
     const h = Math.max(1, Math.round(canvas.height * scale));
@@ -214,7 +226,7 @@ export async function recordGIF(canvas: HTMLCanvasElement, seconds = 3, fps = 8)
     for (let i = 0; i < frames; i++) {
       tctx.drawImage(canvas, 0, 0, w, h);
       const data = tctx.getImageData(0, 0, w, h).data;
-      const palette = quantize(data, 256);
+      const palette = quantize(data, 128); // L28: 128 colors → better LZW, ~30% smaller
       const index = applyPalette(data, palette);
       gif.writeFrame(index, w, h, { palette, delay });
       await new Promise((r) => setTimeout(r, delay));

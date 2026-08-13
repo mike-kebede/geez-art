@@ -221,8 +221,11 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
   });
   lastResult = res;
   const out = $('mosaic') as HTMLCanvasElement;
-  out.width = res.canvas.width;
-  out.height = res.canvas.height;
+  // L8: only resize when dimensions actually change — reassigning width/height
+  // unconditionally clears and reinitializes the bitmap every call, which in
+  // video mode is a redundant ~17MB clear + context reset on every frame.
+  if (out.width !== res.canvas.width) out.width = res.canvas.width;
+  if (out.height !== res.canvas.height) out.height = res.canvas.height;
   out.getContext('2d')!.drawImage(res.canvas, 0, 0);
   mosaicCanvas = res.canvas;
   updateShareState();
@@ -513,7 +516,12 @@ function handlePickedFile(file: File): void {
     const gen = ++photoGen; // A2
     flash(t('reading')); // #6: the first tap must not look dead during decode
     void imageFileToCanvas(file)
-      .then((c) => {
+      .then(async (c) => {
+        // M3 e2e seam: hold the decoded photo before setSource so a second pick
+        // (or Clear) during the window deterministically bumps photoGen.
+        if (import.meta.env.DEV && (window as unknown as { __stallPhotoDecode?: boolean }).__stallPhotoDecode) {
+          await new Promise((r) => setTimeout(r, 1500));
+        }
         if (gen !== photoGen) return; // a newer photo was picked while decoding
         setSource(c);
         trackEvent('source', { kind: 'image' });
@@ -1026,7 +1034,12 @@ async function init(): Promise<void> {
     if (source) render();
     // A3: warm the 64-level color atlas at idle so the FIRST drop (colorize is
     // on by default) doesn't pay a ~300-800ms synchronous build.
-    const warm = () => { try { warmColorAtlas(ramp, currentPalette.paper, currentPalette.ink); } catch { /* warm only */ } };
+    // M1: warm the color atlas for EVERY palette at idle (the cache is now a
+    // small LRU), so a palette switch — or a cold visit with a persisted
+    // non-default palette — never pays the ~15k-fillText build inside a render.
+    const warm = () => {
+      try { for (const p of PALETTES) warmColorAtlas(ramp, p.paper, p.ink); } catch { /* warm only */ }
+    };
     if (typeof requestIdleCallback === 'function') requestIdleCallback(warm, { timeout: 2000 });
     else setTimeout(warm, 500);
     // M10: a shared ?demo=1 link lands on a live demo, not a blank canvas.

@@ -1357,6 +1357,82 @@ test('a superseded video load cannot clobber a fresh photo (A6)', async ({ page 
   await expect(page.locator('#playBtn')).toBeHidden(); // no video controls active
 });
 
+test('recorder failure flashes videoFailed and re-enables exports (M2)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  await page.evaluate(() => { (window as unknown as { __forceRecorderFail?: boolean }).__forceRecorderFail = true; });
+  await expect(page.locator('#dlVideo')).toBeVisible();
+  await page.click('#dlVideo');
+  await expect(page.locator('#status')).toContainText("Couldn't record the video.", { timeout: 15000 });
+  await expect(page.locator('#dlVideo')).toBeEnabled();
+  await expect(page.locator('#dlGif')).toBeEnabled();
+});
+
+test('GIF recorder failure flashes gifFailed and re-enables exports (M2)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.setInputFiles('#file', VIDEO);
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  await page.evaluate(() => { (window as unknown as { __forceRecorderFail?: boolean }).__forceRecorderFail = true; });
+  await expect(page.locator('#dlGif')).toBeVisible();
+  await page.click('#dlGif');
+  await expect(page.locator('#status')).toContainText("Couldn't make the GIF", { timeout: 15000 });
+  await expect(page.locator('#dlVideo')).toBeEnabled();
+  await expect(page.locator('#dlGif')).toBeEnabled();
+});
+
+test('a late photo decode cannot clobber a newer pick (M3)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  const mk = (w: number, h: number, color: string) =>
+    page.evaluate(([w, h, color]) => {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const x = c.getContext('2d')!;
+      x.fillStyle = color;
+      x.fillRect(0, 0, w, h);
+      return c.toDataURL('image/png').split(',')[1];
+    }, [w, h, color] as const);
+  const aB64 = await mk(100, 200, '#000'); // A: portrait — must lose
+  const bB64 = await mk(300, 100, '#fff'); // B: landscape — must win
+  await page.evaluate(() => { (window as unknown as { __stallPhotoDecode?: boolean }).__stallPhotoDecode = true; });
+  await page.setInputFiles('#file', { name: 'a.png', mimeType: 'image/png', buffer: Buffer.from(aB64, 'base64') });
+  await page.waitForTimeout(300); // A starts its decode and stalls before setSource
+  await page.evaluate(() => { (window as unknown as { __stallPhotoDecode?: boolean }).__stallPhotoDecode = false; });
+  await page.setInputFiles('#file', { name: 'b.png', mimeType: 'image/png', buffer: Buffer.from(bB64, 'base64') });
+  await page.waitForFunction(() => {
+    const c = document.getElementById('mosaic') as HTMLCanvasElement;
+    return c.width > 10;
+  });
+  await page.waitForTimeout(2000); // A's stall elapses — must NOT clobber B
+  const src = await page.evaluate(() => {
+    const s = document.getElementById('source') as HTMLCanvasElement;
+    return { w: s.width, h: s.height };
+  });
+  expect(src.w).toBe(300); // B won; A's 100px portrait never landed
+});
+
+test('Clear invalidates an in-flight photo decode (M3)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.evaluate(() => { (window as unknown as { __stallPhotoDecode?: boolean }).__stallPhotoDecode = true; });
+  await page.setInputFiles('#file', SAMPLE);
+  await page.waitForTimeout(300); // decode stalls before setSource
+  await page.evaluate(() => { (window as unknown as { __stallPhotoDecode?: boolean }).__stallPhotoDecode = false; });
+  await page.click('#clearBtn');
+  await page.waitForTimeout(2000); // stall elapses — the stale decode must NOT setSource
+  const mosaicW = await page.evaluate(() => (document.getElementById('mosaic') as HTMLCanvasElement).width);
+  expect(mosaicW).toBe(0); // still cleared, no stale render
+});
+
 test('i18n dictionary is in sync: every data-i18n key exists in both languages (F25)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);

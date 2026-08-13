@@ -174,6 +174,18 @@ code confirms them):
   actual rec.mimeType. F29 empty-fidel gold #a67a22 (3.6:1). F36 summary display
   duplicate removed. DEFERRED: F26 font-subset imports (low value), F30
   title/description Amharic (needs native review — same block as F20-F22).
+- Round 3.22 (in progress, fixes for the 89/100 live-site audit): M5 glyph-size
+  geometry fixed — the atlas now draws glyphs at ~1.4x cellPx (GLYPH_SCALE) to
+  match the measurement ratio (was ~0.71x, so ink stayed ~1/3 of a cell). Default
+  dark ink 7.4% -> 19.1%, meanLum 216 -> 184, structure correlation UP. M1 color
+  atlas is now a real 4-slot LRU and the idle warm pre-builds ALL palettes (palette
+  switch no longer pays the ~15k-fillText build). L8 #mosaic canvas resize guarded
+  (video mode no longer clears+reinitializes ~17MB every frame). M2 __forceRecorderFail
+  seam + tests (videoFailed/gifFailed flash + export buttons re-enable). M3
+  __stallPhotoDecode seam + photo-to-photo and Clear-during-decode race tests. M4
+  Amharic analytics disclosure now carries the third-party-provider clause. L16
+  copyLink register -> polite. L17 spelling normalized to standard ሥዕል/መሣሪያ (the
+  ሠ/ሰ/ሣ family still needs a definitive native review).
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
