@@ -78,7 +78,7 @@ const SITE_URL: string = (() => {
   // L1: only https (or localhost dev) origins get stamped on shares.
   if (origin && origin.startsWith('https://')) return origin;
   if (origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'))) return origin;
-  return 'https://geez-art.pages.dev';
+  return 'https://geez-art.mike-kebede.workers.dev';
 })();
 
 /** The share-sheet TEXT link carries a fresh per-share referral token (F10);

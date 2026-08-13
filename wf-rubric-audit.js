@@ -16,13 +16,18 @@ videos into mosaics of Ge'ez/Ethiopic fidel letters. Product goal: a free viral 
 + diaspora audience (send a pic, friend taps the URL baked into the image, makes their own, shares onward).
 Source root: C:\\Users\\mike-work\\Desktop\\geez-art.
 
-App runs two ways right now:
+App runs three ways right now:
+- LIVE: https://geez-art.mike-kebede.workers.dev — this is the primary target. Review the deployed site
+  (the author verified it boots: status Ready, demo renders, CSP/headers served, no console errors).
+  The runtime share URL is origin-derived; the SEO meta + og-image band now point at this domain.
 - Dev server: http://localhost:5199 (may be briefly busy — the author's Playwright suite uses it; a quick
   HTTP GET of the page is fine, do not hammer it, and do NOT run the full test suite yourself).
 - Production build: \`npm run build\` → dist/ is clean (tsc + vite build green).
 
-DEPLOYMENT IS DELIBERATELY PARKED by the user. Anything that only manifests on a live URL (og:image
-preview, CSP enforcement, share-card rendering, DNS) is "deploy-blocked", not a fixable bug.
+DEPLOYMENT IS LIVE (un-parked by the user on 2026-08-13) at the workers.dev URL above. Things that only
+manifest on a live URL are now CHECKABLE against that URL, not "deploy-blocked". The user owns a Hostinger
+domain and may add a custom subdomain later; until then workers.dev is canonical. Note: there is NO custom
+domain, NO attribution-short-domain redirect, and the analytics provider is not configured.
 
 THIS IS A RE-AUDIT (round 3). Two prior rounds of 12 persona reviews surfaced ~60 findings; the author has
 since fixed the tractable ones. Fixed-and-verified (do NOT re-report as new; you may mark them PASS if the

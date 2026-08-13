@@ -1,0 +1,14 @@
+# geez-art — Workers Static Assets deployment.
+# Serves the Vite build (dist/) with public/_headers honored (CSP, etc.).
+name = "geez-art"
+main = "cloudflare/worker.ts"
+compatibility_date = "2026-08-12"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+# Custom domain once the Hostinger subdomain is ready:
+#  [routes]
+#  pattern = "geez-art.yourdomain.com"
+#  custom_domain = true

@@ -99,7 +99,7 @@ const outB64 = await page2.evaluate(async (mosaicB64) => {
   x.fillStyle = '#d9a441';
   x.font = '14px ui-monospace,Menlo,monospace';
   x.textAlign = 'right';
-  x.fillText('geez-art.pages.dev', 1176, bandY + 15);
+  x.fillText('geez-art.mike-kebede.workers.dev', 1176, bandY + 15);
   return c.toDataURL('image/png').split(',')[1];
 }, mosaicB64);
 await browser2.close();
