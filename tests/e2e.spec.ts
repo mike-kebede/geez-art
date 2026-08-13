@@ -1471,14 +1471,14 @@ test.describe('mobile (Pixel 7 — F-7)', () => {
   const { defaultBrowserType: _dbt, ...pixel7 } = devices['Pixel 7'];
   test.use(pixel7);
 
-  test('coarse-pointer default is 120 and max is 240', async ({ page }) => {
+  test('coarse-pointer default is 100 and max is budget-derived (<240) (L23)', async ({ page }) => {
     await page.goto('/');
     await waitReady(page);
     const w = await page.evaluate(() => {
       const el = document.getElementById('width') as HTMLInputElement;
       return { value: el.value, max: el.max };
     });
-    expect(w.value).toBe('120');
+    expect(w.value).toBe('100'); // user-requested default detail
     expect(parseInt(w.max, 10)).toBeLessThan(240); // A4: the max now reflects the cell budget, not an unreachable 240
   });
 

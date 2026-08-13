@@ -29,6 +29,9 @@ export interface RenderOpts {
   ink?: string;
   /** draw each glyph in its source cell's average color instead of ink */
   colorize?: boolean;
+  /** stable variety seed for video frames (flat areas must not boil); omit for
+   *  stills so the seed rotates and the letter mix is fresh every render */
+  seed?: number;
 }
 
 export interface MosaicResult {
@@ -55,7 +58,11 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
     paper = '#f3ecdd',
     ink = '#2a1a12',
     colorize = false,
+    seed,
   } = opts;
+  // Still renders rotate the variety seed (fresh flat-area letters each time);
+  // video passes an explicit seed so the texture stays stable frame-to-frame.
+  const varietySeed = seed ?? mosaicSeed++;
   const sW = source.width;
   const sH = source.height;
 
@@ -146,7 +153,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
     for (let i = 0; i < gi.length; i++) {
       const r = Math.floor(i / cols);
       const c = i % cols;
-      gi[i] = pickNorm(ramp, key, buf.data[i] / 255, c, r);
+      gi[i] = pickNorm(ramp, key, buf.data[i] / 255, c, r, varietySeed);
     }
   } else if (dither === 'scatter') {
     // Deterministic hash jitter — an integer-hash white-noise scatter, NOT true
@@ -158,7 +165,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
         const jitter = (hashNoise(c, r) - 0.5) * step * 2;
-        gi[i] = pickNorm(ramp, key, clamp01(work[i] + jitter), c, r);
+        gi[i] = pickNorm(ramp, key, clamp01(work[i] + jitter), c, r, varietySeed);
       }
     }
   } else {
@@ -171,7 +178,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
         const d = clamp01(work[i]);
-        gi[i] = pickNorm(ramp, key, d, c, r);
+        gi[i] = pickNorm(ramp, key, d, c, r, varietySeed);
         const gn = key(gi[i]);
         const err = d - gn;
         if (c + 1 < cols) work[i + 1] += err * (7 / 16);
@@ -477,19 +484,29 @@ function nearestNorm(ramp: GlyphInfo[], key: (i: number) => number, d: number): 
 const VARIETY_WINDOW = 0.05;
 
 /**
+ * Per-render variety seed. The flat-area letter mix used to be hashed from the
+ * cell position ONLY, so a uniform region froze one fixed set of glyphs forever
+ * — and if that set was dominated by a visually heavy letter (e.g. ጨ), it
+ * recurred on every render. Rotating the seed each STILL render gives flat
+ * areas a fresh mix every time (the new one differs from the old); video frames
+ * pass an explicit stable seed so the texture doesn't boil frame-to-frame.
+ */
+let mosaicSeed = 0;
+
+/**
  * Variety-aware selection: instead of always taking the single nearest-density
  * glyph, pick among the glyphs within a small density window of the target,
- * chosen deterministically by cell position. Flat areas then show a MIX of
- * letters rather than the same glyph repeated — this is what kills the
- * "always the che letter" look.
+ * chosen by a hash of (cell position, seed). Flat areas then show a MIX of
+ * letters rather than the same glyph repeated — and that mix changes each render
+ * because the seed rotates.
  */
-function pickNorm(ramp: GlyphInfo[], key: (i: number) => number, d: number, x: number, y: number): number {
+function pickNorm(ramp: GlyphInfo[], key: (i: number) => number, d: number, x: number, y: number, seed: number): number {
   const idx = nearestNorm(ramp, key, d);
   let lo = idx;
   let hi = idx;
   while (lo > 0 && Math.abs(key(lo - 1) - d) < VARIETY_WINDOW) lo--;
   while (hi < ramp.length - 1 && Math.abs(key(hi + 1) - d) < VARIETY_WINDOW) hi++;
   if (hi - lo <= 0) return idx;
-  const h = hashNoise(x * 0.1337, y * 0.9517);
+  const h = hashNoise(x * 0.1337 + seed * 0.37, y * 0.9517 + seed * 0.61);
   return lo + Math.min(hi - lo, Math.floor(h * (hi - lo + 1)));
 }

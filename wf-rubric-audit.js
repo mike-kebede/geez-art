@@ -174,6 +174,11 @@ code confirms them):
   actual rec.mimeType. F29 empty-fidel gold #a67a22 (3.6:1). F36 summary display
   duplicate removed. DEFERRED: F26 font-subset imports (low value), F30
   title/description Amharic (needs native review — same block as F20-F22).
+- Round 3.23 (user request): default Detail slider lowered to 100 (was 170; coarse
+  default too). The flat-area variety hash now rotates a per-render seed (RenderOpts
+  .seed) so a uniform region's letter mix is FRESH every still render instead of
+  freezing one set forever (the recurring ጨ); video frames pin seed 0 so the
+  texture doesn't boil frame-to-frame. Verified: two identical re-renders differ.
 - Round 3.22 (in progress, fixes for the 89/100 live-site audit): M5 glyph-size
   geometry fixed — the atlas now draws glyphs at ~1.4x cellPx (GLYPH_SCALE) to
   match the measurement ratio (was ~0.71x, so ink stayed ~1/3 of a cell). Default

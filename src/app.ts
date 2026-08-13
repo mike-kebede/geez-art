@@ -218,6 +218,9 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
     ...opts,
     paper: currentPalette.paper,
     ink: currentPalette.ink,
+    // stills omit seed → it rotates each render (fresh flat-area letters);
+    // video pins it so the letter texture doesn't boil frame-to-frame.
+    seed: videoHandle ? 0 : undefined,
   });
   lastResult = res;
   const out = $('mosaic') as HTMLCanvasElement;
@@ -1010,8 +1013,7 @@ async function init(): Promise<void> {
     // hit a 1-3s synchronous render at 400 cols.
     if (window.matchMedia('(pointer: coarse)').matches) {
       const w = $('width') as HTMLInputElement;
-      w.value = '120';
-      w.max = '240'; // bound the still-render cost too
+      w.value = '100'; // same default as the HTML (detail 100), bounded for coarse
     }
     // A4: the slider must not advertise an unreachable max — derive it from the
     // total-cell budget for the current device class (F25: same constants as the
