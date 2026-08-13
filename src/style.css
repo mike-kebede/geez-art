@@ -346,6 +346,7 @@ details#advanced {
   padding-top: 4px;
 }
 details#advanced > summary {
+  display: block; /* #2: Firefox drops <summary> from tab order when the marker is hidden without this */
   list-style: none;
   cursor: pointer;
   user-select: none;

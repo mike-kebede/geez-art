@@ -6,7 +6,7 @@ import { chromium } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const PORT = 5198;
+const PORT = Number(process.env.PORT || 5198);
 const SIZES = [192, 512, 180];
 const OUT = path.resolve('public');
 

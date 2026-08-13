@@ -125,8 +125,25 @@ code confirms them):
 - Round 3.18 (just committed): photo supersede token; color atlas warmed at
   idle; Detail slider max derived from the cell budget; PWA icons regenerated
   with the Ethiopic font loaded (were black tiles).
-- PENDING USER DECISION: the demo photo (public/demo.png) is 97% black — the
-  user chose it; awaiting a well-lit replacement.
+- Round 3.19 (just committed): photo supersede TWO-WAY (clearAll bumps photoGen);
+  color atlas warmed DIRECTLY at idle; iOS share falls back to native text share
+  + download; busy cues for photo/video load.
+- VERIFIED: the round-3.17 "CSP style-src blocks CSSOM on Firefox/WebKit" HIGH
+  is a FALSE POSITIVE — Firefox boots dist under the real headers, reaches
+  Ready, zero page errors, photo renders. CSP stands; no unsafe-inline needed.
+- VERIFIED (round-3.19 audit's A1 HIGH "demo.png 97% black" is a FALSE
+  POSITIVE / stale): the committed public/demo.png measures 99.9% of pixels
+  above luminance 40, meanLum 119, fully opaque, with real tonal structure
+  (verified 4 ways incl. in-app source-pass probe). The demo image was already
+  the user's chosen image, committed since Iteration-13; no replacement was
+  needed. The legitimate residual concern is that ALL mosaics render parchment-
+  light (glyphs cover ~1/3 of each cell) — a renderer-wide property, not a
+  demo-only regression; contrast/boldness is an open design lever.
+- A8 verified: PWA icons regenerated with the Ethiopic font loaded — fidel
+  strokes now visible (8.6% bright-ivory pixels over brick, gold ring), was
+  ~99% black. og-image verified non-blank (mosaic + brand band) but light.
+- GIF-export test flakes under heavy CPU load (passes isolated in 5.6s) — not a
+  regression; re-run isolated before treating it as one.
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so

@@ -463,8 +463,10 @@ function applyLang(): void {
   if (!pb.hidden) pb.textContent = videoPaused ? t('play') : t('pause');
   // F24: the language re-render wipes the analytics disclosure — re-append it.
   if (analyticsEnabled()) {
+    // #6: when a provider is live, REPLACE the body — the absolute "no server
+    // requests / nothing stored" copy must be retracted, not contradicted.
     const body = document.getElementById('privacyBody');
-    if (body && !body.textContent.endsWith(t('analyticsDisclosure'))) body.textContent += ' ' + t('analyticsDisclosure');
+    if (body) body.textContent = t('privacyBodyAnalytics');
   }
 }
 
