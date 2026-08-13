@@ -93,7 +93,10 @@ body {
   font-size: 12px;
   color: var(--mist);
 }
-#status.is-idle { visibility: hidden; } /* hide the persistent 'Ready' — show only real messages */
+/* F11: opacity (not visibility) hides the persistent 'Ready' while keeping the
+   role=status live region in the a11y tree — visibility:hidden pruned it, so
+   flash() messages written while idle weren't reliably announced. */
+#status.is-idle { opacity: 0; }
 .lang-toggle {
   font-family: inherit;
   font-size: 12px;
@@ -229,7 +232,7 @@ body {
   font-size: 110px;
   font-weight: 700;
   line-height: 1;
-  color: #b98a2f; /* L26: deepened gold — var(--gold) was ~1.4:1, invisible outdoors */
+  color: #a67a22; /* F29: on #f6f4f0 this is 3.6:1 — clears the 3:1 non-text floor (was 2.84:1) */
   opacity: 0.9;
   animation: fidelSettle 0.7s ease-out both;
 }
@@ -346,7 +349,9 @@ details#advanced {
   padding-top: 4px;
 }
 details#advanced > summary {
-  display: block; /* #2: Firefox drops <summary> from tab order when the marker is hidden without this */
+  /* #2: list-style:none drops the disclosure marker — display:flex keeps
+     <summary> focusable/operable in the tab order (works on current Firefox,
+     F36: a duplicate display:block used to cancel this). */
   list-style: none;
   cursor: pointer;
   user-select: none;

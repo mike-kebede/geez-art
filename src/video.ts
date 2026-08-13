@@ -157,17 +157,22 @@ export async function recordCanvas(
       : MediaRecorder.isTypeSupported('video/webm')
         ? 'video/webm'
         : '';
-    const ext: 'webm' | 'mp4' = mime === 'video/webm' ? 'webm' : 'mp4';
     // Bound quality/size so encoding stays real-time on budget phones instead of
     // dropping frames on a large canvas (M10). The bitrate cap applies on the
     // mp4 path too, not just WebM.
     const rec = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: 2_500_000 });
+    // F27: the extension/type must match what the recorder ACTUALLY produced.
+    // When both mime types are unsupported, `mime` is '' and MediaRecorder falls
+    // back to its container default (WebM on Chromium) — the ternary above would
+    // have named a '.mp4' holding WebM bytes.
+    const actual = rec.mimeType || mime;
+    const ext: 'webm' | 'mp4' = /webm/i.test(actual) ? 'webm' : 'mp4';
     const chunks: BlobPart[] = [];
     rec.ondataavailable = (e) => {
       if (e.data.size) chunks.push(e.data);
     };
     const done = new Promise<Blob | null>((resolve, reject) => {
-      rec.onstop = () => resolve(chunks.length ? new Blob(chunks, { type: mime || 'video/mp4' }) : null);
+      rec.onstop = () => resolve(chunks.length ? new Blob(chunks, { type: actual || 'video/mp4' }) : null);
       // M1: a recorder error must reject — never hang the caller (and strand
       // the export buttons in the caller's finally).
       rec.onerror = () => reject(new Error('MediaRecorder error'));

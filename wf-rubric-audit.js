@@ -153,6 +153,22 @@ code confirms them):
   without a backend). A8 icons regenerated (fidel visible). A9 og-image verified
   non-blank. A7 "works offline" claim softened to the accurate no-upload promise
   (SW path documented; adding a SW is the option to reclaim the claim).
+- Round 3.21 (in progress, fixes for the 88/100 re-audit): F2 renderer boldness —
+  glyph weight raised 400→700 consistently in BOTH the density measurement and
+  the render atlas (fonts.ts GLYPH_WEIGHT); tripled dark ink (2.7%→7.4%).
+  F5 exifr skipped for signature-known formats (PNG/GIF/WebP can't carry EXIF) —
+  the 75KB lazy chunk no longer rides the ?demo=1 first pick. F6 og-image
+  regenerated from a bold MONO render on a deep-ink card + dark-ink assertion in
+  make-og-image.mjs (fails loudly below 5%). F10 audio-track assertion in the
+  video-export test (WebM A_OPUS/A_VORBIS, MP4 mp4a/soun). F18 ?demo=1 landing
+  test under real dist/CSP (ephemeral port). F11 idle status uses opacity not
+  visibility (live region stays in the a11y tree). F13 slider tooltips + Fit
+  label localized. F14 Trusted Types header (only innerHTML sink → replaceChildren).
+  F15 CORP same-origin header. F25 cell budgets hoisted to limits.ts + the 40-col
+  floor removed (budget now ALWAYS bounds cells). F27 recorder ext derived from
+  actual rec.mimeType. F29 empty-fidel gold #a67a22 (3.6:1). F36 summary display
+  duplicate removed. DEFERRED: F26 font-subset imports (low value), F30
+  title/description Amharic (needs native review — same block as F20-F22).
 
 Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
 validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so

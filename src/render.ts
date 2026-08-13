@@ -12,7 +12,7 @@
 import { orderedDither } from '@thi.ng/pixel-dither';
 import { IntBuffer, GRAY8 } from '@thi.ng/pixel';
 import type { GlyphInfo } from './fonts';
-import { FONT } from './fonts';
+import { FONT, GLYPH_WEIGHT } from './fonts';
 
 export type DitherMode = 'fs' | 'ordered' | 'scatter';
 
@@ -88,7 +88,7 @@ export function renderMosaic(source: HTMLCanvasElement, ramp: GlyphInfo[], opts:
   const octx = out.getContext('2d')!;
   octx.fillStyle = paper;
   octx.fillRect(0, 0, out.width, out.height);
-  octx.font = `${cellPx}px ${FONT}`;
+  octx.font = `${GLYPH_WEIGHT} ${cellPx}px ${FONT}`;
   octx.textAlign = 'center';
   octx.textBaseline = 'middle';
 
@@ -338,7 +338,7 @@ function ensureAtlas(ramp: GlyphInfo[], cellPx: number, ink: string, paper: stri
   const ctx = atlas.getContext('2d')!;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, atlas.width, atlas.height);
-  ctx.font = `${cellPx}px ${FONT}`;
+  ctx.font = `${GLYPH_WEIGHT} ${cellPx}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = ink;
@@ -379,7 +379,7 @@ function colorAtlasFor(
   const ctx = atlas.getContext('2d')!;
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, atlas.width, atlas.height);
-  ctx.font = `${COLOR_REF_CELL}px ${FONT}`;
+  ctx.font = `${GLYPH_WEIGHT} ${COLOR_REF_CELL}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   for (let level = 0; level < LEVELS; level++) {

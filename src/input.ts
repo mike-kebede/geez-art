@@ -221,12 +221,34 @@ function loadViaImg(blob: Blob): Promise<HTMLImageElement> {
   });
 }
 
+/** True when the file can carry EXIF orientation — JPEG or HEIC/HEIF only.
+ *  PNG/GIF/WebP never have it, so skipping exifr there keeps the ~75KB lazy
+ *  chunk (and its parse) off the first-pick interaction — including the viral
+ *  ?demo=1 path, whose 3.7KB PNG would otherwise pay it every time (F5). */
+async function mayCarryExif(f: File): Promise<boolean> {
+  if (/\.(jpe?g|heic|heif)$/i.test(f.name)) return true;
+  if (/^image\/(jpe?g|heic|heif)$/i.test(f.type)) return true;
+  try {
+    const head = new Uint8Array(await f.slice(0, 12).arrayBuffer());
+    // JPEG SOI (FF D8) or ISO-BMFF 'ftyp' (HEIC/HEIF container).
+    return (
+      (head[0] === 0xff && head[1] === 0xd8) ||
+      (head[4] === 0x66 && head[5] === 0x74 && head[6] === 0x79 && head[7] === 0x70)
+    );
+  } catch {
+    return true; // unknown → keep the old exifr behavior
+  }
+}
+
 /** Read a local image file, apply EXIF orientation, composite alpha onto white. */
 export async function imageFileToCanvas(file: File): Promise<HTMLCanvasElement> {
   try {
     // EXIF read must never sink a valid image: if it fails, treat as upright.
-    const { default: exifr } = await import('exifr'); // lazy — keeps exifr out of the eager bundle
-    const orientation = await exifr.orientation(file).catch(() => undefined);
+    let orientation: number | undefined;
+    if (await mayCarryExif(file)) {
+      const { default: exifr } = await import('exifr'); // lazy — keeps exifr out of the eager bundle
+      orientation = await exifr.orientation(file).catch(() => undefined);
+    }
     const size = await imageDimensions(file);
     // Decode straight into the capped size (L28) so a 12MP photo never occupies
     // full-resolution memory on a low-end phone.

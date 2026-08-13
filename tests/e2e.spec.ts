@@ -140,6 +140,20 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
+/** True if the exported container carries an audio track. WebM (Chromium's
+ *  default) lists audio codec IDs (A_OPUS / A_VORBIS) inside TrackEntry; MP4
+ *  uses an 'mp4a' sample entry / 'soun' handler. A best-effort byte scan — the
+ *  point is to FAIL if the audio-capture chain (R3.10–R3.12, the most-churned
+ *  feature in the app) ever silently drops the track again (F10). */
+function hasAudioTrack(bytes: Buffer): boolean {
+  const isWebm = bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3;
+  const isMp4 = bytes.subarray(4, 8).toString('ascii') === 'ftyp';
+  const s = bytes.toString('latin1');
+  if (isWebm) return /A_OPUS|A_VORBIS/.test(s);
+  if (isMp4) return /mp4a|soun/.test(s);
+  return false;
+}
+
 test('app loads, reaches Ready, and has no console errors', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/');
@@ -552,6 +566,10 @@ test('download video produces a file', async ({ page }) => {
   const isMp4 = bytes.subarray(4, 8).toString('ascii') === 'ftyp';
   expect(isWebm || isMp4).toBe(true);
   expect(bytes.length).toBeGreaterThan(1000);
+  // F10: the exported clip must carry an AUDIO track — the capture chain was
+  // the most-churned feature (3 fix rounds); a silent-audio regression would
+  // otherwise pass every test green.
+  expect(hasAudioTrack(bytes), 'exported video has no audio track').toBe(true);
   expect(errors).toEqual([]);
 });
 
@@ -620,6 +638,30 @@ test('the built app works under its own production CSP headers (blob: media allo
       return c.width > 10 && c.height > 10;
     });
     await expect(page.locator('#playBtn')).toBeVisible();
+  } finally {
+    server.close();
+  }
+});
+
+test('?demo=1 landing renders the bundled demo under production CSP (F18)', async ({ page }) => {
+  // The exact recipient path of the viral loop: every share/copy-link mints
+  // &demo=1. A fetch('/demo.png') or CSP regression on that landing used to be
+  // invisible to the suite (only the #exampleBtn path was tested).
+  test.setTimeout(120000);
+  ensureBuilt();
+  const server = serveDist(0); // ephemeral port — no fixed-port collisions (F19)
+  await listenServer(server, 0);
+  const addr = server.address() as { port: number };
+  const errors = collectErrors(page);
+  try {
+    await page.goto(`http://localhost:${addr.port}/?demo=1`);
+    await page.waitForFunction(() => /Ready/.test(document.getElementById('status')?.textContent ?? ''), null, { timeout: 30000 });
+    await page.waitForFunction(() => {
+      const c = document.getElementById('mosaic') as HTMLCanvasElement;
+      return c.width > 10 && c.height > 10;
+    });
+    await expect(page.locator('#sourceChip')).toBeVisible();
+    expect(errors).toEqual([]);
   } finally {
     server.close();
   }

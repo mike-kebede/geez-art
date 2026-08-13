@@ -3,6 +3,16 @@
 
 export const FONT = '"Noto Sans Ethiopic Variable","Noto Sans Ethiopic","Ebrima","Nyala",sans-serif';
 
+/**
+ * Glyph weight used for BOTH the density measurement and the render atlas —
+ * the two MUST agree, or the ramp's density values stop describing what is
+ * actually drawn. Bumped from 400 to 700 (F2/F6): regular-weight Ethiopic
+ * strokes cover only ~1/3 of a cell, so even pure black rendered mid-beige and
+ * the og-image read as a pale rectangle at feed size. Bold strokes roughly
+ * double the ink coverage and give the output real contrast.
+ */
+export const GLYPH_WEIGHT = 700;
+
 export interface GlyphInfo {
   cp: number;
   ch: string;
@@ -25,6 +35,8 @@ export function loadEthiopicFont(): Promise<void> {
       // font) the ramp comes back empty: "Ready · 0 letters" tofu.
       const fidel = 'ሀለሐመሠረሰሸቀበቨተቸኀነኘአከኰኸወዐዘዠየደዸገጠጨጰጸፈፐ፩፪፫';
       await Promise.all([
+        document.fonts.load(`${GLYPH_WEIGHT} ${MEASURE_PX}px "Noto Sans Ethiopic Variable"`, fidel),
+        document.fonts.load(`${GLYPH_WEIGHT} ${MEASURE_PX}px "Noto Sans Ethiopic"`, fidel),
         document.fonts.load(`${MEASURE_PX}px "Noto Sans Ethiopic Variable"`, fidel),
         document.fonts.load(`${MEASURE_PX}px "Noto Sans Ethiopic"`, fidel),
       ]);
@@ -51,7 +63,7 @@ function alphaMask(ch: string): Uint8Array {
   const [, ctx] = measureCanvas();
   ctx.clearRect(0, 0, S, S);
   ctx.fillStyle = '#000';
-  ctx.font = `${MEASURE_PX}px "Noto Sans Ethiopic Variable"`;
+  ctx.font = `${GLYPH_WEIGHT} ${MEASURE_PX}px "Noto Sans Ethiopic Variable"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(ch, S / 2, S / 2);

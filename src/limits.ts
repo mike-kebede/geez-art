@@ -16,6 +16,14 @@ export const VIDEO_FRAME_EDGE = 512;
  *  enough that the preview feels live. */
 export const RENDER_DEBOUNCE_MS = 250; // M1: coalesce slider drags harder (INP)
 
+/** Total-cell budget for a single render — bounds the synchronous work (F25).
+ *  Video caps lower because frames repeat; stills scale with the detail tier.
+ *  Kept here so renderSource's cap and the Detail-slider max derivation can
+ *  never disagree (they were duplicated verbatim). */
+export const VIDEO_CELL_BUDGET = 20000;
+export const STILL_CELL_BUDGET_HIGH = 40000; // fine-pointer / high-detail devices
+export const STILL_CELL_BUDGET_LOW = 25000;
+
 /** Reject files above this size before createObjectURL (L7) — the app is
  *  client-side, so nothing would be uploaded, but a multi-GB file would pin
  *  memory and hang the tab for no gain. */

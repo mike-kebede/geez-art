@@ -1,25 +1,63 @@
-// Regenerate public/og-image.png from an ACTUAL fidel-mosaic render (the old asset
-// was a near-blank idle-page screenshot). Renders the icon-classical sample in a
-// browser, composes it onto a 1200×630 parchment card with the brand band.
+// Regenerate public/og-image.png from an ACTUAL fidel-mosaic render. Uses the
+// MONO palette at boosted contrast/edge so the share card has real dark ink
+// (the previous asset read as a pale rectangle at feed size — F6). A minimum
+// dark-ink assertion makes the script fail loudly if the render ever drifts
+// back to pale, so the asset can't silently degrade again.
 import { chromium } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const PORT = 5198;
+const PORT = Number(process.env.PORT || 5198);
 const OUT = path.resolve('public', 'og-image.png');
+// Dark-ink floor for the MONO mosaic (bold weight, 1.7x contrast): the current
+// demo image lands ~7.4%; the old regular-weight render landed ~2.7%. A drift
+// back below 5% means the boldness lever regressed — fail loudly, don't ship a
+// pale card (F6).
+const MIN_DARK_PCT = 5;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 await page.goto(`http://localhost:${PORT}/`);
 await page.waitForFunction(() => /Ready|ዝግጁ|Setup error/.test(document.getElementById('status')?.textContent || ''), { timeout: 30000 });
-await page.click('#exampleBtn'); // icon-classical sample
+await page.click('#exampleBtn'); // the user's demo photo
 await page.waitForFunction(() => (document.getElementById('mosaic')).width > 10, { timeout: 30000 });
-await page.waitForTimeout(800); // let the render settle
+await page.waitForTimeout(800); // let the first render settle
 
-const mosaicB64 = await page.evaluate(() => {
-  const c = document.getElementById('mosaic');
-  return c.toDataURL('image/png');
+// Punch it up: mono ink on white paper, boosted contrast + edge emphasis.
+await page.evaluate(() => {
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    el.value = v;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  const pal = document.getElementById('palette');
+  pal.value = 'mono';
+  pal.dispatchEvent(new Event('change'));
+  set('width', '200');
+  set('contrast', '70'); // → 1.7×
+  set('edge', '40');     // → 0.40
 });
+await page.waitForTimeout(1600); // debounce (250ms) + render + settle
+
+const check = await page.evaluate(() => {
+  const c = document.getElementById('mosaic');
+  const x = c.getContext('2d');
+  const d = x.getImageData(0, 0, c.width, c.height).data;
+  let dark = 0, n = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    n++;
+    if (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2] < 100) dark++;
+  }
+  return { darkPct: +((100 * dark) / n).toFixed(1), w: c.width, h: c.height };
+});
+if (check.darkPct < MIN_DARK_PCT) {
+  console.error(`og-image mosaic too pale: dark ${check.darkPct}% < ${MIN_DARK_PCT}% — fix the render, not the asset`);
+  process.exit(1);
+}
+console.log(`mosaic ${check.w}x${check.h}, dark ink ${check.darkPct}%`);
+
+const mosaicB64 = await page.evaluate(() => document.getElementById('mosaic').toDataURL('image/png'));
 await browser.close();
 
 // Compose the 1200×630 card in a fresh page.
@@ -29,8 +67,10 @@ await page2.setContent('<canvas id="og" width="1200" height="630"></canvas>');
 const outB64 = await page2.evaluate(async (mosaicB64) => {
   const c = document.getElementById('og');
   const x = c.getContext('2d');
-  // parchment ground
-  x.fillStyle = '#efe6d2';
+  // Deep-ink ground: the card reads as bold at feed size even though the
+  // mosaic is inherently letters-on-paper. The bright mosaic panel pops
+  // against it (F6).
+  x.fillStyle = '#15110d';
   x.fillRect(0, 0, 1200, 630);
   // gold hairline top
   x.fillStyle = '#d9a441';

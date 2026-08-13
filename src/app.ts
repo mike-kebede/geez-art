@@ -11,7 +11,7 @@ import ethiopicWoffUrl from '@fontsource-variable/noto-sans-ethiopic/files/noto-
 import { renderMosaic, invalidateSource, warmColorAtlas, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone, isHeic, isVideoFile } from './input';
 import { downloadCanvasPNG, gridToText, selfContainedHTML, makeShareImage, shareCanvas, downscaleCanvas, paintBrandedCapture, triggerDownload } from './export';
-import { RENDER_DEBOUNCE_MS, MAX_FILE_BYTES } from './limits';
+import { RENDER_DEBOUNCE_MS, MAX_FILE_BYTES, VIDEO_CELL_BUDGET, STILL_CELL_BUDGET_HIGH, STILL_CELL_BUDGET_LOW } from './limits';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
 // (getSamples removed — the example now uses a bundled demo photo)
 import { startVideoLoop, recordCanvas, recordGIF, canRecordVideo, type VideoHandle } from './video';
@@ -206,9 +206,13 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
     // M1/M6: bound total CELLS (~20k video, ~40k still) so tall/portrait renders
     // can't hard-freeze — default 170-col square renders (~29k cells) are unaffected;
     // only the max-detail freeze cases get capped.
+    // F25: budgets live in limits.ts (shared with the slider-max derivation) and
+    // there is NO 40-col floor — a floor let an extreme-tall source blow the
+    // cell budget (e.g. a 1:30 portrait reached 48k cells); sqrt(budget/aspect)
+    // alone always bounds cells.
     const aspect = src.height / src.width;
-    const budget = videoHandle ? 20000 : DESKTOP_MAX_COLS >= 400 ? 40000 : 25000;
-    opts.cols = Math.min(opts.cols, Math.max(40, Math.floor(Math.sqrt(budget / Math.max(0.1, aspect)))));
+    const budget = videoHandle ? VIDEO_CELL_BUDGET : DESKTOP_MAX_COLS >= 400 ? STILL_CELL_BUDGET_HIGH : STILL_CELL_BUDGET_LOW;
+    opts.cols = Math.min(opts.cols, Math.max(1, Math.floor(Math.sqrt(budget / Math.max(0.1, aspect)))));
   }
   const res = renderMosaic(src, ramp, {
     ...opts,
@@ -728,7 +732,7 @@ function ensurePickerBuilt(): void {
 
 function buildPicker(): void {
   const grid = $('pickerGrid');
-  grid.innerHTML = '';
+  grid.replaceChildren(); // F14: no innerHTML sink → Trusted Types can be enforced
   // Group by radical family: each fidel family spans an 8-codepoint block.
   const groups = new Map<number, GlyphInfo[]>();
   for (const g of allGlyphs) {
@@ -1002,8 +1006,9 @@ async function init(): Promise<void> {
       w.max = '240'; // bound the still-render cost too
     }
     // A4: the slider must not advertise an unreachable max — derive it from the
-    // total-cell budget for the current device class.
-    (($('width')) as HTMLInputElement).max = String(Math.min(400, Math.max(120, Math.floor(Math.sqrt(DESKTOP_MAX_COLS >= 400 ? 40000 : 25000)))));
+    // total-cell budget for the current device class (F25: same constants as the
+    // render cap, so they can never disagree).
+    (($('width')) as HTMLInputElement).max = String(Math.min(400, Math.max(120, Math.floor(Math.sqrt(DESKTOP_MAX_COLS >= 400 ? STILL_CELL_BUDGET_HIGH : STILL_CELL_BUDGET_LOW)))));
   }
   // L20/F24: the analytics disclosure is appended by applyLang() (called below),
   // so it survives language toggles — not appended here.

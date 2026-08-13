@@ -40,6 +40,7 @@ const enDict = {
     zoomOutAria: 'Zoom out',
     zoomInAria: 'Zoom in',
     zoomResetAria: 'Fit to width',
+    zoomFit: 'Fit',
     mosaicAriaEmpty: 'Ethiopic letter mosaic — add a photo to create one.',
     mosaicAriaStart: 'Mosaic of Ethiopic letters,',
     mosaicAriaDistinct: 'distinct letters,',
@@ -170,6 +171,7 @@ export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
     zoomOutAria: 'ያሳንሱ', // F-5: reduce, not 'magnify-then-close'
     zoomInAria: 'ያጉሉ',
     zoomResetAria: 'ከስፋቱ ጋር አስተካክሉ',
+    zoomFit: 'አስተካክሉ', // polite imperative, matches zoomResetAria verb
     mosaicAriaEmpty: 'የኢትዮጵያ ፊደላት ሞዛይክ — ለመስራት ምስል ይጨምሩ።',
     mosaicAriaStart: 'የኢትዮጵያ ፊደላት ሞዛይክ፣',
     mosaicAriaDistinct: 'የተለያዩ ፊደላት፣',
@@ -242,7 +244,7 @@ export const STRINGS: { en: typeof enDict; am: Record<I18nKey, string> } = {
     reading: 'ፎቶዎን በማንበብ ላይ…',
     loadingVideo: 'ቪዲዮ በመጫን ላይ…',
     analyticsDisclosure: 'ይህ ጣቢያ ማንነት አልባ ስታቲስቲክስ ይጠቀማል፣ በጣቢያው ባለቤት የተነቃ።',
-    privacyBodyAnalytics: 'ፎቶዎ ሁልጊዜ በመሣሪያዎ ላይ ይሰራል እንጂ አይሰቀልም። ይህ ጣቢያ በባለቤቱ የነቃ የጉብኝት ስታቲስቲክስ (የአይፒ አድራሻን ጨምሮ) ይጠቀማል። ፎቶዎ አይተላለፍም። ለወላጆች፡ ከጊዝ-አርት ራሱ መለያም ኩኪም የለም። ከማጋራትዎ በፊት የእውነተኛ ሰው ፎቶ ይጠይቁ።',
+    privacyBodyAnalytics: 'ፎቶዎ ሁልጊዜ በመሣሪያዎ ላይ ይሰራል እንጂ አይሰቀልም። ይህ ጣቢያ በባለቤቱ የነቃ የጉብኝት ስታቲስቲክስ (የአይፒ አድራሻን ጨምሮ) ይጠቀማል። ፎቶዎ አይተላለፍም። ለወላጆች፡ ከጊዝ-አርት ራሱ መለያም ኩኪም የለም። ፎቶ ላይ እውነተኛ ሰው ካለ፣ ከማጋራትዎ በፊት ይጠይቁ።',
     ready: 'ዝግጁ',
     rendering: 'እየተሰራ ነው…',
     preparing: 'ፊደላትን በማዘጋጀት ላይ…',
