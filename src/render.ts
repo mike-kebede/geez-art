@@ -479,9 +479,18 @@ function nearestNorm(ramp: GlyphInfo[], key: (i: number) => number, d: number): 
   return lo;
 }
 
-/** Density window (normalized) from which a cell's glyph is chosen — the
- *  "don't collapse onto one letter" knob. */
-const VARIETY_WINDOW = 0.05;
+/**
+ * Density window (normalized) from which a cell's glyph is chosen — the
+ * "don't collapse onto one letter" knob. Density-dependent: at a flat 0.05 the
+ * dense end of the ramp offered so few distinct glyphs that dark areas mostly
+ * kept the same heavy glyph across re-renders — the seed reshuffle was
+ * imperceptible ("still ጨ"). Widening the window at the DENSE end surfaces more
+ * distinctly-shaped candidates there (where the user wants visible variety),
+ * while mid-tones stay tight so subject edges keep their tonal fidelity.
+ */
+function varietyWindowAt(d: number): number {
+  return 0.05 + 0.04 * d; // light end 0.05 → dense end 0.09
+}
 
 /**
  * Per-render variety seed. The flat-area letter mix used to be hashed from the
@@ -502,10 +511,11 @@ let mosaicSeed = 0;
  */
 function pickNorm(ramp: GlyphInfo[], key: (i: number) => number, d: number, x: number, y: number, seed: number): number {
   const idx = nearestNorm(ramp, key, d);
+  const win = varietyWindowAt(d);
   let lo = idx;
   let hi = idx;
-  while (lo > 0 && Math.abs(key(lo - 1) - d) < VARIETY_WINDOW) lo--;
-  while (hi < ramp.length - 1 && Math.abs(key(hi + 1) - d) < VARIETY_WINDOW) hi++;
+  while (lo > 0 && Math.abs(key(lo - 1) - d) < win) lo--;
+  while (hi < ramp.length - 1 && Math.abs(key(hi + 1) - d) < win) hi++;
   if (hi - lo <= 0) return idx;
   const h = hashNoise(x * 0.1337 + seed * 0.37, y * 0.9517 + seed * 0.61);
   return lo + Math.min(hi - lo, Math.floor(h * (hi - lo + 1)));

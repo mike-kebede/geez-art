@@ -179,6 +179,10 @@ code confirms them):
   .seed) so a uniform region's letter mix is FRESH every still render instead of
   freezing one set forever (the recurring ጨ); video frames pin seed 0 so the
   texture doesn't boil frame-to-frame. Verified: two identical re-renders differ.
+  Round 3.24 (user follow-up): the variety window is now density-dependent
+  (varietyWindowAt: 0.05 light → 0.09 dense) so DENSE regions reshuffle visibly
+  too — 63-68% of dense cells change per render (was ~18% imperceptible) while
+  mid-tone subject edges stay tight (16-19%). Tonal fidelity holds (coarse 0.53).
 - Round 3.22 (in progress, fixes for the 89/100 live-site audit): M5 glyph-size
   geometry fixed — the atlas now draws glyphs at ~1.4x cellPx (GLYPH_SCALE) to
   match the measurement ratio (was ~0.71x, so ink stayed ~1/3 of a cell). Default
