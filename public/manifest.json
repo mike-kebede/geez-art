@@ -1,7 +1,7 @@
 {
-  "name": "geez·art — Ethiopic letter art",
-  "short_name": "geez·art",
-  "description": "Turn any photo or video into a mosaic of Ge'ez fidel letters — free, nothing uploaded.",
+  "name": "geez art - Ethiopic letter art",
+  "short_name": "geez art",
+  "description": "Turn any photo or video into a mosaic of Ge'ez fidel letters - free, nothing uploaded.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FCF9F3",

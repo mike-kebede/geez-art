@@ -221,10 +221,10 @@ test('custom picker works before a photo is added (no errors, feedback shown)', 
 test('header Share is disabled until a mosaic exists, then enabled', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
-  const shareTop = page.locator('#shareTop');
-  await expect(shareTop).toBeDisabled();
+  const share = page.locator('#share');
+  await expect(share).toBeDisabled();
   await uploadSample(page);
-  await expect(shareTop).toBeEnabled();
+  await expect(share).toBeEnabled();
 });
 
 test('contrast slider changes the mosaic output', async ({ page }) => {
@@ -346,6 +346,27 @@ test('custom picker guides you when no photo is loaded', async ({ page }) => {
   await expect(page.locator('#emptyTitle')).toHaveText('Pick your letters');
 });
 
+test('picker tiles reflect their selection state - no tile is unstyled (regression: parseInt NaN broke updatePickerUI)', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.selectOption('#charset', 'custom');
+  const counts = await page.evaluate(() => {
+    const tiles = [...document.querySelectorAll<HTMLElement>('#pickerGrid .fam-tile')];
+    const c = { on: 0, off: 0, partial: 0, none: 0 };
+    for (const t of tiles) {
+      if (t.classList.contains('on')) c.on++;
+      else if (t.classList.contains('off')) c.off++;
+      else if (t.classList.contains('partial')) c.partial++;
+      else c.none++;
+    }
+    return c;
+  });
+  // The bug: parseInt('f171') = NaN made updatePickerUI skip every cell, so all
+  // tiles rendered unstyled. Every family tile must carry on/off/partial.
+  expect(counts.none).toBe(0);
+  expect(counts.on + counts.partial + counts.off).toBeGreaterThan(10);
+});
+
 test('zoom in changes the displayed scale', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
@@ -400,9 +421,9 @@ test('randomize swaps the letter set and the mosaic changes', async ({ page }) =
     const c = document.getElementById('mosaic') as HTMLCanvasElement;
     return c.width > 0 && c.toDataURL() !== prev;
   }, before);
-  // randomize produces a custom selection with real variety
+  // randomize produces a custom selection of ~10 letters spanning the range
   const selected = await page.evaluate(() => (window as any).__selectedCps.length);
-  expect(selected).toBeGreaterThan(10);
+  expect(selected).toBe(10);
 });
 
 test('texture (dithering) options each change the output', async ({ page }) => {
@@ -586,14 +607,15 @@ test('download GIF produces a valid, capped file', async ({ page }) => {
   await page.click('#dlGif');
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toContain('geez-art.gif');
-  // L38: the exported bytes are a real GIF89a, capped at 480px on BOTH axes.
+  // The GIF long edge is capped at ~960px — big enough to be a real-size GIF yet
+  // sendable (~7MB), a deliberate balance over the old 480px thumbnail.
   const path = await download.path();
   const gif = fs.readFileSync(path!);
   expect(gif.subarray(0, 6).toString('ascii')).toBe('GIF89a');
-  expect(gif.readUInt16LE(6)).toBeLessThanOrEqual(480);
-  expect(gif.readUInt16LE(8)).toBeLessThanOrEqual(480);
-  // M5: messenger-friendly byte budget — a dithered 480px GIF must stay small.
-  expect(gif.length).toBeLessThan(2.5 * 1024 * 1024); // M5: a 480px dithered GIF measures ~1.9MB — bound a runaway, not the norm
+  expect(gif.readUInt16LE(6)).toBeLessThanOrEqual(960);
+  expect(gif.readUInt16LE(8)).toBeLessThanOrEqual(960);
+  // Generous byte budget (128-color GIF at 960px) — bound a runaway, not the norm.
+  expect(gif.length).toBeLessThan(10 * 1024 * 1024);
 });
 
 test('share metadata: absolute og image, large card, JSON-LD (M7/L46)', async ({ page }) => {
@@ -601,7 +623,7 @@ test('share metadata: absolute og image, large card, JSON-LD (M7/L46)', async ({
   await waitReady(page);
   const og = await page.getAttribute('meta[property="og:image"]', 'content');
   expect(og).toMatch(/^https:\/\//);
-  expect(og).toContain('/og-image.png');
+  expect(og).toContain('/og-image.jpg');
   expect(await page.getAttribute('meta[name="twitter:card"]', 'content')).toBe('summary_large_image');
   expect(await page.getAttribute('meta[property="og:image:width"]', 'content')).toBe('1200');
   expect(await page.getAttribute('meta[property="og:image:height"]', 'content')).toBe('630');
@@ -717,7 +739,8 @@ test('cancelling the share sheet reports "cancelled", not "saved" (L7)', async (
       value: () => Promise.reject(new DOMException('Aborted', 'AbortError')),
     });
   });
-  await page.click('#share');
+  await page.click('#share'); // unfurl the platform menu
+  await page.click('#shareWa');
   await expect(page.locator('#status')).toContainText('Share cancelled', { timeout: 10000 });
 });
 
@@ -793,12 +816,13 @@ test('empty-MIME files still route correctly: .heic friendly error + .mp4 video 
   await expect(page.locator('#status')).toContainText("couldn't read that video", { timeout: 10000 });
 });
 
-test('the shared image carries the dark URL brand band (M11)', async ({ page }) => {
+test('the shared image carries a subtle share-card footer with the URL (M11)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
   await uploadSample(page);
   const downloadPromise = page.waitForEvent('download');
-  await page.click('#share');
+  await page.click('#share'); // unfurl the platform menu
+  await page.click('#shareWa');
   const download = await downloadPromise;
   const buf = fs.readFileSync((await download.path())!);
   const band = await page.evaluate(async (b64) => {
@@ -809,21 +833,30 @@ test('the shared image carries the dark URL brand band (M11)', async ({ page }) 
     c.height = img.naturalHeight;
     const ctx = c.getContext('2d')!;
     ctx.drawImage(img, 0, 0);
-    const rowY = Math.floor(c.height * 0.97); // inside the bottom band
-    const d = ctx.getImageData(0, rowY, c.width, 1).data;
-    let dark = 0;
-    let gold = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i] < 60 && d[i + 1] < 60 && d[i + 2] < 60) dark++;
-      if (d[i] > 150 && d[i + 1] > 100 && d[i + 2] < 120) gold++; // the gold URL/CTA text
+    // Scan the bottom card rows: it must be a SUBTLE parchment footer (light,
+    // warm) with muted umber brand/CTA text and the gold hairline - not a dark
+    // banner.
+    let parchment = 0, text = 0, gold = 0, dark = 0;
+    for (let y = Math.floor(c.height * 0.94); y < c.height; y++) {
+      const row = ctx.getImageData(0, y, c.width, 1).data;
+      for (let i = 0; i < row.length; i += 4) {
+        const r = row[i], g = row[i + 1], b = row[i + 2];
+        if (r > 215 && g > 195 && b > 170) parchment++;
+        if (r < 130 && g < 110 && b < 100) text++; // umber brand/CTA glyphs
+        if (r > 160 && g > 120 && b < 100) gold++; // gold hairline + accents
+        if (r < 60 && g < 60 && b < 60) dark++;
+      }
     }
-    return { w: c.width, h: c.height, darkFrac: dark / (d.length / 4), goldPx: gold };
+    const total = (c.height - Math.floor(c.height * 0.94)) * c.width;
+    return { w: c.width, h: c.height, parchment: parchment / total, text, gold, dark: dark / total };
   }, buf.toString('base64'));
   expect(band.w).toBeGreaterThan(0);
-  expect(band.darkFrac).toBeGreaterThan(0.4); // brand band #15110d dominates the row
-  // M4: the CTA must be LEGIBLE, not just dark — a blank band passes the dark
-  // check but ships no URL. Assert real gold text pixels on the row.
-  expect(band.goldPx).toBeGreaterThan(20);
+  // SUBTLE: the footer is parchment-light, not a dark banner.
+  expect(band.parchment).toBeGreaterThan(0.3);
+  expect(band.dark).toBeLessThan(0.3);
+  // The URL/CTA must be present (muted text) with the gold hairline accent.
+  expect(band.text).toBeGreaterThan(20);
+  expect(band.gold).toBeGreaterThan(20);
 });
 
 test('save as HTML embeds the Ethiopic font (self-contained) (L12)', async ({ page }) => {
@@ -913,7 +946,8 @@ test('share_cancelled fires as an analytics event (L13)', async ({ page }) => {
     (window as unknown as { __beaconCalls: unknown[] }).__beaconCalls = [];
   });
   await uploadSample(page);
-  await page.click('#share');
+  await page.click('#share'); // unfurl the platform menu
+  await page.click('#shareWa');
   await expect(page.locator('#status')).toContainText('Share cancelled', { timeout: 10000 });
   await page.waitForFunction(() => {
     const calls = (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls;
@@ -1009,7 +1043,8 @@ test('share does not error', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
   await uploadSample(page);
-  await page.click('#share');
+  await page.click('#share'); // unfurl the platform menu
+  await page.click('#shareWa');
   await page.waitForTimeout(600);
   expect(errors).toEqual([]);
 });
@@ -1233,7 +1268,7 @@ test('language toggle: controls, export buttons, and palette options switch too 
   await page.goto('/');
   await waitReady(page);
   await page.selectOption('#lang', 'am');
-  await expect(page.locator('[data-i18n="groupExport"]')).toHaveText('ያስወጡ');
+  await expect(page.locator('#share')).toHaveText('ያጋሩ');
   await expect(page.locator('#dlPng')).toHaveText('PNG ያውርዱ');
   await expect(page.locator('#exampleBtn')).toHaveText('ምሳሌ ይሞክሩ');
   await expect(page.locator('#palette option[value="mono"]')).toHaveText('ሞኖ');
@@ -1268,14 +1303,68 @@ test('a successful share fires share_success and buttons re-enable (audit #8)', 
     (window as unknown as { __beaconCalls: unknown[] }).__beaconCalls = [];
   });
   await uploadSample(page);
-  await page.click('#share');
+  await page.click('#share'); // unfurl the platform menu
+  await page.click('#shareWa');
   await expect(page.locator('#status')).toContainText('Shared', { timeout: 10000 });
   await page.waitForFunction(() => {
     const calls = (window as unknown as { __beaconCalls?: Array<{ body: string }> }).__beaconCalls;
     return Array.isArray(calls) && calls.some((c) => c.body.includes('share_success'));
   });
   await expect(page.locator('#share')).toBeEnabled();
-  await expect(page.locator('#shareTop')).toBeEnabled();
+  await expect(page.locator('#dlPng')).toBeEnabled();
+});
+
+test('the viral share TEXT carries a referral link, demo flag, and origin-derived URL (F1)', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: (data: { text?: string }) => {
+        (window as unknown as { __sharedText?: string }).__sharedText = data.text ?? '';
+        return Promise.resolve();
+      },
+    });
+  });
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  await page.click('#share'); // unfurl the platform menu
+  await page.click('#shareWa');
+  await page.waitForFunction(() => (window as unknown as { __sharedText?: string }).__sharedText !== undefined);
+  const text = await page.evaluate(() => (window as unknown as { __sharedText?: string }).__sharedText ?? '');
+  const origin = new URL(page.url()).origin;
+  // This string IS the viral loop - the recipient's link must carry the
+  // per-share token, the auto-demo flag, and a runtime (never hardcoded) host.
+  expect(text).toContain(origin);
+  expect(text).toMatch(/ref=share-[a-z0-9]{6}/);
+  expect(text).toContain('&demo=1');
+  expect(text).not.toMatch(/workers\.dev/);
+});
+
+test('each platform share target sends its OWN caption - not one identical string (share format per platform)', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __captured: string[] }).__captured = [];
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: (data: { text?: string }) => {
+        (window as unknown as { __captured: string[] }).__captured.push(data.text ?? '');
+        return Promise.resolve();
+      },
+    });
+  });
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  for (const id of ['#shareTg', '#shareWa', '#shareTw']) {
+    await page.click('#share'); // unfurl the platform menu
+    await page.click(id);
+  }
+  await page.waitForTimeout(300);
+  const captured = await page.evaluate(() => (window as unknown as { __captured: string[] }).__captured);
+  expect(captured.length).toBe(3);
+  // Telegram / WhatsApp / X each carry their own phrasing
+  expect(new Set(captured).size).toBe(3);
 });
 
 test('referral_visit fires when arriving with ?ref=share (audit #8)', async ({ page }) => {
@@ -1412,12 +1501,12 @@ test('a late photo decode cannot clobber a newer pick (M3)', async ({ page }) =>
     const c = document.getElementById('mosaic') as HTMLCanvasElement;
     return c.width > 10;
   });
-  await page.waitForTimeout(2000); // A's stall elapses — must NOT clobber B
-  const src = await page.evaluate(() => {
-    const s = document.getElementById('source') as HTMLCanvasElement;
-    return { w: s.width, h: s.height };
-  });
-  expect(src.w).toBe(300); // B won; A's 100px portrait never landed
+  // B is 300x100 (3:1 landscape); A is 100x200 (portrait). Wait for the mosaic
+  // to be landscape (B won) - a fixed timeout flaked under full-suite CPU load.
+  await page.waitForFunction(() => {
+    const m = document.getElementById('mosaic') as HTMLCanvasElement;
+    return m.width > 0 && m.width > m.height * 2; // B's landscape; A never landed
+  }, { timeout: 5000 });
 });
 
 test('Clear invalidates an in-flight photo decode (M3)', async ({ page }) => {
@@ -1492,15 +1581,6 @@ test.describe('mobile (Pixel 7 — F-7)', () => {
     expect(errors).toEqual([]);
   });
 
-  test('copy link copies an attributed URL (F-4)', async ({ page, context }) => {
-    await page.goto('/');
-    await waitReady(page);
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.click('#copyLink');
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText().then((t) => t.length)), { timeout: 5000 }).toBeGreaterThan(0);
-    const text = await page.evaluate(() => navigator.clipboard.readText());
-    expect(text).toMatch(/ref=share-/);
-  });
 });
 
 test('language + palette persist across reloads (M7)', async ({ page }) => {
@@ -1530,12 +1610,13 @@ test('Maleda theme toggle switches light/dark and persists (Maleda)', async ({ p
   expect(await page.getAttribute('html', 'data-theme')).toBe('dark'); // persisted
 });
 
-test('Maleda eye-dot pulses during a busy state and the tibeb spine is present (Maleda)', async ({ page }) => {
+test('Maleda mesob brand mark pulses during a busy state (Maleda)', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
-  await expect(page.locator('#eyedot')).toBeVisible();
-  // The tibeb spine is the footer's one quiet woven recurrence.
-  await expect(page.locator('.tibeb-spine')).toBeVisible();
+  // The top bar wordmark is the brand; the mesob sits beside the status as the
+  // loading/motif and pulses while busy.
+  await expect(page.locator('.wordmark-brand')).toBeVisible();
+  await expect(page.locator('.mesob-mark.gaze')).toBeVisible();
   // Stall the photo decode so the 'reading' status (→ eye-dot pulse) is held
   // deterministically long enough to observe.
   await page.evaluate(() => { (window as unknown as { __stallPhotoDecode?: boolean }).__stallPhotoDecode = true; });

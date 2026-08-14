@@ -1,6 +1,6 @@
 // Optional, opt-in, privacy-first analytics — zero backend, off by default.
 //
-// geez·art stores nothing and phones nothing home, and that stays true until a
+// geez.art stores nothing and phones nothing home, and that stays true until a
 // deployer explicitly enables a provider by adding ONE meta tag to index.html:
 //
 //   <meta name="geez-art:analytics" content='{"provider":"plausible","domain":"example.com"}'>

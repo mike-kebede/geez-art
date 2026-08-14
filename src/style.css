@@ -1,4 +1,4 @@
-/* geez·art — "The app is the canvas."
+/* geez.art — "The app is the canvas."
    Skinned with the Maleda Ethiopian Classical Design Language
    (dev/maleda-design-language/tokens.css is the canonical token source):
    parchment gallery walls, the mosaic hung as a gilded painting (gold mount +
@@ -132,6 +132,12 @@ body {
   outline-offset: 3px;
   border-radius: 6px;
 }
+/* F5: on the dark umber grounds the madder ring drops to ~2.6:1 - switch to the
+   light "madder on ink" so focus stays ≥3:1 in both dark modes. */
+:root[data-theme='dark'] :focus-visible { outline-color: var(--ox-onink); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) :focus-visible { outline-color: var(--ox-onink); }
+}
 
 /* ---------- skip link ---------- */
 .skip-link {
@@ -168,16 +174,31 @@ body {
   background: var(--canvas);
   border-bottom: 1px solid var(--hairline);
 }
-.wordmark { margin: 0; }
-.wm-latin {
+.wordmark {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Maleda brand: the wordmark is language-dependent — "geez.art" in Latin (Noto),
+   "ግዕዝ ጥበብ" in Amharic set in Bela Bereka, the display voice. No ፊ in the bar;
+   the ፊ is the tab icon and the mesob is the loading/motif. */
+/* the mesob that carries the "gaze": it sits beside the status text and pulses
+   while the app is busy (generating/done). */
+.mesob-mark.gaze {
+  flex: none;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+.mesob-mark.gaze.pulse { animation: mesobSpin 3s linear infinite; }
+.wordmark-brand {
   font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--ink);
 }
-/* the Amharic display wordmark — Bela Bereka is the display voice for fidel */
-.wm-fidel { font-family: 'Bela Bereka', 'Noto Sans Ethiopic Variable', serif; color: var(--accent-text); }
+.wordmark-brand.am { font-family: 'Bela Bereka', 'Noto Sans Ethiopic Variable', serif; color: var(--accent-text); }
 .status-wrap {
   margin-left: auto;
   display: flex;
@@ -199,19 +220,9 @@ body {
    flash() messages written while idle weren't reliably announced. */
 #status.is-idle { opacity: 0; }
 
-/* the eye-dot — the gaze of the product: gold when live, pulse while busy.
-   One quiet moment, never multiplied. */
-.eye-dot {
-  width: 6px;
-  height: 6px;
-  transform: rotate(45deg);
-  background: var(--dot);
-  border-radius: 1px;
-  flex: none;
-  transition: background 0.3s ease;
-}
-.eye-dot.pulse { animation: eyePulse 2.2s ease-in-out infinite; }
-@keyframes eyePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+/* the mesob brand mark ROTATES while busy (the woven basket turning) - the
+   eye-dot "gaze" pulse is a separate element, never applied to the mesob. */
+@keyframes mesobSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* the weave loader — the three manuscript pigments as a weaving triad,
    used ONLY while the fonts/ramp load (motion, never a static motif). */
@@ -244,20 +255,34 @@ body {
 }
 
 /* ---------- stage ---------- */
+/* hybrid layout: a compact action strip (Start + Export) spans the top, the
+   mosaic (the painting) is the hero on the left, and the fine-tune panel
+   (Letters + Advanced) sits on the right — the preview is never pushed below
+   the fold. */
 .stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
-  gap: 26px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: auto auto;
+  gap: 22px;
   padding: 10px 28px 26px;
   align-items: start;
   flex: 1;
 }
 @media (max-width: 920px) {
-  .stage { grid-template-columns: 1fr; }
+  .stage { grid-template-columns: 1fr; grid-template-rows: auto; }
+  /* painting first - the empty ፊደል hero is itself a wired picker, so the
+     strip below it loses nothing; the artwork stays above the fold */
+  .showcase { grid-column: auto; grid-row: auto; order: 1; }
+  .controls { grid-column: auto; grid-row: auto; order: 2; }
+  .side-panel { grid-column: auto; grid-row: auto; order: 3; position: static; }
+}
+@media (max-width: 520px) {
+  .controls-primary { flex-direction: column; }
+  .controls-primary .share-root { flex: 1 1 auto; }
 }
 
 /* ---------- showcase + halo + frame ---------- */
-.showcase { position: relative; min-width: 0; }
+.showcase { position: relative; min-width: 0; grid-column: 1; grid-row: 2; }
 
 .halo {
   position: absolute;
@@ -287,8 +312,9 @@ body {
   --teal: #1e5a55;
   border-radius: 22px;
   padding: 9px; /* the mount width */
-  /* the gold mount — gradient + inner hairline, per the gallery `.mount` */
-  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep, #C9962E) 100%);
+  /* the gold mount — always the Maleda gilding (gold-500), regardless of the
+     mosaic palette (mono's gold is gray and must not gray the frame) */
+  background: linear-gradient(180deg, var(--gold-300, #E1C488) 0%, var(--gold-500, #C9962E) 100%);
   box-shadow: var(--shadow);
   animation: frameIn 0.6s ease-out both;
   transition: box-shadow 0.3s ease;
@@ -329,27 +355,31 @@ body {
 /* zoom toolbar */
 .zoom-controls {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 8px;
+  right: 8px;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: var(--ink-900); /* solid umber pill */
+  gap: 1px;
+  /* compact + semi-transparent so it doesn't cover the artwork */
+  background: rgba(21, 9, 11, 0.68);
+  backdrop-filter: blur(3px);
   border-radius: 999px;
-  padding: 3px;
+  padding: 2px;
 }
 .zoom-controls[hidden] { display: none; }
 .zoom-controls button {
-  min-height: 48px; /* F15 */
-  min-width: 48px;
+  min-height: 38px; /* compact — was 48px and covered the picture */
+  min-width: 38px;
   padding: 0;
-  font-size: 16px;
+  font-size: 14px;
   background: transparent;
   color: #fff; /* L20: raised from #f6f4f0 (~4.2:1) to ≥8:1 on the dark pill */
   border-color: transparent;
 }
 .zoom-controls button:hover { background: rgba(255, 255, 255, 0.16); color: #fff; transform: none; box-shadow: none; }
+.zoom-controls button:disabled { opacity: 0.35; cursor: default; }
+.zoom-controls button:disabled:hover { background: transparent; color: #fff; }
 /* L23: a high-contrast focus ring on the dark pill (the global accent ring was ~1.6:1 there). */
 .zoom-controls button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .zoom-val {
@@ -445,11 +475,11 @@ body {
   background: #fff;
 }
 .share-hint {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mist); /* a caption, not a fifth CTA */
   text-align: center;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 .share-hint [lang="am"] {
   display: block;
@@ -469,30 +499,70 @@ body {
 .replay video { width: 100%; max-height: 320px; border-radius: 10px; background: #000; }
 .replay-actions { display: flex; gap: 10px; margin-top: 10px; justify-content: center; }
 
-/* ---------- controls — floating glass panel ---------- */
+/* ---------- controls — the action strip: exactly two 56px pills ---------- */
 .controls {
-  background: var(--surface-2); /* solid warm surface */
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 8px 22px 26px;
-  box-shadow: var(--shadow);
-  position: sticky;
-  top: 100px; /* clears the sticky topbar (~80px) so the panel never slides under it */
-  max-height: calc(100vh - 112px); /* M7: with Advanced + picker open it must not pin exports below the fold */
-  overflow-y: auto;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  background: transparent; /* no panel box - the painting is the only framed surface */
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
-.group { padding: 16px 0; }
-.group + .group { border-top: 1px solid var(--line); }
+.group { flex: 0 1 auto; min-width: 0; }
+.controls-primary { display: flex; gap: 12px; align-items: stretch; }
+.controls-primary .dropzone {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 56px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1.5px solid var(--hairline);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.controls-primary .dz-main { margin: 0; font-size: 15px; white-space: nowrap; }
+.controls-primary .share-root { flex: 0 1 clamp(220px, 32%, 320px); min-width: 0; display: flex; }
+.controls-primary #share { width: 100%; min-height: 56px; padding: 0 22px; font-size: 15px; border-radius: 999px; }
+/* disabled controls read as dead - no inert saturated buttons */
+button:disabled { opacity: 0.45; cursor: default; box-shadow: none; transform: none; }
+button:disabled:hover { transform: none; box-shadow: none; }
+button.primary:disabled { opacity: 1; background: transparent; border: 1.5px dashed var(--hairline); color: var(--mist); font-weight: 600; }
+button.primary:disabled:hover { background: transparent; border-color: var(--hairline); color: var(--mist); }
+/* side panel top row: example / pause / clear */
+.side-row { display: flex; gap: 8px; }
+.side-row .side-example { flex: 1; width: auto; }
+
+/* ---------- side panel — fine-tune (Letters + Advanced) ---------- */
+.side-panel {
+  grid-column: 2;
+  grid-row: 2;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
 .group h2 {
-  margin: 0 0 14px;
+  margin: 0 0 8px;
   font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', system-ui, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--mist);
 }
-
 /* advanced disclosure — the second tap for fine-tuning */
 details#advanced {
   border-top: 1px solid var(--line);
@@ -564,14 +634,6 @@ button.primary:hover { background: var(--accent-deep); border-color: var(--accen
 button.ghost { background: transparent; border-color: transparent; color: var(--mist); }
 button.ghost:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: transparent; color: var(--accent-text); transform: none; box-shadow: none; }
 button.share { width: 100%; font-weight: 700; font-size: 15px; }
-.share-top { min-height: 48px; /* F15 */ padding: 7px 18px; font-size: 13px; font-weight: 700; }
-.share-top:disabled { opacity: 0.4; cursor: default; box-shadow: none; transform: none; }
-.share-top:disabled:hover { background: var(--accent); color: #fff7ec; }
-.share-top.pulse { animation: sharePulse 1.4s ease-out 2; }
-@keyframes sharePulse {
-  0% { box-shadow: 0 0 0 0 rgba(166, 43, 22, 0.45); }
-  100% { box-shadow: 0 0 0 12px rgba(166, 43, 22, 0); }
-}
 #clearBtn { background: transparent; border-color: transparent; color: var(--mist); }
 #clearBtn:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: transparent; color: var(--accent-text); transform: none; box-shadow: none; }
 .mix-btn {
@@ -617,7 +679,7 @@ input[type='range'] {
   background: transparent;
   cursor: pointer;
 }
-.controls select {
+.side-panel select {
   font-family: inherit;
   font-size: 14px;
   padding: 9px 12px;
@@ -637,12 +699,64 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
    "Download video" / "Download GIF" wrap instead of overflowing. */
 .btn-row button { flex: 1 1 45%; min-width: 0; padding: 9px 8px; font-size: 12.5px; white-space: normal; line-height: 1.2; }
 .btn-stack { display: flex; flex-direction: column; gap: 12px; }
+/* the Share button unfurls a small platform menu (Telegram / WhatsApp / X)
+   as a popover anchored just below the button - one Share on the page */
+.share-root { position: relative; display: inline-block; }
+.share-unfurl {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 240px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  transform: scale(0.95);
+  transform-origin: top left;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.share-root.open .share-unfurl,
+.share-root:focus-within .share-unfurl { display: flex; opacity: 1; transform: scale(1); }
+.share-unfurl-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin-bottom: 4px;
+}
+.share-unfurl .share-target { min-height: 44px; padding: 9px 14px; font-size: 13.5px; text-align: left; }
 
 /* letter picker */
 .picker { margin-top: 12px; }
-.picker-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-.picker-actions { display: flex; gap: 6px; }
-.picker-actions button { min-height: 48px; /* F15 */ padding: 4px 10px; font-size: 12px; }
+.picker-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+#pickSummary {
+  /* a STATUS label, never a control: muted, plain, no border/pill/hover, so it
+     can't be mistaken for a "select all" button next to Use all / Use none */
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mist);
+  letter-spacing: 0.02em;
+  cursor: default;
+  user-select: none;
+}
+.picker-actions { display: flex; gap: 8px; }
+.picker-actions button {
+  min-height: 44px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  color: var(--ink);
+}
+.picker-actions button:hover { border-color: var(--accent); color: var(--accent-text); }
 .picker .hint { margin: 8px 0 10px; }
 .hint { color: var(--mist); font-size: 12px; margin: 0; }
 .picker .hint .plus { color: var(--accent-text); font-weight: 700; }
@@ -664,57 +778,64 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; bo
 .ramp-preview span { opacity: 0.85; }
 .picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* M2: 48px tile + 44px expand + gap */
-  gap: 6px;
-  max-height: 250px;
+  grid-template-columns: repeat(auto-fill, minmax(122px, 1fr));
+  gap: 8px;
+  max-height: 300px;
   overflow-y: auto;
   padding-right: 4px;
 }
-.fam { display: grid; grid-template-columns: minmax(48px, 1fr) 44px; gap: 3px; align-items: center; } /* M2 */
+/* Maleda-styled family cards: parchment tile with an umber glyph, madder when
+   fully on, gold hairline when partly selected, muted when off */
+.fam { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 6px; align-items: stretch; }
 .fam-tile {
-  min-height: 48px; /* F15 */
+  min-height: 52px;
   padding: 0;
   font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif;
-  font-size: 18px;
+  font-size: 22px;
+  line-height: 1;
   color: var(--ink);
   background: var(--surface);
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: 12px;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
-.fam-tile.on { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent-text); }
-.fam-tile.partial { border-color: var(--accent); color: var(--accent-text); }
-.fam-tile.off { color: var(--mist); background: transparent; opacity: 1; border-color: var(--hairline); }
+.fam-tile:hover { border-color: var(--accent); color: var(--accent-text); transform: translateY(-1px); }
+.fam-tile.on { background: color-mix(in srgb, var(--accent) 13%, var(--surface)); border-color: var(--accent); color: var(--accent-text); }
+.fam-tile.partial { border-color: var(--gold, #C9962E); color: var(--accent-text); }
+.fam-tile.off { color: var(--mist); background: transparent; border-color: var(--hairline); }
 .fam-expand {
-  min-height: 48px; /* F15 */
-  min-width: 48px; /* L8: the exact control a mobile user needs — was 36px in a 20px column */
+  min-height: 52px;
+  width: 100%;
   padding: 0;
-  font-size: 13px;
-  color: var(--mist);
-  background: transparent;
-  border-color: transparent;
+  font-size: 15px;
+  color: var(--gold, #C9962E);
+  background: color-mix(in srgb, var(--gold) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  border-radius: 12px;
 }
-.fam-expand:hover { color: var(--accent-text); background: rgba(166, 43, 22, 0.08); box-shadow: none; transform: none; }
+.fam-expand:hover { color: var(--accent-text); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: none; transform: none; }
 .fam-detail {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
   background: var(--canvas);
+  border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 8px;
+  padding: 10px;
 }
 .fam-detail[hidden] { display: none; }
 .fam-detail .letter {
   font-family: 'Noto Sans Ethiopic Variable', 'Noto Sans Ethiopic', serif;
-  font-size: 14px;
+  font-size: 16px;
   min-height: 48px; /* F15 */
   min-width: 48px;
-  padding: 2px 4px;
+  padding: 0;
   border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
 }
-.fam-detail .letter.selected { background: rgba(166, 43, 22, 0.1); border-color: var(--accent); color: var(--accent-text); }
+.fam-detail .letter.selected { background: color-mix(in srgb, var(--accent) 13%, var(--surface)); border-color: var(--accent); color: var(--accent-text); }
 .fam-detail .letter:not(.selected) { color: var(--mist); opacity: 1; }
 .fam-detail .letter:hover { opacity: 1; transform: scale(1.05); }
 
@@ -725,14 +846,6 @@ footer {
   color: var(--mist);
   font-size: 12.5px;
   border-top: 1px solid var(--line);
-}
-/* the tibeb spine — one quiet woven recurrence in the footer, never repeated */
-.tibeb-spine {
-  display: block;
-  width: 24px;
-  height: 24px;
-  margin: 0 auto 14px;
-  opacity: 0.9;
 }
 /* theme toggle — icon-only pill, mirrors the lang toggle */
 .theme-toggle {
@@ -770,18 +883,26 @@ footer .fidel { color: var(--accent-text); font-weight: 700; }
     .topbar { flex-wrap: wrap; row-gap: 6px; }
     .status-wrap { order: 3; flex-basis: 100%; margin-left: 0; justify-content: center; }
   }
-  .stage { padding: 8px 18px 18px; gap: 22px; }
+  .stage { padding: 8px 18px 18px; gap: 18px; }
   .status-wrap { margin-left: 0; }
   .frame { padding: 10px; }
-  .controls { padding: 4px 18px 22px; position: static; }
+  .side-panel { padding: 12px 14px; }
   .empty-state { min-height: 280px; padding: 40px 22px; }
   .empty-fidel { font-size: 72px; }
   footer { padding: 20px 18px 26px; }
+  /* the share popover stays fully usable on small screens */
+  .share-unfurl { width: min(300px, calc(100vw - 32px)); min-width: 0; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .share-unfurl .share-target { min-height: 48px; }
+  @media (max-width: 480px) {
+    .share-unfurl { top: auto; left: 0; right: 0; bottom: 0; width: 100%; min-width: 0;
+      border-radius: 18px 18px 0 0; padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); }
+    .share-root.open .share-unfurl { transform: none; }
+  }
 }
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .frame, .halo, .empty-fidel, .share-top.pulse, .eye-dot.pulse, .weave-loader span { animation: none; }
+  .frame, .halo, .empty-fidel, .mesob-mark.gaze.pulse, .weave-loader span { animation: none; }
   * { transition: none !important; }
 }
 

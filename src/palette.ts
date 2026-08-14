@@ -16,6 +16,9 @@ export interface ArtPalette {
   accent: string;
   gold: string;
   teal: string;
+  /** i18n key (both languages) for the palette's OWN description — shown under
+   *  the selector so each category names its tradition, not one generic line. */
+  descKey: string;
   /**
    * The pigments this preset's COLORIZED mosaic is allowed to use — every
    * source cell maps to its NEAREST pigment. Drawn from the Maleda wheel
@@ -46,6 +49,7 @@ export const PALETTES: ArtPalette[] = [
     accent: '#6C523D',
     gold: '#8f8f8f',
     teal: '#3a3a3a',
+    descKey: 'paletteMonoDesc',
     pigments: ['#FCF9F3', '#D9D2C4', '#A79E8B', '#6E6553', '#3A3329', '#15090B'], // grayscale
   },
   {
@@ -56,6 +60,7 @@ export const PALETTES: ArtPalette[] = [
     accent: '#A62F1E', // madder
     gold: '#C9962E',   // the illumination gold
     teal: '#1E8A5E',   // verdigris
+    descKey: 'paletteManuscriptDesc',
     pigments: PIGMENTS_MANUSCRIPT,
   },
   {
@@ -66,6 +71,7 @@ export const PALETTES: ArtPalette[] = [
     accent: '#A62F1E',
     gold: '#C9962E',
     teal: '#1E8A5E',
+    descKey: 'paletteIconDesc',
     pigments: ['#F5E9D1', '#F0DFBD', '#E8C46A', '#C9962E', '#A62F1E', '#651E15', '#1E8A5E', '#573928', '#15090B'],
   },
   {
@@ -76,11 +82,12 @@ export const PALETTES: ArtPalette[] = [
     accent: '#A62F1E',
     gold: '#C9962E',
     teal: '#1E8A5E',
+    descKey: 'paletteChurchDesc',
     pigments: ['#F5E9D1', '#E1C488', '#C9962E', '#A62F1E', '#7A1F14', '#1A5039', '#3A2016', '#15090B'],
   },
 ];
 
-export const DEFAULT_PALETTE: ArtPalette = PALETTES[1]; // "manuscript"
+export const DEFAULT_PALETTE: ArtPalette = PALETTES[1]; // "Parchment" (manuscript) — the canonical Maleda painting palette (user preference)
 
 export function cssVars(p: ArtPalette): Record<string, string> {
   return {

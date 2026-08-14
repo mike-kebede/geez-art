@@ -184,6 +184,31 @@ code confirms them):
   Also: DEFAULT charset is now "Pick your own" (custom) — the picker starts with
   the common Amharic set pre-selected and OPEN, so glyphs like ጨ can be tapped
   off instead of dominating.
+- Round 3.27 (user batch): zoom-out disabled at fit (was a dead no-op); brand is
+  language-dependent ("geez.art" / "ግዕዝ ጥበብ" in Bela); copy-text & save-HTML
+  disabled during video; the mesob woven-star replaced the tibeb lozenge and sits
+  TOP-BAR beside the wordmark as brand mark + busy "gaze" pulse; Share now hands
+  off the actual VIDEO file + text for video sources (shareBlob); GIF long-edge
+  cap raised 480 -> 960px (~9MB — real-size but sendable; full-1280 was 14MB).
+  Round 3.29 (critic tail + domain): M6 service worker (network-first HTML,
+  cache-first hashed assets; worker-src 'self'). L1 GIF paint loop throttled to
+  ~10fps. L2 source-chip holds an 80px thumbnail not the full-res frame.
+  L5 replay video gets a localized aria-label. L6 focus restored after the
+  native file chooser. L7 half-built AudioContext is closed, not orphaned.
+  L9 og-image re-encoded as JPEG (256KB vs 1MB). Share card now captured with
+  html-to-image (toBlob) - the exchange.et-style in-app card (mosaic + parchment
+  footer + brand + CTA), shared with the video/photo + text. NO domain is
+  hardcoded anywhere: SITE_URL is origin-derived; the SEO/OG meta uses
+  %VITE_SITE_URL% build-time injection (.env) and the og-image generator reads
+  SITE_URL from env. Brand name standardized to "geez.art".
+  Round 3.28: MONO is now the default palette (frame mount stays Maleda gold);
+  the Letters group (alphabet selector + picker + randomize) moved OUT of
+  Advanced to the top of the controls; the randomizer now picks ~10 letters
+  stratified across density deciles from the chosen alphabet (was ~60% of all
+  glyphs, and pure-random clustered to 5-7 distinct); the favicon/logo is the
+  GOLD ፊ on the mesob (was mistakenly madder red); zoom controls compact +
+  semi-transparent; NO em dashes anywhere (English or Amharic); PWA icons +
+  tab icon = the ፊ-on-mesob mark.
 - Round 3.25 (user request): FULL MALEDA DESIGN-LANGUAGE RESTYLE
   (dev/maleda-design-language/ — tokens.css is canonical). Parchment gallery
   walls + umber ink; the mosaic is now hung as a GILDED PAINTING (gold mount +
@@ -219,9 +244,26 @@ code confirms them):
   copyLink register -> polite. L17 spelling normalized to standard ሥዕል/መሣሪያ (the
   ሠ/ሰ/ሣ family still needs a definitive native review).
 
-Test suite: tests/e2e.spec.ts — 74 Playwright tests expected green (Chromium; the suite builds dist and
-validates it under the real CSP headers). Read the file to assess COVERAGE; the author is running it, so
-do not execute it.
+Test suite: tests/e2e.spec.ts — 80 Playwright tests, all GREEN in the latest run (Chromium; the suite
+builds dist and validates it under the real CSP headers). Read the file to assess COVERAGE; the author
+is running it, so do not execute it.
+
+CURRENT STATE (round 3.30, 2026-08-14): all round-3.29 fixes are STAGED but UNCOMMITTED + UNDEPLOYED
+(holding for the user's go). The 80-test suite is green. Outstanding: the user flagged the right-side
+controls panel as "hiding capabilities" and wants a layout answer; and deployment is pending a Hostinger
+CNAME for a custom subdomain (workers.dev is still the live canonical URL). Round 3.29 items to treat as
+FIXED: photo supersede two-way (clear bumps photoGen); color atlas warmed directly at idle; iOS share
+falls back to native text share + download; busy cues for photo/video load; html-to-image share card
+(mosaic + parchment footer + brand + CTA) handed to the native share sheet alongside the actual
+video/photo file + text (t.me/wa.me URLs cannot carry files — native sheet is the only path);
+platform share buttons fire the native sheet; service worker (network-first HTML, cache-first hashed
+assets; worker-src 'self'); L1 GIF paint ~10fps; L2 source-chip 80px thumbnail; L6 focus restore after
+file chooser; L7 half-built AudioContext closed; L9 og-image JPEG 256KB; FULL Ethiopic set verified
+(326 syllables + 9 punct + 20 numbers; numbers/punct grouped, not 7-blocks); Mono = default palette;
+Letters group out of Advanced (alphabet + picker + randomize on top); randomizer picks ~10 stratified
+across density deciles; gold ፊ favicon; SITE_URL origin-derived (nothing hardcoded); Maleda restyle
+(gold mount, parchment mat, tibeb footer, eye-dot status, weave loader, dark theme toggle, Bela Bereka
+display fidel, mono default).
 
 Grade the CURRENT code fresh against your rubric and give an honest 0-100 score. Re-reporting an already
 fixed item as a NEW finding is a mistake; noting "previously FAIL, now PASS" in a criterion verdict is
@@ -331,6 +373,21 @@ const RUBRICS = [
       'AARRR pirate metrics: Acquisition, Activation, Retention, Referral, Revenue. Audit the loop as a ' +
       'non-technical user: does the shared image carry a clear CTA + URL? ≤3 taps to first result? Is the ' +
       'filter "faddish" enough to share? What would break the loop at scale (cost, CORS, CDN)?',
+  },
+  {
+    key: 'maleda',
+    persona: 'Maleda Design-Language Compliance Auditor',
+    rubric:
+      'THE MALEDA ETHIOPIAN CLASSICAL DESIGN LANGUAGE — dev/maleda-design-language/tokens.css is canonical; ' +
+      'DESIGN-LANGUAGE.md. Grade the CURRENT implementation against it: (1) parchment grounds + umber ink tokens ' +
+      'used consistently in both themes; (2) the gilded painting (gold mount + parchment mat on .frame/.frame-inner) ' +
+      'is the only framed surface; (3) the tibeb spine footer, one quiet recurrence; (4) the mesob brand mark ROTATES ' +
+      'while busy — it must NOT carry an eyePulse opacity-fade (the eye-dot gaze is a separate element); (5) the weave ' +
+      'loader (verdigris·saffron·madder triangles) appears only during boot; (6) gold pulled back to ≤3% (scarce — no ' +
+      'gold hovers/borders on buttons); (7) madder is the single action color; (8) the single-signature rule (the ' +
+      'mosaic is the hero, nothing crowds it); (9) restraint — nothing reads template/AI-default; (10) dark umber theme ' +
+      'matches tokens. Read tokens.css + DESIGN-LANGUAGE.md + src/style.css + index.html and grade PASS/FAIL/WARN per ' +
+      'criterion with an honest 0-100 score. Flag every concrete violation with file:line.',
   },
   {
     key: 'media',

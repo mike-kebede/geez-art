@@ -122,7 +122,15 @@ function isTofu(mask: Uint8Array): boolean {
   for (let i = 0; i < mask.length; i++) {
     if ((mask[i] > 60) !== (TOFU_REF[i] > 60)) diff++;
   }
-  return diff / mask.length < 0.06; // essentially identical to the .notdef box
+  const diffFrac = diff / mask.length;
+  if (diffFrac < 0.06) return true; // essentially identical to the .notdef box
+  // Unassigned Ethiopic slots (e.g. U+1249, U+124E, the ኰ/ጐ gaps) render a SMALL
+  // centered hollow rectangle that the checks above miss: low density (~0.102)
+  // and only ~12% different from the .notdef box. Catch low-density glyphs that
+  // are still near-identical to the reference (real glyphs are ≥0.124 density
+  // and ≥15% different).
+  if (density < 0.13 && diffFrac < 0.14) return true;
+  return false;
 }
 
 function measureGlyph(cp: number): GlyphInfo | null {
@@ -180,9 +188,15 @@ async function ensureMeasured(): Promise<GlyphInfo[]> {
     // cold visits — yield to the event loop every 32 so the page stays responsive.
     if (++measured % 32 === 0) await new Promise((r) => setTimeout(r, 0));
   }
+  // Punctuation (U+1360-1368) and numbers (U+1369-137C) are ALL assigned in
+  // Unicode - the tofu filter is only for the syllabary's unassigned slots. A
+  // real mark like ፡ has low density and would be wrongly dropped; include any
+  // codepoint that renders ANY ink at all.
   for (let cp = 0x1360; cp <= 0x137c; cp++) {
-    const g = measureGlyph(cp);
-    if (g) infos.push(g);
+    const mask = alphaMask(String.fromCodePoint(cp));
+    const { density } = stats(mask);
+    if (density < 0.0005) continue; // truly nothing rendered (missing from font)
+    infos.push({ cp, ch: String.fromCodePoint(cp), density });
   }
   infos.sort((a, b) => a.density - b.density);
   fullSet = infos;

@@ -7,8 +7,101 @@ import { MAX_SOURCE_EDGE } from './limits';
 
 const DEFAULT_FILENAME = 'geez-art.png';
 
-/** Brand-band colors for shared images — umber band with Maleda gold accents. */
-const BRAND = { band: '#15090B', gold: '#C9962E', text: '#F3E9D5' };
+/** Share-card colors — SUBTLE: parchment footer, thin gold hairline, muted
+ *  umber brand text, madder CTA. The mosaic is the hero; the card is quiet. */
+const BRAND = {
+  card: '#F5E9D1',   // parchment-300
+  gold: '#C9962E',   // gold-500 hairline
+  text: '#573928',   // umber-700 brand
+  accent: '#8A2B1D', // madder CTA
+};
+
+/* ---------- share card (html-to-image) ---------- */
+
+let shareCardEl: HTMLDivElement | null = null;
+let shareCardWrap: HTMLDivElement | null = null;
+
+/** Build (once) a hidden share-card DOM element: the mosaic + a subtle parchment
+ *  footer with the bilingual brand and the CTA. Captured with html-to-image
+ *  (toBlob) - the exchange.et-style in-app card. */
+function getShareCard(mosaic: HTMLCanvasElement, siteUrl: string): HTMLDivElement {
+  if (!shareCardEl) {
+    // The card is built at fixed 0,0 so html-to-image can paint it, but it is
+    // CLIPPED by a zero-size overflow:hidden wrapper: a negative z-index alone
+    // still paints above the canvas backdrop and bleeds through the app's
+    // transparent gaps (the mosaic showed behind the chrome on Share).
+    shareCardWrap = document.createElement('div');
+    shareCardWrap.style.position = 'fixed';
+    shareCardWrap.style.left = '0';
+    shareCardWrap.style.top = '0';
+    shareCardWrap.style.width = '0';
+    shareCardWrap.style.height = '0';
+    shareCardWrap.style.overflow = 'hidden';
+    shareCardWrap.style.pointerEvents = 'none';
+    document.body.appendChild(shareCardWrap);
+    shareCardEl = document.createElement('div');
+    shareCardEl.style.width = '1200px';
+    shareCardEl.style.background = '#F5E9D1';
+    shareCardEl.style.fontFamily = '"Noto Sans Ethiopic Variable","Noto Sans Ethiopic",sans-serif';
+    shareCardWrap.appendChild(shareCardEl);
+    const foot = document.createElement('div');
+    foot.style.display = 'flex';
+    foot.style.justifyContent = 'space-between';
+    foot.style.alignItems = 'center';
+    foot.style.padding = '16px 20px';
+    foot.style.borderTop = '2px solid #C9962E';
+    const brand = document.createElement('span');
+    brand.style.fontSize = '22px';
+    brand.style.fontWeight = '600';
+    brand.style.color = '#573928';
+    const cta = document.createElement('span');
+    cta.style.fontSize = '19px';
+    cta.style.fontWeight = '600';
+    cta.style.color = '#8A2B1D';
+    foot.append(brand, cta);
+    shareCardEl.appendChild(foot);
+  }
+  // Mosaic image (downscaled to the card width). Explicit height: html-to-image
+  // clones the node, and height:auto can resolve to 0 there.
+  let img = shareCardEl.querySelector('img');
+  if (!img) {
+    img = document.createElement('img');
+    img.alt = '';
+    img.style.display = 'block';
+    img.style.width = '1200px';
+    shareCardEl.insertBefore(img, shareCardEl.lastElementChild);
+  }
+  const scale = Math.min(1, 1200 / mosaic.width);
+  const w = Math.max(1, Math.round(mosaic.width * scale));
+  const h = Math.max(1, Math.round(mosaic.height * scale));
+  img.style.height = h + 'px';
+  const tmp = document.createElement('canvas');
+  tmp.width = w;
+  tmp.height = h;
+  tmp.getContext('2d')!.drawImage(mosaic, 0, 0, w, h);
+  img.src = tmp.toDataURL('image/png');
+  // Footer text (bilingual brand + CTA).
+  const [brand, cta] = Array.from(shareCardEl.lastElementChild!.children) as [HTMLSpanElement, HTMLSpanElement];
+  brand.textContent = 'ግዕዝ ጥበብ · geez art';
+  cta.textContent = 'make yours at ' + siteUrl;
+  return shareCardEl;
+}
+
+/** Capture the share card (mosaic + footer + CTA) as a PNG blob via html-to-image. */
+export async function captureShareCard(mosaic: HTMLCanvasElement, siteUrl: string): Promise<Blob> {
+  const { toBlob } = await import('html-to-image'); // lazy - keeps it out of the eager bundle
+  const card = getShareCard(mosaic, siteUrl);
+  // Override the clone's offscreen positioning - a fixed element at
+  // left:-10000px paints nothing in the foreignObject clone.
+  const blob = await toBlob(card, {
+    width: 1200,
+    pixelRatio: 1,
+    cacheBust: true,
+    style: { position: 'fixed', left: '0', top: '0', margin: '0' },
+  });
+  if (!blob) throw new Error('share-card capture failed');
+  return blob;
+}
 
 /** Promise wrapper around canvas.toBlob("image/png"). Rejects if the blob is null. */
 export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
@@ -53,17 +146,18 @@ export function downloadCanvasPNG(canvas: HTMLCanvasElement, filename: string = 
 }
 
 /**
- * Build a shareable PNG: the mosaic with a brand band (wordmark + site URL)
- * beneath it, so anyone who receives the image can find the app and make
- * their own. The band scales with the mosaic width.
+ * Build a shareable PNG: the mosaic with a SUBTLE share-card footer beneath it
+ * (thin gold hairline, small bilingual brand lockup, and a CTA), so anyone who
+ * receives the image can find the app and make their own. The mosaic is the
+ * hero; the footer is a quiet caption, not a banner.
  */
 export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTMLCanvasElement {
-  const bandH = Math.min(84, Math.max(44, Math.round(mosaic.width * 0.045)));
+  const bandH = Math.min(56, Math.max(36, Math.round(mosaic.width * 0.035)));
   const out = document.createElement('canvas');
   out.width = mosaic.width;
   out.height = mosaic.height + bandH;
   const ctx = out.getContext('2d')!;
-  ctx.fillStyle = BRAND.band;
+  ctx.fillStyle = BRAND.card;
   ctx.fillRect(0, 0, out.width, out.height);
   ctx.drawImage(mosaic, 0, 0);
   drawBrandBand(ctx, mosaic.width, mosaic.height, bandH, siteUrl);
@@ -71,9 +165,10 @@ export function makeShareImage(mosaic: HTMLCanvasElement, siteUrl: string): HTML
 }
 
 /**
- * Draw the brand band (gold hairline + fidel wordmark + "make yours at" CTA)
+ * Draw the share-card footer (gold hairline + bilingual brand lockup + CTA)
  * BELOW the mosaic area on an already-sized context. Shared by the static PNG
  * path and the video/GIF capture path so every shared artifact carries the URL.
+ * Subtle on purpose: parchment, muted umber text, one thin gold line.
  */
 export function drawBrandBand(
   ctx: CanvasRenderingContext2D,
@@ -82,53 +177,47 @@ export function drawBrandBand(
   bandH: number,
   siteUrl: string,
 ): void {
-  ctx.fillStyle = BRAND.band;
+  ctx.fillStyle = BRAND.card;
   ctx.fillRect(0, mosaicH, mosaicW, bandH);
   ctx.fillStyle = BRAND.gold;
-  ctx.fillRect(0, mosaicH, mosaicW, 2); // gold hairline
+  ctx.fillRect(0, mosaicH, mosaicW, 2); // one thin gold hairline
   const mid = mosaicH + bandH / 2;
   ctx.textBaseline = 'middle';
 
-  const PAD = 16; // horizontal padding on each side of the band
-  const STEP = Math.round(bandH * 0.62); // gap between the fidel and the latin wordmark
-  const GAP = 24; // minimum clearance between wordmark and CTA
+  const PAD = 16; // horizontal padding on each side of the card
+  const GAP = 24; // minimum clearance between brand and CTA
 
-  // wordmark: fidel + latin (left-anchored)
+  // Brand lockup (left): bilingual, small and muted.
   ctx.textAlign = 'left';
-  ctx.font = `700 ${Math.round(bandH * 0.5)}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",serif`;
-  ctx.fillStyle = BRAND.gold;
-  ctx.fillText('ግዕዝ', PAD, mid);
-  const fidelW = ctx.measureText('ግዕዝ').width;
-  ctx.font = `600 ${Math.round(bandH * 0.42)}px "Inter Variable","Inter",sans-serif`;
+  const brandPx = Math.round(bandH * 0.34);
+  ctx.font = `600 ${brandPx}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",sans-serif`;
   ctx.fillStyle = BRAND.text;
-  ctx.fillText('geez·art', PAD + STEP, mid);
-  const latinW = ctx.measureText('geez·art').width;
-  // Occupied width of the wordmark (fidel and latin may overlap, so use the wider edge).
-  const wordmarkRight = Math.max(PAD + fidelW, PAD + STEP + latinW);
+  ctx.fillText('ግዕዝ ጥበብ · geez art', PAD, mid);
+  const brandW = ctx.measureText('ግዕዝ ጥበብ · geez art').width;
+  const brandRight = PAD + brandW;
 
-  // Viral CTA on the right. On narrow mosaics the monospace URL collides with
-  // the wordmark; shrink it until it fits, and if it still can't, drop the
-  // "make yours at " prefix and show the bare URL (still findable as the CTA).
+  // Viral CTA (right): "make yours at <url>". Shrink until it fits; if it
+  // still can't, drop the prefix and show the bare URL.
   const right = mosaicW - PAD;
   const full = 'make yours at ' + siteUrl;
   const bare = siteUrl;
-  const minSize = 10;
+  const minSize = 11;
   const fitsCta = (label: string, px: number): boolean => {
-    ctx.font = `${px}px ui-monospace,Menlo,monospace`;
-    return wordmarkRight + GAP <= right - ctx.measureText(label).width;
+    ctx.font = `${px}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",monospace`;
+    return brandRight + GAP <= right - ctx.measureText(label).width;
   };
   let label = full;
-  let size = Math.round(bandH * 0.32);
+  let size = Math.round(bandH * 0.3);
   if (!fitsCta(label, size)) {
     while (size > minSize && !fitsCta(label, size)) size -= 1;
     if (!fitsCta(label, size)) {
-      label = bare; // the prefix doesn't fit — the URL alone still carries the app
-      size = Math.round(bandH * 0.32);
+      label = bare;
+      size = Math.round(bandH * 0.3);
       while (size > minSize && !fitsCta(label, size)) size -= 1;
     }
   }
-  ctx.font = `${size}px ui-monospace,Menlo,monospace`;
-  ctx.fillStyle = BRAND.gold;
+  ctx.font = `${size}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",monospace`;
+  ctx.fillStyle = BRAND.accent;
   ctx.textAlign = 'right';
   ctx.fillText(label, right, mid);
 }
@@ -157,7 +246,7 @@ export function paintBrandedCapture(
     target.height = h + bandH;
   }
   const ctx = target.getContext('2d')!;
-  ctx.fillStyle = BRAND.band;
+  ctx.fillStyle = BRAND.card;
   ctx.fillRect(0, 0, target.width, target.height);
   ctx.drawImage(mosaic, 0, 0, w, h);
   // Video/GIF watermark: a single English URL, sized to fit — the full wordmark
@@ -166,10 +255,10 @@ export function paintBrandedCapture(
   drawUrlBand(ctx, w, h, bandH, siteUrl);
 }
 
-/** Minimal watermark for video/GIF exports: the site URL centered on the dark
- *  band, gold, shrunk until it fits on one line. No overflow, no script mixing. */
+/** Minimal watermark for video/GIF exports: the site URL centered on the subtle
+ *  parchment card, umber, shrunk until it fits on one line. No overflow. */
 function drawUrlBand(ctx: CanvasRenderingContext2D, mosaicW: number, mosaicH: number, bandH: number, siteUrl: string): void {
-  ctx.fillStyle = BRAND.band;
+  ctx.fillStyle = BRAND.card;
   ctx.fillRect(0, mosaicH, mosaicW, bandH);
   ctx.fillStyle = BRAND.gold;
   ctx.fillRect(0, mosaicH, mosaicW, 2); // gold hairline
@@ -179,10 +268,10 @@ function drawUrlBand(ctx: CanvasRenderingContext2D, mosaicW: number, mosaicH: nu
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
   for (; size >= 9; size--) {
-    ctx.font = `${size}px ui-monospace,Menlo,monospace`;
+    ctx.font = `${size}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",monospace`;
     if (ctx.measureText(siteUrl).width <= maxW) break;
   }
-  ctx.fillStyle = BRAND.gold;
+  ctx.fillStyle = BRAND.text;
   ctx.fillText(siteUrl, mosaicW / 2, mosaicH + bandH / 2);
 }
 
@@ -247,6 +336,77 @@ export async function shareCanvas(
 }
 
 /**
+ * Share a BLOB (e.g. a recorded video) with the share-sheet text — same
+ * fallback ladder as shareCanvas: file-share where supported, else text-share +
+ * download, else download. Used so the Share button can hand off the actual
+ * video file (not just a still frame) for video sources.
+ */
+export async function shareBlob(
+  blob: Blob,
+  filename: string,
+  text: string,
+): Promise<'shared' | 'downloaded' | 'cancelled'> {
+  const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+  const nav = navigator as Navigator & {
+    canShare?: (data: ShareData) => boolean;
+    share?: (data: ShareData) => Promise<void>;
+  };
+  if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], text });
+      return 'shared';
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') {
+        triggerDownload(blob, filename);
+        return 'downloaded';
+      }
+      return 'cancelled';
+    }
+  }
+  // iOS Web Share has no file support — share the TEXT link natively AND
+  // download the video, so the referral token + native sheet both fire.
+  if (nav.canShare && nav.share && nav.canShare({ text })) {
+    try { await nav.share({ text }); } catch (err) { if ((err as Error).name === 'AbortError') return 'cancelled'; }
+    triggerDownload(blob, filename);
+    return 'shared';
+  }
+  triggerDownload(blob, filename);
+  return 'downloaded';
+}
+
+/**
+ * Share MULTIPLE files (e.g. the recorded video AND the share-card PNG) with
+ * the share-sheet text — same fallback ladder as shareCanvas/shareBlob. Used so
+ * the Share button can hand over the moving mosaic AND the card together.
+ */
+export async function shareFiles(files: File[], text: string): Promise<'shared' | 'downloaded' | 'cancelled'> {
+  const nav = navigator as Navigator & {
+    canShare?: (data: ShareData) => boolean;
+    share?: (data: ShareData) => Promise<void>;
+  };
+  if (nav.canShare && nav.share && nav.canShare({ files })) {
+    try {
+      await nav.share({ files, text });
+      return 'shared';
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') {
+        for (const f of files) triggerDownload(f, f.name);
+        return 'downloaded';
+      }
+      return 'cancelled';
+    }
+  }
+  // No file-sharing support: share the TEXT link natively AND download the files.
+  if (nav.canShare && nav.share && nav.canShare({ text })) {
+    try { await nav.share({ text }); } catch (err) { if ((err as Error).name === 'AbortError') return 'cancelled'; }
+    for (const f of files) triggerDownload(f, f.name);
+    return 'shared';
+  }
+  for (const f of files) triggerDownload(f, f.name);
+  return 'downloaded';
+}
+
+/**
  * Render the mosaic grid as plain text: rows joined by "\n", cells within a
  * row joined with the empty string so the picture holds. Best-effort — glyph
  * advance widths vary, so alignment is approximate. Meant for a <pre> element
@@ -267,7 +427,7 @@ function htmlDocument(
   const body = escapeHTML(gridToText(chars));
   // #1: the one export that carried no attribution — a credit line under the pre.
   const credit = siteUrl
-    ? `<p style="font-family:'Fidel',sans-serif;font-size:12px;color:#8a6d2f;margin:18px 0 0;">made with ግዕዝ geez·art — ${escapeHTML(siteUrl)}</p>`
+    ? `<p style="font-family:'Fidel',sans-serif;font-size:12px;color:#8a6d2f;margin:18px 0 0;">made with ግዕዝ geez art — ${escapeHTML(siteUrl)}</p>`
     : '';
   return [
     '<!DOCTYPE html>',

@@ -9,10 +9,10 @@ import { loadEthiopicFont, loadBelaFont, buildRamp, getAllGlyphs, rampFromGlyphs
 import ethiopicWoffUrl from '@fontsource-variable/noto-sans-ethiopic/files/noto-sans-ethiopic-ethiopic-wght-normal.woff2';
 import { renderMosaic, invalidateSource, warmColorAtlas, type DitherMode } from './render';
 import { imageFileToCanvas, setupPaste, setupDropZone, isHeic, isVideoFile } from './input';
-import { downloadCanvasPNG, gridToText, selfContainedHTML, makeShareImage, shareCanvas, downscaleCanvas, paintBrandedCapture, triggerDownload } from './export';
+import { downloadCanvasPNG, gridToText, selfContainedHTML, captureShareCard, makeShareImage, shareFiles, downscaleCanvas, paintBrandedCapture, triggerDownload } from './export';
 import { RENDER_DEBOUNCE_MS, MAX_FILE_BYTES, VIDEO_CELL_BUDGET, STILL_CELL_BUDGET_HIGH, STILL_CELL_BUDGET_LOW } from './limits';
 import { PALETTES, DEFAULT_PALETTE, cssVars, type ArtPalette } from './palette';
-// (getSamples removed — the example now uses a bundled demo photo)
+// (getSamples removed - the example now uses a bundled demo photo)
 import { startVideoLoop, recordCanvas, recordGIF, canRecordVideo, type VideoHandle } from './video';
 import { initAnalytics, trackEvent, analyticsEnabled } from './analytics';
 import { setLang, getLang, t, type Lang, type I18nKey } from './i18n';
@@ -32,16 +32,20 @@ let videoEl: HTMLVideoElement | null = null;
 let lastResult: ReturnType<typeof renderMosaic> | null = null;
 let zoom = 1;
 let customTouched = false;
+/** The alphabet the RANDOMIZER draws from - remembered from the last preset the
+ *  user picked, so "Pick 10 random letters" works again and again (it must not
+ *  re-derive from the 10 already selected after the charset flips to custom). */
+let alphabetPool: GlyphInfo[] = [];
 /** Track the currently-shown replay object URL so a new one replaces (revokes) the old. */
 let replayUrl: string | null = null;
-/** The source-video object URL, stored so it can be revoked by the STRING — not by
+/** The source-video object URL, stored so it can be revoked by the STRING - not by
  *  reading videoEl.src after the video element has been torn down (M1: that read
  *  returns '' after removeAttribute('src'), making the revoke a silent no-op). */
 let videoUrl: string | null = null;
 
-/** Which guidance the empty state is showing — re-applied on language toggle. */
+/** Which guidance the empty state is showing - re-applied on language toggle. */
 let emptyMode: 'default' | 'pick' = 'default';
-/** Whether the video filter is paused — drives the Play/Pause label on toggle. */
+/** Whether the video filter is paused - drives the Play/Pause label on toggle. */
 let videoPaused = false;
 /** F2: bumps each video load so a superseded metadata-wait can't orphan a loop. */
 let videoGen = 0;
@@ -49,7 +53,7 @@ let videoGen = 0;
 let photoGen = 0;
 /** F2(b): bumps when the app is torn down so an in-flight recording is cancelled. */
 let recordGen = 0;
-/** F-1: per-video-load audio graph — reused for every recording, closed on teardown. */
+/** F-1: per-video-load audio graph - reused for every recording, closed on teardown. */
 let audioCtx: AudioContext | null = null;
 let mediaDest: MediaStreamAudioDestinationNode | null = null;
 
@@ -62,26 +66,31 @@ let mediaDest: MediaStreamAudioDestinationNode | null = null;
  */
 /** M2: cap desktop still-render columns by RAM so a 6-8GB machine can't hard-freeze. */
 const DESKTOP_MAX_COLS = (() => {
-  // #4: coarse-pointer devices and anything with no deviceMemory signal (iOS
-  // Safari, Firefox mobile, WebViews) get the low-mem cap too — an old iPhone
-  // at detail 240 is a 1-3s freeze.
+  // Fine-pointer very-low-RAM (4GB) gets the smallest cap first (F26: the old
+  // order made this branch unreachable).
   const coarse = window.matchMedia('(pointer: coarse)').matches;
   const m = (navigator as { deviceMemory?: number }).deviceMemory;
+  if (!coarse && m !== undefined && m < 4) return 160;
+  // #4: coarse-pointer devices and anything with no deviceMemory signal (iOS
+  // Safari, Firefox mobile, WebViews) get the low-mem cap too - an old iPhone
+  // at detail 240 is a 1-3s freeze.
   if (coarse || m === undefined || m < 8) return 200;
-  if (m < 4) return 160;
   return 400;
 })();
 
 const SITE_URL: string = (() => {
+  // Never hardcode the domain: the watermark + share links always carry the
+  // origin the app is ACTUALLY served from, so the same build works on the
+  // dev server, a pages.dev/workers.dev deployment, or a custom domain.
   const origin = window.location.origin;
-  // L1: only https (or localhost dev) origins get stamped on shares.
-  if (origin && origin.startsWith('https://')) return origin;
-  if (origin && (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1'))) return origin;
-  return 'https://geez-art.mike-kebede.workers.dev';
+  if (origin && /^https?:\/\//.test(origin)) return origin;
+  // file:// → origin is "null"; shares degrade to a relative link (unused in
+  // practice) rather than point at a hardcoded host.
+  return origin || '';
 })();
 
 /** The share-sheet TEXT link carries a fresh per-share referral token (F10);
- *  the visible image band stays BARE (typable, no query friction — F21). Each
+ *  the visible image band stays BARE (typable, no query friction - F21). Each
  *  share mints its own ?ref=share-XXXX so the funnel can be bucketed per share.
  */
 function shareLink(): string {
@@ -90,21 +99,20 @@ function shareLink(): string {
 }
 
 /** Hide the status line when it's just the idle "Ready" (it shows only real
- *  messages now). A MutationObserver centralizes this — every status write is
+ *  messages now). A MutationObserver centralizes this - every status write is
  *  caught, no scattered class toggles. */
 function watchStatusIdle(): void {
   const status = $('status');
   const eyedot = document.getElementById('eyedot');
   // The busy set drives the eye-dot pulse: while the app is doing visible work
   // (font/ramp load, decode, render, export) the gaze pulses; Ready and flashes
-  // hold it gold.
-  const busySet = new Set<string>([
-    t('statusLoading'), t('preparing'), t('rendering'), t('reading'), t('loadingVideo'),
-    t('makingGif'), t('recording'), t('preparingShare'),
-  ]);
+  // hold it gold. The KEYS (not a precomputed Set of translated strings) are
+  // stored so the pulse survives a language toggle (F28).
+  const busyKeys = ['statusLoading', 'preparing', 'rendering', 'reading', 'loadingVideo', 'makingGif', 'recording', 'preparingShare'] as const;
   const sync = () => {
-    status.classList.toggle('is-idle', status.textContent === t('ready'));
-    if (eyedot) eyedot.classList.toggle('pulse', status.textContent !== null && busySet.has(status.textContent));
+    const txt = status.textContent;
+    status.classList.toggle('is-idle', txt === t('ready'));
+    if (eyedot) eyedot.classList.toggle('pulse', txt !== null && busyKeys.some((k) => txt === t(k)));
   };
   sync();
   const mo = new MutationObserver(sync);
@@ -119,7 +127,7 @@ function $(id: string): HTMLElement {
  *  and Amharic lines don't flash as tofu on iOS/macOS (no system Ethiopic font)
  *  during the cold viral visit. Runs before the font/ramp awaits in init. */
 function preloadEthiopicFont(): void {
-  // M3: ALWAYS inject from the module-resolved URL (hash always correct) — the
+  // M3: ALWAYS inject from the module-resolved URL (hash always correct) - the
   // static link with a hand-synced hash would 404 on the next fontsource bump.
   const link = document.createElement('link');
   link.rel = 'preload';
@@ -182,16 +190,25 @@ function setSource(c: HTMLCanvasElement): void {
   const chip = $('sourceChip');
   if (chip) chip.classList.add('visible');
   const srcEl = $('source') as HTMLCanvasElement;
-  srcEl.width = c.width;
-  srcEl.height = c.height;
-  srcEl.getContext('2d')!.drawImage(c, 0, 0);
+  // L2: the chip is displayed at ~40px - draw an 80px thumbnail instead of
+  // holding the full-res backing store (a 4K photo was ~33MB for a 40px chip).
+  const k = Math.min(1, 80 / Math.max(c.width, c.height));
+  const sw = Math.max(1, Math.round(c.width * k));
+  const sh = Math.max(1, Math.round(c.height * k));
+  const thumb = document.createElement('canvas');
+  thumb.width = sw;
+  thumb.height = sh;
+  thumb.getContext('2d')!.drawImage(c, 0, 0, sw, sh);
+  srcEl.width = sw;
+  srcEl.height = sh;
+  srcEl.getContext('2d')!.drawImage(thumb, 0, 0);
   $('clearBtn').hidden = false;
   queueRender();
 }
 
 function readRenderOpts(): { cols: number; contrast: number; invert: boolean; colorize: boolean; dither: DitherMode; edge: number } {
   return {
-    // F3: the renderer is synchronous — clamp columns during video playback so
+    // F3: the renderer is synchronous - clamp columns during video playback so
     // a 400-col frame can't freeze a low-end device.
     cols: Math.min(videoHandle ? 140 : DESKTOP_MAX_COLS, parseInt(($('width') as HTMLInputElement).value, 10)),
     contrast: 1 + parseInt(($('contrast') as HTMLInputElement).value, 10) / 100,
@@ -214,10 +231,10 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
   const opts = readRenderOpts();
   {
     // M1/M6: bound total CELLS (~20k video, ~40k still) so tall/portrait renders
-    // can't hard-freeze — default 170-col square renders (~29k cells) are unaffected;
+    // can't hard-freeze - default 170-col square renders (~29k cells) are unaffected;
     // only the max-detail freeze cases get capped.
     // F25: budgets live in limits.ts (shared with the slider-max derivation) and
-    // there is NO 40-col floor — a floor let an extreme-tall source blow the
+    // there is NO 40-col floor - a floor let an extreme-tall source blow the
     // cell budget (e.g. a 1:30 portrait reached 48k cells); sqrt(budget/aspect)
     // alone always bounds cells.
     const aspect = src.height / src.width;
@@ -235,7 +252,7 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
   });
   lastResult = res;
   const out = $('mosaic') as HTMLCanvasElement;
-  // L8: only resize when dimensions actually change — reassigning width/height
+  // L8: only resize when dimensions actually change - reassigning width/height
   // unconditionally clears and reinitializes the bitmap every call, which in
   // video mode is a redundant ~17MB clear + context reset on every frame.
   if (out.width !== res.canvas.width) out.width = res.canvas.width;
@@ -246,8 +263,6 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
   const firstRender = !firstRenderDone;
   if (!firstRenderDone) {
     firstRenderDone = true;
-    const top = document.getElementById('shareTop');
-    if (top) top.classList.add('pulse');
     const zc = document.getElementById('zoomControls');
     if (zc) zc.hidden = false;
     const sh = document.getElementById('shareHint');
@@ -272,7 +287,7 @@ function renderSource(src: HTMLCanvasElement, fade = false): void {
     const distinct = new Set<string>();
     for (const row of res.chars) for (const ch of row) distinct.add(ch);
     out.dataset.distinct = String(distinct.size);
-    // Expose ramp + usage stats for diagnostics and tests (dev only — never shipped).
+    // Expose ramp + usage stats for diagnostics and tests (dev only - never shipped).
     if (import.meta.env.DEV) {
       (window as unknown as { __ramp?: unknown; __lastChars?: string[] }).__ramp = ramp;
       (window as unknown as { __lastChars?: string[] }).__lastChars = Array.from(distinct);
@@ -304,6 +319,9 @@ function applyPalette(p: ArtPalette): void {
   const frame = $('frame');
   const vars = cssVars(p);
   for (const [k, v] of Object.entries(vars)) frame.style.setProperty(k, v);
+  // Each palette names its own Ethiopian tradition under the selector.
+  const desc = document.getElementById('paletteDesc');
+  if (desc) desc.textContent = t(p.descKey as I18nKey);
   queueRender();
 }
 
@@ -357,7 +375,7 @@ function downloadTextFile(name: string, text: string, type: string): void {
 let flashTimer: number | undefined;
 function flash(msg: string, ms = 1500): void {
   const status = $('status');
-  // Only the LATEST message owns the status line — a stale "Ready" timer from a
+  // Only the LATEST message owns the status line - a stale "Ready" timer from a
   // longer flash (e.g. the 5s HEIC notice) must not clobber a newer message (M18).
   if (flashTimer !== undefined) window.clearTimeout(flashTimer);
   status.textContent = msg;
@@ -379,7 +397,7 @@ function clearReplay(): void {
     replayUrl = null;
   }
   // M5: on close, return focus to a STABLE visible control (dlVideo/dlGif are
-  // the obvious originals) — the Close button is inside the now-hidden panel.
+  // the obvious originals) - the Close button is inside the now-hidden panel.
   requestAnimationFrame(() => {
     const target =
       (document.getElementById('dlVideo') as HTMLElement | null) ??
@@ -389,32 +407,74 @@ function clearReplay(): void {
   });
 }
 
-/** The viral action — branded PNG with the site URL, via native share sheet or download. */
-async function doShare(): Promise<void> {
+/** The viral action - branded PNG with the site URL, via native share sheet or download. */
+async function doShare(platform?: 'tg' | 'wa' | 'tw'): Promise<void> {
   if (!mosaicCanvas) return;
   trackEvent('share_started');
-  // L10: downscale + brand + toBlob is ~300–500ms of silent async work — show
+  if (platform) trackEvent('share_target', { platform });
+  // Platform-specific caption: Telegram / WhatsApp / X each get their own
+  // phrasing (the generic Share keeps the default) so the sheet isn't identical
+  // no matter which target was tapped.
+  const shareMsg = `${(platform === 'tg' ? t('shareTextTg') : platform === 'wa' ? t('shareTextWa') : platform === 'tw' ? t('shareTextTw') : t('shareText'))} ${shareLink()}`;
+  // L10: downscale + brand + toBlob is ~300–500ms of silent async work - show
   // progress and disable the CTA so the tap doesn't feel dead.
   const shareBtns: HTMLButtonElement[] = [];
-  for (const id of ['share', 'shareTop']) {
+  for (const id of ['share', 'shareTg', 'shareWa', 'shareTw']) {
     const b = document.getElementById(id) as HTMLButtonElement | null;
     if (b) shareBtns.push(b);
   }
   for (const b of shareBtns) b.disabled = true;
   flash(t('preparingShare'), 3000);
   try {
-    // M1: downscale the mosaic FIRST, then stamp the band at final resolution —
-    // stamping on the full-res canvas and shrinking the whole thing crushed the
-    // URL band to ~4px after messenger recompression. The band must be legible:
-    // it is the entire viral CTA.
-    const compact = downscaleCanvas(mosaicCanvas, 1600);
-    // F21: the visible image band shows the BARE domain (no ?ref — typable, no
-    // query friction); the referral token rides the share-sheet TEXT link, which
-    // is tapped, not typed.
-    const branded = makeShareImage(compact, SITE_URL);
-    const result = await shareCanvas(branded, `${t('shareText')} ${shareLink()}`);
+    // VIDEO source: share the RECORDED video (URL band + text) - the moving
+    // mosaic, not a still frame. Falls back to the branded still if recording
+    // is unsupported or fails.
+    const out = mosaicCanvas;
+    if (videoHandle && canRecordVideo() && out) {
+      const gen = recordGen; // F29: Clear/teardown mid-recording must cancel this
+      const recCanvas = document.createElement('canvas');
+      let recRaf = 0;
+      let lastPaint = 0;
+      const paint = () => {
+        if (!out) return;
+        const now = performance.now();
+        if (now - lastPaint >= 100) { // ~10fps paint, not a 60fps rAF churn
+          lastPaint = now;
+          paintBrandedCapture(recCanvas, out, SITE_URL);
+        }
+        recRaf = requestAnimationFrame(paint);
+      };
+      paint();
+      const effFps = Math.max(6, Math.min(12, Math.round(1000 / (videoHandle.getFrameMs() ?? 83))));
+      try {
+        const rec = await recordCanvas(recCanvas, 4, effFps, mediaDest?.stream ?? null);
+        if (gen !== recordGen) return; // superseded - don't surface a stale share
+        if (rec.blob) {
+          // Share the VIDEO file AND the share-card PNG together + the text —
+          // the native sheet opens Telegram/WhatsApp/IMO with both attached.
+          const cardBlob = await captureShareCard(out, SITE_URL);
+          const files = [
+            new File([rec.blob], 'geez-art-video.' + rec.ext, { type: rec.blob.type || 'video/webm' }),
+            new File([cardBlob], 'geez-art-card.png', { type: 'image/png' }),
+          ];
+          const result = await shareFiles(files, shareMsg);
+          trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
+          if (result === 'shared') flash(t('shared'));
+          else if (result === 'cancelled') flash(t('shareCancelled'));
+          else flash(t('saved'));
+          return;
+        }
+      } finally {
+        cancelAnimationFrame(recRaf);
+      }
+    }
+    // STILL path (photo, or video whose recording fell through): share the
+    // html-to-image share CARD (mosaic + brand + CTA) + text.
+    const cardBlob = await captureShareCard(mosaicCanvas, SITE_URL);
+    const cardFile = new File([cardBlob], 'geez-art-card.png', { type: 'image/png' });
+    const result = await shareFiles([cardFile], shareMsg);
     // M6: track the OUTCOME so the viral loop's K-factor is observable (only
-    // fires when a provider is configured — otherwise a no-op).
+    // fires when a provider is configured - otherwise a no-op).
     trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
     // L7: a dismissed share sheet is not a "Saved" success.
     if (result === 'shared') flash(t('shared'));
@@ -428,14 +488,20 @@ async function doShare(): Promise<void> {
 /** Keep every Share control honest: disabled until a mosaic exists. */
 function updateShareState(): void {
   const ready = mosaicCanvas !== null;
-  for (const id of ['share', 'shareTop']) {
+  for (const id of ['share', 'dlPng']) {
     const b = document.getElementById(id);
     if (b) (b as HTMLButtonElement).disabled = !ready;
+  }
+  // A video is a moving mosaic - "copy as text" / "save as HTML" would snapshot
+  // one arbitrary frame, which reads as a bug. Disable them while a video is live.
+  for (const id of ['copyText', 'dlHtml']) {
+    const b = document.getElementById(id);
+    if (b) (b as HTMLButtonElement).disabled = !ready || videoHandle !== null;
   }
 }
 
 /** Swap the idle frame's guidance (choose-a-photo vs pick-letters), in the
- *  CURRENT language — the whole UI is single-language via the toggle. */
+ *  CURRENT language - the whole UI is single-language via the toggle. */
 function setEmpty(mode: 'default' | 'pick'): void {
   emptyMode = mode;
   const tEl = document.getElementById('emptyTitle');
@@ -463,6 +529,9 @@ function applyLang(): void {
   setEmpty(emptyMode);
   applyZoom(); // #4: zoom-pan aria follows the language
   updatePickerUI(); // #4: picker tile/letter titles follow the language
+  // Maleda brand: "geez.art" in Latin (Noto), "ግዕዝ ጥበብ" in Amharic (Bela).
+  const brand = document.querySelector('.wordmark-brand');
+  if (brand) brand.classList.toggle('am', getLang() === 'am');
   // F8: palette option names follow the language too.
   const palSel = document.getElementById('palette') as HTMLSelectElement | null;
   if (palSel) {
@@ -470,6 +539,9 @@ function applyLang(): void {
       opt.textContent = t(('palette_' + opt.value) as I18nKey);
     }
   }
+  // The selected palette's own description re-renders in the new language.
+  const desc = document.getElementById('paletteDesc');
+  if (desc) desc.textContent = t(currentPalette.descKey as I18nKey);
   // F6: re-render the dynamic mosaic aria-label in the new language.
   if (lastResult) {
     const out = $('mosaic') as HTMLCanvasElement;
@@ -482,9 +554,9 @@ function applyLang(): void {
   if (status.textContent === 'Ready' || status.textContent === 'ዝግጁ') status.textContent = t('ready');
   const pb = $('playBtn') as HTMLButtonElement;
   if (!pb.hidden) pb.textContent = videoPaused ? t('play') : t('pause');
-  // F24: the language re-render wipes the analytics disclosure — re-append it.
+  // F24: the language re-render wipes the analytics disclosure - re-append it.
   if (analyticsEnabled()) {
-    // #6: when a provider is live, REPLACE the body — the absolute "no server
+    // #6: when a provider is live, REPLACE the body - the absolute "no server
     // requests / nothing stored" copy must be retracted, not contradicted.
     const body = document.getElementById('privacyBody');
     if (body) body.textContent = t('privacyBodyAnalytics');
@@ -497,6 +569,12 @@ function applyZoom(): void {
   if (c) c.style.width = `${100 * zoom}%`;
   const v = document.getElementById('zoomVal');
   if (v) v.textContent = `${Math.round(zoom * 100)}%`;
+  // The mosaic can't go below fit (100%) or above 400% - disable the dead button
+  // at each limit so it's honest, not a no-op.
+  const zo = document.getElementById('zoomOut') as HTMLButtonElement | null;
+  const zi = document.getElementById('zoomIn') as HTMLButtonElement | null;
+  if (zo) zo.disabled = zoom <= 1;
+  if (zi) zi.disabled = zoom >= 4;
   // M16 (WCAG 2.1.1): at zoom > 100% the artwork overflows .zoom-wrap; make it
   // focusable so keyboard users can pan it with the arrow keys.
   const zw = document.querySelector<HTMLElement>('.zoom-wrap');
@@ -517,7 +595,7 @@ function applyZoom(): void {
 
 /** Route a picked file to photo or video mode. */
 function handlePickedFile(file: File): void {
-  // L7: guard BEFORE createObjectURL — a multi-GB file would pin memory and hang
+  // L7: guard BEFORE createObjectURL - a multi-GB file would pin memory and hang
   // the tab for no gain (nothing is uploaded, but it's still wasted work).
   if (file.size > MAX_FILE_BYTES) {
     flash(t('tooLarge'), 5000);
@@ -541,7 +619,7 @@ function handlePickedFile(file: File): void {
         trackEvent('source', { kind: 'image' });
       })
       .catch(() => {
-        // HEIC is decodable on iPhone but not most other devices — say so
+        // HEIC is decodable on iPhone but not most other devices - say so
         // plainly instead of a generic "couldn't read that picture".
         flash(isHeic(file) ? t('heicFailed') : t('pictureFailed'), isHeic(file) ? 5000 : 1500);
       });
@@ -563,7 +641,7 @@ async function handleVideoFile(file: File): Promise<void> {
   v.preload = 'metadata';
   v.src = url;
   // A stalled/blocked file must not hang the UI forever after clearAll() already
-  // tore the page back to the empty state — give metadata 15s, then bail.
+  // tore the page back to the empty state - give metadata 15s, then bail.
   try {
     await new Promise<void>((resolve, reject) => {
       const timer = window.setTimeout(() => reject(new Error('timed out waiting for the video to load')), 15000);
@@ -578,10 +656,10 @@ async function handleVideoFile(file: File): Promise<void> {
     });
   } catch (e) {
     // F1: if a newer action superseded this load, revoke quietly and let the
-    // fresh state stand — the old clearAll() here clobbered a photo the user
+    // fresh state stand - the old clearAll() here clobbered a photo the user
     // had just picked while a stale video's error/timeout was settling.
     if (gen !== videoGen) {
-      // M2: this load is superseded — revoke ONLY its own url; never touch
+      // M2: this load is superseded - revoke ONLY its own url; never touch
       // videoUrl (which now belongs to the newer load) and never clear the page.
       URL.revokeObjectURL(ownUrl);
       return;
@@ -595,16 +673,16 @@ async function handleVideoFile(file: File): Promise<void> {
   if (import.meta.env.DEV && (window as unknown as { __stallVideoLoad?: boolean }).__stallVideoLoad) {
     await new Promise((r) => setTimeout(r, 2500));
   }
-  // F2: a newer video was chosen while this one was still loading — abandon it
+  // F2: a newer video was chosen while this one was still loading - abandon it
   // (revoke + don't start a loop that would clobber the newer one).
   if (gen !== videoGen) {
-    // M2: superseded — revoke only this load's url (videoUrl belongs to the newer load).
+    // M2: superseded - revoke only this load's url (videoUrl belongs to the newer load).
     URL.revokeObjectURL(ownUrl);
     return;
   }
   videoEl = v;
   // H1 (final): the element MUST be UNMUTED for the MediaElementSource to carry
-  // signal — muted=true attenuates the audio before it enters the graph (RMS 0).
+  // signal - muted=true attenuates the audio before it enters the graph (RMS 0).
   // Capture source→mediaDest (full signal) AND tap source→Gain(0)→destination so
   // speakers stay silent. createMediaElementSource is one-shot per element.
   try {
@@ -612,18 +690,21 @@ async function handleVideoFile(file: File): Promise<void> {
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (AC) {
-      audioCtx = new AC();
-      const src = audioCtx.createMediaElementSource(v);
-      mediaDest = audioCtx.createMediaStreamDestination();
-      const muteTap = audioCtx.createGain();
+      const ac = new AC(); // L7: local, so a partial build can be closed, not orphaned
+      audioCtx = ac;
+      const src = ac.createMediaElementSource(v);
+      mediaDest = ac.createMediaStreamDestination();
+      const muteTap = ac.createGain();
       muteTap.gain.value = 0;
       src.connect(mediaDest); // full signal → captured track
       src.connect(muteTap); // 0-gain → speakers stay silent
-      muteTap.connect(audioCtx.destination);
+      muteTap.connect(ac.destination);
       v.muted = false; // unmuted so the captured track has signal
     }
   } catch {
     // Graph unavailable → degrade to silent playback, no captured audio.
+    // L7: never orphan a half-built AudioContext (browsers cap ~6 concurrent).
+    try { audioCtx?.close(); } catch { /* already closed */ }
     audioCtx = null;
     mediaDest = null;
     v.muted = true;
@@ -635,7 +716,7 @@ async function handleVideoFile(file: File): Promise<void> {
       renderSource(c);
     },
     12,
-    // M9: a throw inside a frame used to kill the loop silently — the loop now
+    // M9: a throw inside a frame used to kill the loop silently - the loop now
     // stops itself and reports so the user isn't staring at a frozen Pause.
     () => flash(t('interrupted'), 4000),
   );
@@ -645,7 +726,7 @@ async function handleVideoFile(file: File): Promise<void> {
   $('playBtn').hidden = false;
   videoPaused = false;
   ($('playBtn') as HTMLButtonElement).textContent = t('pause');
-  // L5/#10: respect prefers-reduced-motion — show ONE static frame and let the
+  // L5/#10: respect prefers-reduced-motion - show ONE static frame and let the
   // user resume on demand instead of auto-animating at up to 12fps. Pause AFTER
   // the loop's first tick (rAF callbacks run in order) so a frame is visible.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -658,7 +739,7 @@ async function handleVideoFile(file: File): Promise<void> {
     });
   }
   // iOS Safari can't captureStream the canvas, so video export is unavailable
-  // there — swap the button for a hint pointing at GIF (which works everywhere).
+  // there - swap the button for a hint pointing at GIF (which works everywhere).
   const canRecord = canRecordVideo();
   $('dlVideo').hidden = !canRecord;
   $('dlGif').hidden = false;
@@ -669,15 +750,19 @@ async function handleVideoFile(file: File): Promise<void> {
   if (chip) chip.classList.add('visible');
   $('clearBtn').hidden = false;
   const srcEl = $('source') as HTMLCanvasElement;
-  srcEl.width = v.videoWidth || 1;
-  srcEl.height = v.videoHeight || 1;
+  // L2: the chip is ~40px - hold an 80px thumbnail, not the full video frame.
+  const vw = v.videoWidth || 1;
+  const vh = v.videoHeight || 1;
+  const vk = Math.min(1, 80 / Math.max(vw, vh));
+  srcEl.width = Math.max(1, Math.round(vw * vk));
+  srcEl.height = Math.max(1, Math.round(vh * vk));
   // The poster frame may not exist yet (InvalidStateError); the frame loop paints
   // the first frame a moment later, so a missing frame is not a failure.
   if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
     try {
-      srcEl.getContext('2d')!.drawImage(v, 0, 0);
+      srcEl.getContext('2d')!.drawImage(v, 0, 0, srcEl.width, srcEl.height);
     } catch {
-      /* no decoded frame yet — the video loop handles it */
+      /* no decoded frame yet - the video loop handles it */
     }
   }
   flash(t('playing'));
@@ -685,14 +770,14 @@ async function handleVideoFile(file: File): Promise<void> {
 
 function stopVideo(): void {
   // #1: any teardown (Clear, photo-pick, new video) supersedes an in-flight
-  // video metadata-wait — without this, a pending load could clobber fresh state.
+  // video metadata-wait - without this, a pending load could clobber fresh state.
   videoGen++;
   if (videoHandle) {
     videoHandle.stop();
     videoHandle = null;
   }
   if (videoEl) videoEl = null;
-  // F-1: close the per-load audio graph — the ~6-context browser cap would
+  // F-1: close the per-load audio graph - the ~6-context browser cap would
   // otherwise kill capture after repeated loads.
   if (audioCtx) {
     try { void audioCtx.close(); } catch { /* already closed */ }
@@ -700,7 +785,7 @@ function stopVideo(): void {
     mediaDest = null;
   }
   // M1: revoke the STORED URL. Reading videoEl.src here would return '' because
-  // videoHandle.stop() already removed the attribute — a silent no-op leak.
+  // videoHandle.stop() already removed the attribute - a silent no-op leak.
   if (videoUrl) {
     URL.revokeObjectURL(videoUrl);
     videoUrl = null;
@@ -744,7 +829,7 @@ function showReplay(blob: Blob): void {
 
 let pickerBuilt = false;
 /** Build the ~300-button picker lazily, on first open of the letter picker
- *  (L29) — it used to be constructed on the critical "Ready" path. */
+ *  (L29) - it used to be constructed on the critical "Ready" path. */
 function ensurePickerBuilt(): void {
   if (pickerBuilt) return;
   pickerBuilt = true;
@@ -756,14 +841,20 @@ function buildPicker(): void {
   const grid = $('pickerGrid');
   grid.replaceChildren(); // F14: no innerHTML sink → Trusted Types can be enforced
   // Group by radical family: each fidel family spans an 8-codepoint block.
-  const groups = new Map<number, GlyphInfo[]>();
+  // Punctuation (U+1360-1368) and numbers (U+1369-137C) are NOT radicals - they
+  // must not be lumped into 7-block "families"; each gets one group of its own.
+  const groups = new Map<string, GlyphInfo[]>();
   for (const g of allGlyphs) {
-    const fam = Math.floor(g.cp / 8);
-    const arr = groups.get(fam);
+    let key: string;
+    if (g.cp >= 0x1360 && g.cp <= 0x1368) key = 'punct';
+    else if (g.cp >= 0x1369 && g.cp <= 0x137c) key = 'nums';
+    else key = 'f' + Math.floor(g.cp / 8);
+    const arr = groups.get(key);
     if (arr) arr.push(g);
-    else groups.set(fam, [g]);
+    else groups.set(key, [g]);
   }
-  const fams = [...groups.keys()].sort((a, b) => a - b);
+  const rank = (k: string) => (k === 'punct' ? 2 : k === 'nums' ? 3 : 1);
+  const fams = [...groups.keys()].sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : 1));
   for (const fam of fams) {
     const members = groups.get(fam)!.slice().sort((a, b) => a.cp - b.cp);
     const head = members[0];
@@ -842,7 +933,10 @@ function toggleLetter(cp: number): void {
 
 function updatePickerUI(): void {
   document.querySelectorAll<HTMLElement>('.fam').forEach((cell) => {
-    const fam = parseInt(cell.dataset.fam!, 10);
+    // FIX: the family key is a STRING ('f171', 'punct', 'nums') - parseInt
+    // turned it into NaN, so the detail lookup missed and NO tile ever got its
+    // on/off/partial state (the picker looked "not rendered").
+    const fam = cell.dataset.fam!;
     const tile = cell.querySelector('.fam-tile');
     const detail = document.querySelector(`.fam-detail[data-fam="${fam}"]`);
     if (!tile || !detail) return;
@@ -852,7 +946,7 @@ function updatePickerUI(): void {
       b.classList.toggle('selected', sel);
       b.setAttribute('aria-pressed', String(sel));
       // A8: keep the per-letter aria-label in the CURRENT language (buildPicker
-      // froze it at build time — this re-applies on every toggle).
+      // froze it at build time - this re-applies on every toggle).
       b.setAttribute('aria-label', `${t('letterName')}${b.dataset.cp!.toUpperCase()}`);
     });
     const on = letters.filter((b) => selectedCps.has(parseInt(b.dataset.cp!, 16))).length;
@@ -877,21 +971,41 @@ function updatePickerUI(): void {
   const sum = $('pickSummary');
   if (sum) {
     const base = used === total ? t('allLetters') : `${used} ${t('of')} ${total} ${t('letters')}`;
-    sum.textContent = source ? base : `${base} — ${t('addPhotoToSee')}`;
+    sum.textContent = source ? base : `${base} - ${t('addPhotoToSee')}`;
   }
 }
 
 /** "Randomize letters": pick a fresh random subset of the alphabet each click. */
+/** The glyph list an alphabet preset defines (used to seed the randomizer's pool). */
+function glyphsForPreset(preset: RampPreset): GlyphInfo[] {
+  if (preset === 'common') return allGlyphs.filter((g) => COMMON_AMHARIC.has(g.cp));
+  if (preset === 'dense') {
+    const med = allGlyphs[Math.floor(allGlyphs.length / 2)].density;
+    return allGlyphs.filter((g) => g.density >= med);
+  }
+  if (preset === 'light') {
+    const med = allGlyphs[Math.floor(allGlyphs.length / 2)].density;
+    return allGlyphs.filter((g) => g.density <= med);
+  }
+  return allGlyphs; // 'all'
+}
+
 function mixItUp(): void {
   customTouched = true;
+  // Draw from the remembered ALPHABET pool (set when the user picks a preset),
+  // so clicking again and again keeps drawing fresh sets - never from the 10
+  // already selected.
+  const base = alphabetPool.length ? alphabetPool : allGlyphs;
+  // Pick ~10 distinct letters at random, ONE from each density decile so the
+  // ramp spans the full tonal range AND keeps ~10 distinct glyphs.
   const next = new Set<number>();
-  for (const g of allGlyphs) {
-    if (Math.random() < 0.6) next.add(g.cp);
-  }
-  if (next.size < 12) {
-    for (const g of allGlyphs) {
-      if (next.size >= 12) break;
-      next.add(g.cp);
+  if (base.length) {
+    const decile = Math.max(1, Math.floor(base.length / 10));
+    for (let d = 0; d < 10; d++) {
+      const lo = Math.min(base.length - 1, d * decile);
+      const hi = Math.min(base.length, lo + decile);
+      const pick = base[lo + Math.floor(Math.random() * (hi - lo))];
+      next.add(pick.cp);
     }
   }
   selectedCps = next;
@@ -906,10 +1020,10 @@ function mixItUp(): void {
 
 async function applyCustomRamp(): Promise<void> {
   // Even-space the selection so no single letter dominates mid-tones (density
-  // clustering is real — without this, one glyph floods every large area).
+  // clustering is real - without this, one glyph floods every large area).
   const selected = allGlyphs.filter((g) => selectedCps.has(g.cp));
   ramp = rampFromGlyphs(selected);
-  // Dev hooks reflect the CURRENT selection even when empty — tests poll these,
+  // Dev hooks reflect the CURRENT selection even when empty - tests poll these,
   // so they must not be skipped by the empty-ramp early return below.
   if (import.meta.env.DEV) {
     (window as unknown as { __ramp?: unknown; __selectedCps?: number[] }).__ramp = ramp;
@@ -928,7 +1042,7 @@ async function applyCustomRamp(): Promise<void> {
     $('status').textContent = t('noLetters');
     return;
   }
-  // Live strip: the letters actually in use — instant feedback per tap.
+  // Live strip: the letters actually in use - instant feedback per tap.
   const preview = document.getElementById('rampPreview');
   if (preview) {
     preview.textContent = '';
@@ -945,7 +1059,7 @@ async function applyCustomRamp(): Promise<void> {
 /**
  * Wire the file picker, dropzone, paste, empty-state, and Clear listeners.
  * Called FIRST in init() so the primary CTA (dropzone / giant ፊደል) is live at
- * DOM-interactive — it used to wait for font download + full glyph-ramp
+ * DOM-interactive - it used to wait for font download + full glyph-ramp
  * measurement, leaving the page's only call-to-action dead for seconds on a
  * cold visit (M4). Dropping a photo before the ramp is ready just sets the
  * source; the render is gated on ramp.length and init re-renders afterwards.
@@ -957,31 +1071,41 @@ function wireInput(): void {
     if (f) handlePickedFile(f);
     file.value = '';
   });
+  // L6: open the native file chooser, then restore focus to the trigger when it
+  // closes (browsers drop focus to <body>, stranding keyboard users).
+  const openFilePicker = (trigger: HTMLElement) => {
+    const restore = () => {
+      window.removeEventListener('focus', restore);
+      if (document.activeElement === document.body || document.activeElement === null) trigger.focus();
+    };
+    window.addEventListener('focus', restore);
+    file.click();
+  };
   $('dropzone').addEventListener('click', () => {
     trackEvent('dropzone_opened'); // opt-in analytics only
-    file.click();
+    openFilePicker($('dropzone'));
   });
   $('dropzone').addEventListener('keydown', (ev: KeyboardEvent) => {
     if (ev.key === 'Enter' || ev.key === ' ') {
       ev.preventDefault();
-      file.click();
+      openFilePicker($('dropzone'));
     }
   });
   setupDropZone($('dropzone'), handlePickedFile);
-  // M4: the designed drop targets — giant fidel empty state + loaded mosaic frame
-  // — accept drops too, and a stray drop anywhere must never navigate the tab.
+  // M4: the designed drop targets - giant fidel empty state + loaded mosaic frame
+  // - accept drops too, and a stray drop anywhere must never navigate the tab.
   setupDropZone($('frame'), handlePickedFile);
   setupDropZone($('emptyHint'), handlePickedFile);
   document.addEventListener('dragover', (ev) => ev.preventDefault());
   document.addEventListener('drop', (ev) => ev.preventDefault());
   setupPaste(document.body, handlePickedFile);
-  // The giant ፊደል empty state IS the drop target — click it to choose a photo.
+  // The giant ፊደል empty state IS the drop target - click it to choose a photo.
   const emptyState = $('emptyHint');
-  emptyState.addEventListener('click', () => file.click());
+  emptyState.addEventListener('click', () => openFilePicker(emptyState));
   emptyState.addEventListener('keydown', (ev: KeyboardEvent) => {
     if (ev.key === 'Enter' || ev.key === ' ') {
       ev.preventDefault();
-      file.click();
+      openFilePicker(emptyState);
     }
   });
   $('clearBtn').addEventListener('click', () => {
@@ -1001,7 +1125,7 @@ async function init(): Promise<void> {
   try {
     const s = localStorage.getItem('geez-art.lang');
     if (s === 'en' || s === 'am') storedLang = s;
-  } catch { /* private mode — no persistence */ }
+  } catch { /* private mode - no persistence */ }
   const detectedLang: Lang = (navigator.language || '').toLowerCase().startsWith('am') ? 'am' : 'en';
   setLang(storedLang ?? detectedLang);
   const langSel = $('lang') as HTMLSelectElement;
@@ -1037,26 +1161,38 @@ async function init(): Promise<void> {
   });
 
   watchStatusIdle(); // hide the idle 'Ready'; show only real messages
+  // M6: register the service worker (offline + installable) - production only,
+  // so it never interferes with dev HMR.
+  if ('serviceWorker' in navigator && !import.meta.env.DEV) {
+    window.addEventListener('load', () => {
+      // The CSP enforces Trusted Types: serviceWorker.register is a
+      // TrustedScriptURL sink, so wrap the URL in a policy.
+      const tt = (window as unknown as { trustedTypes?: { createPolicy: (n: string, r: { createScriptURL: (u: string) => string }) => { createScriptURL: (u: string) => string } } }).trustedTypes;
+      const policy = tt?.createPolicy('geez-sw', { createScriptURL: (u: string) => u });
+      const url = policy ? policy.createScriptURL('/sw.js') : '/sw.js';
+      void navigator.serviceWorker.register(url).catch(() => { /* offline degrades gracefully */ });
+    });
+  }
   // F5: Amharic-first visitors see a localized boot status (the HTML default is
   // English and would otherwise show for the whole font+ramp window).
   status.textContent = t('statusLoading');
   // M5: on coarse-pointer / low-memory devices, lower the default detail so the
   // synchronous renderer doesn't freeze them before they can touch a slider.
   {
-    // A3: every touch device gets the bounded default — the old <=4GB guard
+    // A3: every touch device gets the bounded default - the old <=4GB guard
     // missed 6-8GB Androids (Chromium reports deviceMemory=8), which can still
     // hit a 1-3s synchronous render at 400 cols.
     if (window.matchMedia('(pointer: coarse)').matches) {
       const w = $('width') as HTMLInputElement;
       w.value = '100'; // same default as the HTML (detail 100), bounded for coarse
     }
-    // A4: the slider must not advertise an unreachable max — derive it from the
+    // A4: the slider must not advertise an unreachable max - derive it from the
     // total-cell budget for the current device class (F25: same constants as the
     // render cap, so they can never disagree).
     (($('width')) as HTMLInputElement).max = String(Math.min(400, Math.max(120, Math.floor(Math.sqrt(DESKTOP_MAX_COLS >= 400 ? STILL_CELL_BUDGET_HIGH : STILL_CELL_BUDGET_LOW)))));
   }
   // L20/F24: the analytics disclosure is appended by applyLang() (called below),
-  // so it survives language toggles — not appended here.
+  // so it survives language toggles - not appended here.
   try {
     // Maleda: the weave loader (three manuscript pigments) marks the boot.
     const loader = document.getElementById('weaveLoader');
@@ -1065,19 +1201,18 @@ async function init(): Promise<void> {
     status.textContent = t('preparing');
     ramp = await buildRamp('common');
     allGlyphs = await getAllGlyphs();
-    // Maleda UX: "choose your letters" is the default — start the picker with the
+    // Maleda UX: "choose your letters" is the default - start the picker with the
     // common Amharic set PRE-SELECTED (so a dropped photo still renders at once),
     // and surface it so glyphs like ጨ can be tapped off instead of dominating.
     selectedCps = new Set(allGlyphs.filter((g) => COMMON_AMHARIC.has(g.cp)).map((g) => g.cp));
+    alphabetPool = glyphsForPreset('common'); // the randomizer's default pool
     // NOT customTouched: a real browser fires no change event for an already-
     // selected option, so the pre-selected common set stays; only switching away
     // and back to custom (or a test) hits the "start fresh" clean slate.
     const charsetSel0 = document.getElementById('charset') as HTMLSelectElement | null;
     if (charsetSel0) charsetSel0.value = 'custom';
     ensurePickerBuilt();
-    $('picker').hidden = false;
-    const adv = document.getElementById('advanced') as HTMLDetailsElement | null;
-    if (adv) adv.open = true;
+    $('picker').hidden = false; // the Letters group now sits above Advanced
     if (import.meta.env.DEV) {
       (window as unknown as { __commonSet?: number[] }).__commonSet = Array.from(COMMON_AMHARIC);
     }
@@ -1088,8 +1223,8 @@ async function init(): Promise<void> {
     // A3: warm the 64-level color atlas at idle so the FIRST drop (colorize is
     // on by default) doesn't pay a ~300-800ms synchronous build.
     // M1: warm the color atlas for EVERY palette at idle (the cache is now a
-    // small LRU), so a palette switch — or a cold visit with a persisted
-    // non-default palette — never pays the ~15k-fillText build inside a render.
+    // small LRU), so a palette switch - or a cold visit with a persisted
+    // non-default palette - never pays the ~15k-fillText build inside a render.
     const warm = () => {
       try { for (const p of PALETTES) warmColorAtlas(ramp, p.paper, p.ink, p.pigments); } catch { /* warm only */ }
     };
@@ -1104,10 +1239,10 @@ async function init(): Promise<void> {
     return;
   }
 
-  // Share hint text comes from the i18n dictionary (data-i18n="shareHint") — no
+  // Share hint text comes from the i18n dictionary (data-i18n="shareHint") - no
   // JS overwrite needed, and it re-renders on the language toggle.
 
-  // Palette selector — guarded so a missing element can never kill the wiring.
+  // Palette selector - guarded so a missing element can never kill the wiring.
   const palSel = document.getElementById('palette') as HTMLSelectElement | null;
   if (palSel) {
     for (const p of PALETTES) {
@@ -1130,7 +1265,7 @@ async function init(): Promise<void> {
 
   // Input listeners are wired at the top of init() via wireInput() so the
   // primary CTA is live at DOM-interactive (M4), not after font + ramp setup.
-  // (wireInput is called before the font awaits — see init below.)
+  // (wireInput is called before the font awaits - see init below.)
 
   // Controls
   const updateWidthVal = () => ($('widthVal')).textContent = ($('width') as HTMLInputElement).value;
@@ -1171,6 +1306,7 @@ async function init(): Promise<void> {
       setEmpty('default');
       try {
         ramp = await buildRamp(preset);
+        alphabetPool = glyphsForPreset(preset); // the randomizer draws from this
         status.textContent = t('ready');
         queueRender();
       } catch {
@@ -1194,16 +1330,6 @@ async function init(): Promise<void> {
   });
 
   // Export
-  $('copyLink').addEventListener('click', () => {
-    // F-4: desktop/feed posters can copy an ATTRIBUTED link (the image band is
-    // deliberately bare so feed shares undercount — this gives a token for them).
-    const text = `${t('shareText')} ${shareLink()}`;
-    if (navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(text).then(() => flash(t('copied')), () => fallbackCopy(text));
-    } else {
-      fallbackCopy(text);
-    }
-  });
   $('dlPng').addEventListener('click', () => {
     if (mosaicCanvas) {
       // M3: brand the PNG with the URL band so the desktop download-then-post
@@ -1213,15 +1339,52 @@ async function init(): Promise<void> {
       trackEvent('export', { kind: 'png' });
     }
   });
-  $('share').addEventListener('click', () => void doShare().catch(() => flash(t('buildFailed'), 4000)));
-  $('shareTop').addEventListener('click', () => void doShare().catch(() => flash(t('buildFailed'), 4000)));
+  // Share popup: the ONE Share button opens a small platform menu (Telegram /
+  // WhatsApp / X) as a popover anchored just below it - each target hands the
+  // actual media to the native sheet (a t.me/wa.me URL can carry text+link
+  // only, no file). Outside click or Escape dismisses.
+  const shareRoot = document.getElementById('shareRoot');
+  const shareBtn = $('share');
+  const closeShareUnfurl = () => { if (shareRoot) shareRoot.classList.remove('open'); };
+  if (shareRoot && shareBtn) {
+    shareBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      shareRoot.classList.toggle('open');
+    });
+    document.addEventListener('click', (ev) => {
+      if (!shareRoot.contains(ev.target as Node)) closeShareUnfurl();
+    });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeShareUnfurl(); });
+  }
+  // Explicit platform share targets (Telegram / WhatsApp / X): the ONLY way a
+  // local video/image reaches these apps is the native share sheet with the
+  // FILE attached (a t.me/wa.me URL can carry text+link only - no file). So
+  // each button runs the same media share and the user confirms the app in the
+  // sheet; the label is the intended target, the sheet completes it.
+  const wireTarget = (id: string, platform: 'tg' | 'wa' | 'tw') => {
+    const el = document.getElementById(id) as HTMLButtonElement | null;
+    if (!el) return;
+    el.addEventListener('click', () => {
+      closeShareUnfurl();
+      void doShare(platform).catch(() => flash(t('buildFailed'), 4000));
+    });
+    // disabled until a mosaic exists - mirror the Share button.
+    const sync = () => { el.disabled = mosaicCanvas === null; };
+    sync();
+    const mo = new MutationObserver(sync);
+    const mosaic = document.getElementById('mosaic');
+    if (mosaic) mo.observe(mosaic, { attributes: true, attributeFilter: ['width'] });
+  };
+  wireTarget('shareTg', 'tg');
+  wireTarget('shareWa', 'wa');
+  wireTarget('shareTw', 'tw');
   $('copyText').addEventListener('click', () => {
     copyText();
     trackEvent('export', { kind: 'text' });
   });
   $('dlHtml').addEventListener('click', () => {
     trackEvent('export', { kind: 'html' });
-    // L1: the embedded-font fetch can fail (offline / file://) — don't let
+    // L1: the embedded-font fetch can fail (offline / file://) - don't let
     // 'Save as HTML' fail silently.
     void downloadHTML().catch(() => flash(t('buildFailed'), 4000));
   });
@@ -1235,7 +1398,7 @@ async function init(): Promise<void> {
       const paused = videoHandle.togglePlay();
       videoPaused = paused;
       ($('playBtn') as HTMLButtonElement).textContent = paused ? t('play') : t('pause');
-      // L28: a paused source would yield a static GIF — disable both exports.
+      // L28: a paused source would yield a static GIF - disable both exports.
       (document.getElementById('dlVideo') as HTMLButtonElement).disabled = paused;
       (document.getElementById('dlGif') as HTMLButtonElement).disabled = paused;
     }
@@ -1255,7 +1418,7 @@ async function init(): Promise<void> {
     ($('dlGif') as HTMLButtonElement).disabled = true;
     // M2+M10: record from a downscaled, URL-branded copy of the LIVE mosaic so
     // video shares carry the loop URL and encode fast on budget phones. The copy
-    // is repainted every frame — captureStream needs changing frames.
+    // is repainted every frame - captureStream needs changing frames.
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
     let lastPaint = 0;
@@ -1268,13 +1431,13 @@ async function init(): Promise<void> {
       recRaf = requestAnimationFrame(paint);
     };
     paint();
-    // F-1: reuse the per-load MediaStreamDestination (built in handleVideoFile —
+    // F-1: reuse the per-load MediaStreamDestination (built in handleVideoFile -
     // createMediaElementSource is one-shot, so it CANNOT be created here).
     if (audioCtx && audioCtx.state === 'suspended') void audioCtx.resume(); // #2
     const audio = mediaDest?.stream ?? null;
     try {
       // F8: export at the loop's EFFECTIVE rate (it backs off to ~6fps on slow
-      // devices — a fixed 12 would duplicate frames and play back at half speed).
+      // devices - a fixed 12 would duplicate frames and play back at half speed).
       const effFps = Math.max(6, Math.min(12, Math.round(1000 / (videoHandle?.getFrameMs() ?? 83))));
       const rec = await recordCanvas(recCanvas, 4, effFps, audio);
       // F2(b): Clear/teardown during the recording → don't surface a stale file.
@@ -1298,12 +1461,19 @@ async function init(): Promise<void> {
     ($('dlVideo') as HTMLButtonElement).disabled = true;
     ($('dlGif') as HTMLButtonElement).disabled = true;
     const gen = recordGen; // F2(b): cancelled by Clear/teardown mid-recording
-    // M2: brand the GIF with the URL band too. The copy is repainted on rAF —
+    // M2: brand the GIF with the URL band too. The copy is repainted on rAF -
     // recordGIF awaits between its frame captures, so the animation survives.
     const recCanvas = document.createElement('canvas');
     let recRaf = 0;
+    let lastGifPaint = 0;
     const paint = () => {
-      paintBrandedCapture(recCanvas, out, SITE_URL, 480); // M3: band at GIF-final res (recordGIF won't re-shrink it)
+      // L1: the GIF samples only every ~125-200ms - don't repaint the branded
+      // frame at 60fps; gate it like the video path (~10fps).
+      const now = performance.now();
+      if (now - lastGifPaint >= 100) {
+        lastGifPaint = now;
+        paintBrandedCapture(recCanvas, out, SITE_URL, 960); // band at GIF-final res
+      }
       recRaf = requestAnimationFrame(paint);
     };
     paint();
@@ -1314,7 +1484,7 @@ async function init(): Promise<void> {
         downloadBlob('geez-art.gif', new Blob([bytes.buffer as ArrayBuffer], { type: 'image/gif' }));
         flash(t('gifSaved'));
       } else {
-        // recordGIF collapses failures to null — don't claim success (M5).
+        // recordGIF collapses failures to null - don't claim success (M5).
         flash(t('gifFailed'), 4000);
       }
     } finally {

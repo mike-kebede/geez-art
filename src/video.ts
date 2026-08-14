@@ -211,10 +211,11 @@ export async function recordGIF(canvas: HTMLCanvasElement, seconds = 3, fps = 8)
     const { GIFEncoder, quantize, applyPalette } = await import('gifenc');
     const gif = GIFEncoder();
     // L28: 128 colors instead of 256 — imperceptible on a letter mosaic, but
-    // LZW compresses better (the denser bold glyphs pushed a 256-color GIF past
-    // the 2.5MB budget on metered data). Cap the LONG edge at 480px (width-only
-    // let tall portraits through at 480×852).
-    const scale = Math.min(1, 480 / Math.max(1, canvas.width, canvas.height));
+    // LZW compresses better. Cap the LONG edge at ~960px — big enough to be a
+    // real-size GIF (user preference over the 480px thumbnail) yet ~7MB so it
+    // still sends on WhatsApp/Telegram (a full-1280px GIF was ~14MB and failed).
+    const GIF_MAX_EDGE = 960;
+    const scale = Math.min(1, GIF_MAX_EDGE / Math.max(1, canvas.width, canvas.height));
     const w = Math.max(1, Math.round(canvas.width * scale));
     const h = Math.max(1, Math.round(canvas.height * scale));
     const tmp = document.createElement('canvas');

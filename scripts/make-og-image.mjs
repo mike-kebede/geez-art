@@ -8,7 +8,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const PORT = Number(process.env.PORT || 5198);
-const OUT = path.resolve('public', 'og-image.png');
+// L9: JPEG (~150KB) instead of PNG (~1MB) - the og card is opaque. Never
+// hardcode the domain: read it from the env, default to the current live host.
+const OUT = path.resolve('public', 'og-image.jpg');
+const SITE_URL = process.env.SITE_URL || 'geez-art.mike-kebede.workers.dev';
 // Dark-ink floor for the MONO mosaic (bold weight, 1.7x contrast): the current
 // demo image lands ~7.4%; the old regular-weight render landed ~2.7%. A drift
 // back below 5% means the boldness lever regressed — fail loudly, don't ship a
@@ -64,7 +67,7 @@ await browser.close();
 const browser2 = await chromium.launch();
 const page2 = await browser2.newPage();
 await page2.setContent('<canvas id="og" width="1200" height="630"></canvas>');
-const outB64 = await page2.evaluate(async (mosaicB64) => {
+const outB64 = await page2.evaluate(async ({ mosaicB64, SITE_URL }) => {
   const c = document.getElementById('og');
   const x = c.getContext('2d');
   // Deep-ink ground: the card reads as bold at feed size even though the
@@ -94,14 +97,14 @@ const outB64 = await page2.evaluate(async (mosaicB64) => {
   x.textAlign = 'left';
   x.fillText('ግዕዝ', 24, bandY + 15);
   x.fillStyle = '#F3E9D5';
-  x.font = '600 16px "Inter Variable","Inter",sans-serif';
-  x.fillText('geez·art', 90, bandY + 15);
+  x.font = '600 16px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",sans-serif';
+  x.fillText('geez art', 90, bandY + 15);
   x.fillStyle = '#C9962E';
   x.font = '14px ui-monospace,Menlo,monospace';
   x.textAlign = 'right';
-  x.fillText('geez-art.mike-kebede.workers.dev', 1176, bandY + 15);
-  return c.toDataURL('image/png').split(',')[1];
-}, mosaicB64);
+  x.fillText(SITE_URL, 1176, bandY + 15);
+  return c.toDataURL('image/jpeg', 0.85).split(',')[1];
+}, { mosaicB64, SITE_URL });
 await browser2.close();
 
 fs.writeFileSync(OUT, Buffer.from(outB64, 'base64'));

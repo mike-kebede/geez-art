@@ -1,6 +1,6 @@
-// Generate PWA + apple-touch icons: the ፊ fidel in ivory on the brick accent,
-// with a gold halo ring. Uses the dev server so the Ethiopic font is LOADED
-// before drawing (the previous version rendered black tiles because the font
+// Generate PWA + apple-touch icons: the brand mark, the GOLD ፊ, on the madder
+// ground with a gold halo. Uses the dev server so the Ethiopic font is LOADED
+// before drawing (the earlier version rendered black tiles because the font
 // hadn't loaded — the fidel never painted).
 import { chromium } from '@playwright/test';
 import fs from 'node:fs';
@@ -31,7 +31,7 @@ const pngs = await page.evaluate(async (sizes) => {
     x.beginPath();
     x.arc(size / 2, size / 2, r, 0, Math.PI * 2);
     x.stroke();
-    x.fillStyle = '#FCF9F3'; // parchment fidel
+    x.fillStyle = '#D9A441'; // the favicon GOLD ፊ
     x.font = `700 ${size * 0.62}px "Noto Sans Ethiopic Variable","Noto Sans Ethiopic",serif`;
     x.textAlign = 'center';
     x.textBaseline = 'middle';
