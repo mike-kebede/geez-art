@@ -297,87 +297,10 @@ export function downscaleCanvas(canvas: HTMLCanvasElement, maxEdge = MAX_SOURCE_
 }
 
 /**
- * Share the branded image via the native share sheet when available (on mobile
- * that surfaces WhatsApp/Telegram/Facebook in the sheet); otherwise fall back
- * to downloading the PNG.
- */
-export async function shareCanvas(
-  canvas: HTMLCanvasElement,
-  text: string,
-  filename = 'geez-art.png',
-): Promise<'shared' | 'downloaded' | 'cancelled'> {
-  const blob = await canvasToBlob(canvas);
-  const file = new File([blob], filename, { type: 'image/png' });
-  const nav = navigator as Navigator & {
-    canShare?: (data: ShareData) => boolean;
-    share?: (data: ShareData) => Promise<void>;
-  };
-  if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
-    try {
-      await nav.share({ files: [file], text });
-      return 'shared';
-    } catch (e) {
-      if ((e as Error).name !== 'AbortError') {
-        downloadCanvasPNG(canvas, filename);
-        return 'downloaded';
-      }
-      return 'cancelled'; // user dismissed the sheet — not an error, but trackable (M6)
-    }
-  }
-  // #5: iOS Web Share has no file support — share the TEXT link natively AND
-  // download the PNG, so the referral token + native sheet both fire.
-  if (nav.canShare && nav.share && nav.canShare({ text })) {
-    try { await nav.share({ text }); } catch (err) { if ((err as Error).name === 'AbortError') return 'cancelled'; }
-    downloadCanvasPNG(canvas, filename);
-    return 'shared';
-  }
-  downloadCanvasPNG(canvas, filename);
-  return 'downloaded';
-}
-
-/**
- * Share a BLOB (e.g. a recorded video) with the share-sheet text — same
- * fallback ladder as shareCanvas: file-share where supported, else text-share +
- * download, else download. Used so the Share button can hand off the actual
- * video file (not just a still frame) for video sources.
- */
-export async function shareBlob(
-  blob: Blob,
-  filename: string,
-  text: string,
-): Promise<'shared' | 'downloaded' | 'cancelled'> {
-  const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
-  const nav = navigator as Navigator & {
-    canShare?: (data: ShareData) => boolean;
-    share?: (data: ShareData) => Promise<void>;
-  };
-  if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
-    try {
-      await nav.share({ files: [file], text });
-      return 'shared';
-    } catch (e) {
-      if ((e as Error).name !== 'AbortError') {
-        triggerDownload(blob, filename);
-        return 'downloaded';
-      }
-      return 'cancelled';
-    }
-  }
-  // iOS Web Share has no file support — share the TEXT link natively AND
-  // download the video, so the referral token + native sheet both fire.
-  if (nav.canShare && nav.share && nav.canShare({ text })) {
-    try { await nav.share({ text }); } catch (err) { if ((err as Error).name === 'AbortError') return 'cancelled'; }
-    triggerDownload(blob, filename);
-    return 'shared';
-  }
-  triggerDownload(blob, filename);
-  return 'downloaded';
-}
-
-/**
  * Share MULTIPLE files (e.g. the recorded video AND the share-card PNG) with
- * the share-sheet text — same fallback ladder as shareCanvas/shareBlob. Used so
- * the Share button can hand over the moving mosaic AND the card together.
+ * the share-sheet text — the single native-share fallback ladder (file-share
+ * where supported, else iOS text-share + download, else download). Used so the
+ * Share button can hand over the moving mosaic AND the card together.
  */
 export async function shareFiles(files: File[], text: string): Promise<'shared' | 'downloaded' | 'cancelled'> {
   const nav = navigator as Navigator & {

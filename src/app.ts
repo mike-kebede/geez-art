@@ -38,6 +38,7 @@ let customTouched = false;
 let alphabetPool: GlyphInfo[] = [];
 /** Track the currently-shown replay object URL so a new one replaces (revokes) the old. */
 let replayUrl: string | null = null;
+let chipThumbPainted = false; // video source-chip thumbnail painted once per load
 /** The source-video object URL, stored so it can be revoked by the STRING - not by
  *  reading videoEl.src after the video element has been torn down (M1: that read
  *  returns '' after removeAttribute('src'), making the revoke a silent no-op). */
@@ -461,7 +462,7 @@ async function doShare(platform?: 'tg' | 'wa' | 'tw'): Promise<void> {
           trackEvent(result === 'shared' ? 'share_success' : result === 'cancelled' ? 'share_cancelled' : 'share_downloaded');
           if (result === 'shared') flash(t('shared'));
           else if (result === 'cancelled') flash(t('shareCancelled'));
-          else flash(t('saved'));
+          else flash(t('shareDownloaded'));
           return;
         }
       } finally {
@@ -714,6 +715,15 @@ async function handleVideoFile(file: File): Promise<void> {
     (c) => {
       invalidateSource(c); // the video canvas is reused; its pixels change every frame
       renderSource(c);
+      // Paint the source-chip thumbnail once a decoded frame exists - the chip
+      // stayed WHITE for videos because nothing ever drew a frame to #source.
+      if (!chipThumbPainted && v.videoWidth > 0) {
+        chipThumbPainted = true;
+        const srcEl = document.getElementById('source') as HTMLCanvasElement | null;
+        if (srcEl && srcEl.width > 0) {
+          try { srcEl.getContext('2d')!.drawImage(v, 0, 0, srcEl.width, srcEl.height); } catch { /* retry next frame */ }
+        }
+      }
     },
     12,
     // M9: a throw inside a frame used to kill the loop silently - the loop now
@@ -772,6 +782,7 @@ function stopVideo(): void {
   // #1: any teardown (Clear, photo-pick, new video) supersedes an in-flight
   // video metadata-wait - without this, a pending load could clobber fresh state.
   videoGen++;
+  chipThumbPainted = false; // the next video repaints its own chip thumbnail
   if (videoHandle) {
     videoHandle.stop();
     videoHandle = null;
@@ -803,28 +814,6 @@ function downloadBlob(name: string, blob: Blob): void {
 }
 
 /** Show the converted video back in-app so the user can replay it there and then. */
-function showReplay(blob: Blob): void {
-  const panel = document.getElementById('replay');
-  const vid = document.getElementById('replayVideo') as HTMLVideoElement | null;
-  const dl = document.getElementById('dlReplay') as HTMLButtonElement | null;
-  const close = document.getElementById('closeReplay') as HTMLButtonElement | null;
-  if (!panel || !vid || !dl || !close) return;
-  // Each replay gets a fresh object URL; revoke the previous one so repeated
-  // downloads don't leak blob URLs.
-  if (replayUrl) URL.revokeObjectURL(replayUrl);
-  replayUrl = URL.createObjectURL(blob);
-  vid.src = replayUrl;
-  void vid.play().catch(() => {});
-  dl.onclick = () => {
-    downloadBlob('geez-art-video.' + (blob.type.includes('webm') ? 'webm' : 'mp4'), blob);
-  };
-  close.onclick = () => clearReplay();
-  panel.hidden = false;
-  // M5: move focus INTO the replay on open (it sits DOM-early; keyboard users
-  // would otherwise Tab past controls, footer, and topbar to reach it).
-  requestAnimationFrame(() => dl.focus());
-}
-
 /* ---------- custom letter picker ---------- */
 
 let pickerBuilt = false;
@@ -956,7 +945,7 @@ function updatePickerUI(): void {
     // L2: aria-pressed accepts only true/false (WAI-ARIA 1.2). Partial state is
     // conveyed by the .partial class + an explicit label, not an invalid 'mixed'.
     tile.setAttribute('aria-pressed', letters.length > 0 && on === letters.length ? 'true' : 'false');
-    if (on > 0 && on < letters.length) tile.setAttribute('aria-label', t('familyPartial'));
+    if (on > 0 && on < letters.length) tile.setAttribute('aria-label', `${tile.textContent} ${t('familyPartial')}`);
     else tile.removeAttribute('aria-label');
     // #3: refresh titles/aria on toggle (buildPicker froze them at build time).
     tile.setAttribute('title', t('toggleFamily'));
@@ -1235,6 +1224,10 @@ async function init(): Promise<void> {
       void loadDemoPhoto();
     }
   } catch {
+    // MD4: a font/ramp rejection must not leave the weave loader spinning on a
+    // dead page - hide it and surface the failure.
+    const weave = document.getElementById('weaveLoader');
+    if (weave) weave.hidden = true;
     status.textContent = t('somethingWrong');
     return;
   }
@@ -1345,11 +1338,15 @@ async function init(): Promise<void> {
   // only, no file). Outside click or Escape dismisses.
   const shareRoot = document.getElementById('shareRoot');
   const shareBtn = $('share');
-  const closeShareUnfurl = () => { if (shareRoot) shareRoot.classList.remove('open'); };
+  const closeShareUnfurl = () => {
+    if (shareRoot) shareRoot.classList.remove('open');
+    shareBtn.setAttribute('aria-expanded', 'false');
+  };
   if (shareRoot && shareBtn) {
     shareBtn.addEventListener('click', (ev) => {
       ev.stopPropagation();
-      shareRoot.classList.toggle('open');
+      const open = shareRoot.classList.toggle('open');
+      shareBtn.setAttribute('aria-expanded', String(open));
     });
     document.addEventListener('click', (ev) => {
       if (!shareRoot.contains(ev.target as Node)) closeShareUnfurl();
@@ -1378,6 +1375,23 @@ async function init(): Promise<void> {
   wireTarget('shareTg', 'tg');
   wireTarget('shareWa', 'wa');
   wireTarget('shareTw', 'tw');
+  // Copy link - the referral link without opening the sheet.
+  const shareCopy = document.getElementById('shareCopy');
+  if (shareCopy) {
+    shareCopy.addEventListener('click', () => {
+      closeShareUnfurl();
+      void navigator.clipboard.writeText(`${t('shareText')} ${shareLink()}`)
+        .then(() => flash(t('copied')), () => flash(t('buildFailed'), 3000));
+    });
+  }
+  // Just share - the plain native sheet (no platform label).
+  const shareMore = document.getElementById('shareMore');
+  if (shareMore) {
+    shareMore.addEventListener('click', () => {
+      closeShareUnfurl();
+      void doShare().catch(() => flash(t('buildFailed'), 4000));
+    });
+  }
   $('copyText').addEventListener('click', () => {
     copyText();
     trackEvent('export', { kind: 'text' });
@@ -1443,8 +1457,8 @@ async function init(): Promise<void> {
       // F2(b): Clear/teardown during the recording → don't surface a stale file.
       if (gen !== recordGen) return;
       if (rec.blob) {
+        // Download only - no replay window popping open below (user preference).
         downloadBlob('geez-art-video.' + rec.ext, rec.blob);
-        showReplay(rec.blob);
       }
       flash(rec.blob ? t('videoSaved') : t('videoFailed'));
     } finally {
@@ -1505,6 +1519,21 @@ async function init(): Promise<void> {
     zoom = 1;
     applyZoom();
   });
+  // M4: the artwork pans with the arrow keys when zoomed (Safari can't native-
+  // scroll a focused region - an explicit handler keeps the aria promise true).
+  const zw = document.querySelector<HTMLElement>('.zoom-wrap');
+  if (zw) {
+    zw.addEventListener('keydown', (ev) => {
+      const k = (ev as KeyboardEvent).key;
+      const step = 48;
+      if (k === 'ArrowRight') { zw.scrollBy({ left: step }); ev.preventDefault(); }
+      else if (k === 'ArrowLeft') { zw.scrollBy({ left: -step }); ev.preventDefault(); }
+      else if (k === 'ArrowDown') { zw.scrollBy({ top: step }); ev.preventDefault(); }
+      else if (k === 'ArrowUp') { zw.scrollBy({ top: -step }); ev.preventDefault(); }
+      else if (k === 'Home') { zw.scrollTo({ left: 0, top: 0 }); ev.preventDefault(); }
+      else if (k === 'End') { zw.scrollTo({ left: zw.scrollWidth, top: zw.scrollHeight }); ev.preventDefault(); }
+    });
+  }
 }
 
 // If ANY part of setup fails, say so on the status line instead of leaving a

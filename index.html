@@ -99,12 +99,29 @@
           <p class="dz-main" data-i18n="dropzoneMain">Choose a photo or video</p>
         </div>
         <div class="share-root" id="shareRoot">
-          <button id="share" class="primary share" data-i18n="shareTop">Share</button>
+          <button id="share" class="primary share" data-i18n="shareTop" aria-haspopup="menu" aria-expanded="false" aria-controls="shareUnfurl">Share</button>
           <div class="share-unfurl" id="shareUnfurl" role="group" aria-label="Share options" data-i18n-aria="shareToAria">
             <span class="share-unfurl-title" data-i18n="shareToAria">Share options</span>
-            <button id="shareTg" class="ghost share-target" type="button" data-i18n="shareTelegram">Telegram</button>
-            <button id="shareWa" class="ghost share-target" type="button" data-i18n="shareWhatsApp">WhatsApp</button>
-            <button id="shareTw" class="ghost share-target" type="button" data-i18n="shareTwitter">X / Twitter</button>
+            <button id="shareTg" class="share-target" type="button">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M11.94 0A12 12 0 1 0 24 12 12 12 0 0 0 11.94 0zm5.87 8.16-1.97 9.29c-.15.67-.49.83-.99.52l-2.73-2.02-1.32 1.27c-.15.15-.27.27-.55.27l.2-2.79 5.09-4.6c.22-.2-.05-.3-.34-.11l-6.29 3.96-2.71-.85c-.59-.19-.6-.59.12-.88l10.6-4.09c.49-.18.92.11.76.87z"/></svg>
+              <span data-i18n="shareTelegram">Telegram</span>
+            </button>
+            <button id="shareWa" class="share-target" type="button">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 21.7h-.01a9.7 9.7 0 0 1-4.95-1.35l-.36-.21-3.68.97.98-3.59-.23-.37a9.66 9.66 0 0 1-1.48-5.15c0-5.34 4.35-9.69 9.7-9.69 2.6 0 5.03 1.01 6.86 2.85a9.6 9.6 0 0 1 2.84 6.86c0 5.34-4.35 9.68-9.68 9.68zm8.49-18.18A11.66 11.66 0 0 0 12.04 0C5.42 0 .06 5.36.06 11.97c0 2.11.55 4.17 1.6 5.99L0 24l6.18-1.62a11.9 11.9 0 0 0 5.86 1.5h.01c6.62 0 11.98-5.36 11.98-11.97 0-3.2-1.25-6.2-3.5-8.46z"/></svg>
+              <span data-i18n="shareWhatsApp">WhatsApp</span>
+            </button>
+            <button id="shareTw" class="share-target" type="button">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M18.9 1.5h3.68l-8.04 9.19L24 22.5h-7.41l-5.8-7.58-6.63 7.58H.47l8.6-9.83L0 1.5h7.59l5.24 6.93L18.9 1.5z"/></svg>
+              <span data-i18n="shareTwitter">X / Twitter</span>
+            </button>
+            <button id="shareCopy" class="share-target" type="button">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.39-1.03.39-1.42 0a5 5 0 0 1 0-7.07l3.54-3.54a5 5 0 0 1 7.07 0 5 5 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.98 2.98 0 0 0 0-4.24 2.98 2.98 0 0 0-4.24 0l-3.53 3.53a2.98 2.98 0 0 0 0 4.24zM13.41 10.59a2.995 2.995 0 0 0-4.24 0l-3.53 3.53a2.995 2.995 0 0 0 0 4.24 2.995 2.995 0 0 0 4.24 0l1.47-1.47c.78.28 1.6.41 2.42.4l-1.49 1.49a4.97 4.97 0 0 1-7.07 0 4.97 4.97 0 0 1 0-7.07l3.54-3.54a4.97 4.97 0 0 1 7.07 0c.98.98.98 2.56 0 3.54z"/></svg>
+              <span data-i18n="shareCopyLink">Copy link</span>
+            </button>
+            <button id="shareMore" class="share-target" type="button">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+              <span data-i18n="shareJustShare">Just share</span>
+            </button>
           </div>
         </div>
       </div>
@@ -200,6 +217,7 @@
   </main>
 
   <footer>
+    <div class="tibeb-spine" aria-hidden="true"><span class="tibeb-lozenge"></span></div>
     <details class="privacy-note">
       <summary data-i18n="privacySummary">Privacy &amp; parents</summary>
       <p id="privacyBody" data-i18n="privacyBody">Everything runs on your device: your photo or video is never uploaded, and this page

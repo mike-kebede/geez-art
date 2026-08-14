@@ -398,6 +398,17 @@ const RUBRICS = [
       'canvas.captureStream). Verify the new fallback actually routes to GIF + hint, and that exports are ' +
       'WhatsApp/Telegram-friendly in size.',
   },
+  {
+    key: 'journey',
+    persona: 'End-User Journey Auditor',
+    rubric:
+      'USER_JOURNEY.md is the canonical testing script (9 journeys, ~35 concrete steps). Walk EVERY step the way ' +
+      'a real user would: read each step against the actual code/DOM (labels, IDs, layout order, enabled/disabled ' +
+      'states, popup anchoring, mobile order) and grade whether the step\'s EXPECTED result actually holds. Flag ' +
+      'every step where the journey breaks, the expected result is missing, or the copy/labels mismatch the doc. ' +
+      'This is the user\'s own acceptance test - be exacting. Score 0-100 (a journey is only as strong as its ' +
+      'weakest step) and report PASS/FAIL/WARN per step with evidence.',
+  },
 ]
 
 const FINDINGS_SCHEMA = {

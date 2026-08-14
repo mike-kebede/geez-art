@@ -1012,7 +1012,7 @@ test('dist perf budget: main JS gzipped under 30KB, Ethiopic font present (L30)'
   }
 });
 
-test('video download shows an in-app replay', async ({ page }) => {
+test('video download downloads without opening a replay panel below', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
   await page.setInputFiles('#file', VIDEO);
@@ -1022,10 +1022,10 @@ test('video download shows an in-app replay', async ({ page }) => {
   });
   const downloadPromise = page.waitForEvent('download');
   await page.click('#dlVideo');
-  await downloadPromise; // the download fires; also the replay appears
-  await expect(page.locator('#replay')).toBeVisible({ timeout: 15000 });
-  const src = await page.getAttribute('#replayVideo', 'src');
-  expect(src).toBeTruthy();
+  await downloadPromise; // the download fires...
+  // ...and NO replay window pops open (user preference: download is enough)
+  await page.waitForTimeout(600);
+  await expect(page.locator('#replay')).toBeHidden();
 });
 
 test('save as HTML produces a file', async ({ page }) => {
@@ -1365,6 +1365,53 @@ test('each platform share target sends its OWN caption - not one identical strin
   expect(captured.length).toBe(3);
   // Telegram / WhatsApp / X each carry their own phrasing
   expect(new Set(captured).size).toBe(3);
+});
+
+test('USER JOURNEY 1.2: the mesob brand mark rotates while busy and stops at idle', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  // capture during boot (before Ready): the mesob should be spinning
+  const duringBoot = await page.evaluate(() => getComputedStyle(document.getElementById('eyedot')).animationName);
+  await waitReady(page);
+  const idle = await page.evaluate(() => getComputedStyle(document.getElementById('eyedot')).animationName);
+  expect(duringBoot).toBe('mesobSpin');
+  expect(idle).toBe('none');
+});
+
+test('USER JOURNEY 2.2 + 6.1/6.2: choose-pill hovers madder; share popup anchors + dismisses', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await uploadSample(page);
+  // 2.2: hover the chooser - it must tint madder, never the old warm white
+  await page.locator('.controls .dropzone').hover();
+  await page.waitForTimeout(200);
+  const hoverBg = await page.evaluate(() => getComputedStyle(document.querySelector('.controls .dropzone')).backgroundColor);
+  expect(hoverBg).not.toBe('rgb(255, 250, 244)');
+  expect(hoverBg).not.toBe('rgb(255, 255, 255)');
+  // 6.1: the share popup anchors just below the button + exposes disclosure state
+  await page.locator('.controls .dropzone').dispatchEvent('mouseout');
+  await page.click('#share');
+  await page.waitForTimeout(200);
+  const open = await page.evaluate(() => {
+    const u = document.getElementById('shareUnfurl').getBoundingClientRect();
+    const b = document.getElementById('share').getBoundingClientRect();
+    return {
+      display: getComputedStyle(document.getElementById('shareUnfurl')).display,
+      touches: u.top >= b.bottom - 2 && Math.abs(u.left - b.left) < 4,
+      expanded: document.getElementById('share').getAttribute('aria-expanded'),
+    };
+  });
+  expect(open.display).toBe('flex');
+  expect(open.touches).toBe(true);
+  expect(open.expanded).toBe('true');
+  // 6.2: click elsewhere dismisses
+  await page.mouse.click(80, 500);
+  await page.waitForTimeout(250);
+  const closed = await page.evaluate(() => ({
+    display: getComputedStyle(document.getElementById('shareUnfurl')).display,
+    expanded: document.getElementById('share').getAttribute('aria-expanded'),
+  }));
+  expect(closed.display).toBe('none');
+  expect(closed.expanded).toBe('false');
 });
 
 test('referral_visit fires when arriving with ?ref=share (audit #8)', async ({ page }) => {
