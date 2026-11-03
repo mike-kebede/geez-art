@@ -99,7 +99,7 @@
           <p class="dz-main" data-i18n="dropzoneMain">Choose a photo or video</p>
         </div>
         <div class="share-root" id="shareRoot">
-          <button id="share" class="primary share" data-i18n="shareTop" aria-haspopup="menu" aria-expanded="false" aria-controls="shareUnfurl">Share</button>
+          <button id="share" class="primary share" disabled data-i18n="shareTop" aria-haspopup="menu" aria-expanded="false" aria-controls="shareUnfurl">Share</button>
           <div class="share-unfurl" id="shareUnfurl" role="group" aria-label="Share options" data-i18n-aria="shareToAria">
             <span class="share-unfurl-title" data-i18n="shareToAria">Share options</span>
             <button id="shareTg" class="share-target" type="button">
@@ -137,11 +137,11 @@
       <section class="group">
         <h2 data-i18n="groupExport">Export</h2>
         <div class="btn-row">
-          <button id="dlPng" data-i18n="dlPng">Download PNG</button>
+          <button id="dlPng" disabled data-i18n="dlPng">Download PNG</button>
           <button id="dlVideo" hidden data-i18n="dlVideo">Download video</button>
           <button id="dlGif" hidden data-i18n="dlGif">Download GIF</button>
-          <button id="copyText" data-i18n="copyText">Copy as text</button>
-          <button id="dlHtml" data-i18n="dlHtml">Save as HTML</button>
+          <button id="copyText" disabled data-i18n="copyText">Copy as text</button>
+          <button id="dlHtml" disabled data-i18n="dlHtml">Save as HTML</button>
         </div>
         <p id="videoCapHint" class="hint" hidden data-i18n="videoCapHint">Video export isn't supported on this device - grab a GIF instead.</p>
       </section>

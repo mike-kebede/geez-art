@@ -218,6 +218,18 @@ test('custom picker works before a photo is added (no errors, feedback shown)', 
   expect(errors).toEqual([]);
 });
 
+test('letter summary stops asking for a photo once one is loaded, and asks again after Clear', async ({ page }) => {
+  await page.goto('/');
+  await waitReady(page);
+  await page.selectOption('#charset', 'custom');
+  await page.locator('.fam-tile').first().click();
+  await expect(page.locator('#pickSummary')).toContainText('add a photo');
+  await uploadSample(page);
+  await expect(page.locator('#pickSummary')).not.toContainText('add a photo');
+  await page.locator('#clearBtn').click();
+  await expect(page.locator('#pickSummary')).toContainText('add a photo');
+});
+
 test('header Share is disabled until a mosaic exists, then enabled', async ({ page }) => {
   await page.goto('/');
   await waitReady(page);
@@ -1629,6 +1641,29 @@ test.describe('mobile (Pixel 7 — F-7)', () => {
   });
 
 });
+
+// Regression: Iteration-16 moved the base .showcase/.controls/.side-panel grid
+// placement BELOW the <=920px media query, so it silently won and phones got a
+// squeezed two-column layout that overflowed sideways.
+for (const vp of [{ width: 360, height: 780 }, { width: 412, height: 915 }, { width: 768, height: 1024 }]) {
+  test(`single-column layout with no sideways scroll at ${vp.width}px`, async ({ page }) => {
+    await page.setViewportSize(vp);
+    await page.goto('/');
+    await waitReady(page);
+    await uploadSample(page);
+    const m = await page.evaluate(() => {
+      const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      return {
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+        showcase: r('.showcase'), side: r('.side-panel'),
+      };
+    });
+    expect(m.scroll).toBeLessThanOrEqual(m.client);
+    expect(m.side.right).toBeLessThanOrEqual(m.client);
+    expect(m.side.top).toBeGreaterThanOrEqual(m.showcase.bottom); // stacked, not side by side
+  });
+}
 
 test('language + palette persist across reloads (M7)', async ({ page }) => {
   await page.goto('/');

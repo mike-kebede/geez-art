@@ -269,12 +269,14 @@ body {
   flex: 1;
 }
 @media (max-width: 920px) {
+  /* `.stage >` raises specificity so these win over the base placement rules
+     (.showcase / .controls / .side-panel) that appear later in this file. */
   .stage { grid-template-columns: 1fr; grid-template-rows: auto; }
   /* painting first - the empty ፊደል hero is itself a wired picker, so the
      strip below it loses nothing; the artwork stays above the fold */
-  .showcase { grid-column: auto; grid-row: auto; order: 1; }
-  .controls { grid-column: auto; grid-row: auto; order: 2; }
-  .side-panel { grid-column: auto; grid-row: auto; order: 3; position: static; }
+  .stage > .showcase { grid-column: auto; grid-row: auto; order: 1; }
+  .stage > .controls { grid-column: auto; grid-row: auto; order: 2; }
+  .stage > .side-panel { grid-column: auto; grid-row: auto; order: 3; position: static; }
 }
 @media (max-width: 520px) {
   .controls-primary { flex-direction: column; }

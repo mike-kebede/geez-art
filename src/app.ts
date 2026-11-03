@@ -28,6 +28,7 @@ let firstRenderDone = false;
 /** H1: video mode throttles the per-frame stat/aria updates to ~1×/s. */
 let lastStatUpdate = 0;
 let videoHandle: VideoHandle | null = null;
+let pickerBuilt = false; // the letter picker builds lazily (L29)
 let videoEl: HTMLVideoElement | null = null;
 let lastResult: ReturnType<typeof renderMosaic> | null = null;
 let zoom = 1;
@@ -168,6 +169,7 @@ function clearAll(): void {
   if (zc) zc.hidden = true;
   firstRenderDone = false;
   updateShareState();
+  if (pickerBuilt) updatePickerUI(); // drop the stale letter summary too
 }
 
 /** Load the bundled demo photo (a real image) through the same decode path. */
@@ -186,6 +188,7 @@ async function loadDemoPhoto(): Promise<void> {
 function setSource(c: HTMLCanvasElement): void {
   clearAll();
   source = c;
+  if (pickerBuilt) updatePickerUI(); // the summary stops asking for a photo
   const empty = $('emptyHint');
   if (empty) empty.style.display = 'none';
   const chip = $('sourceChip');
@@ -730,6 +733,7 @@ async function handleVideoFile(file: File): Promise<void> {
     // stops itself and reports so the user isn't staring at a frozen Pause.
     () => flash(t('interrupted'), 4000),
   );
+  if (pickerBuilt) updatePickerUI();
   zoom = 1;
   applyZoom();
   $('emptyHint').style.display = 'none';
@@ -816,7 +820,6 @@ function downloadBlob(name: string, blob: Blob): void {
 /** Show the converted video back in-app so the user can replay it there and then. */
 /* ---------- custom letter picker ---------- */
 
-let pickerBuilt = false;
 /** Build the ~300-button picker lazily, on first open of the letter picker
  *  (L29) - it used to be constructed on the critical "Ready" path. */
 function ensurePickerBuilt(): void {
@@ -960,7 +963,9 @@ function updatePickerUI(): void {
   const sum = $('pickSummary');
   if (sum) {
     const base = used === total ? t('allLetters') : `${used} ${t('of')} ${total} ${t('letters')}`;
-    sum.textContent = source ? base : `${base} - ${t('addPhotoToSee')}`;
+    // a video never sets `source` - it runs through videoHandle instead
+    const hasPicture = source !== null || videoHandle !== null;
+    sum.textContent = hasPicture ? base : `${base} - ${t('addPhotoToSee')}`;
   }
 }
 
@@ -1342,6 +1347,7 @@ async function init(): Promise<void> {
     if (shareRoot) shareRoot.classList.remove('open');
     shareBtn.setAttribute('aria-expanded', 'false');
   };
+  updateShareState(); // start honest: nothing to share until a mosaic exists
   if (shareRoot && shareBtn) {
     shareBtn.addEventListener('click', (ev) => {
       ev.stopPropagation();
